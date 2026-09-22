@@ -74,6 +74,18 @@ so no reported result is contaminated — but from now on **development runs use
 `av2_dev`** (AV2 val/train); `av2_cal` is for calibration and `av2_test` is touched only for
 pre-registered evaluations.
 
+## Dependency posture (2026-09-22)
+
+The author raised a real risk: if a manuscript's claims lean on an unpublished companion
+paper ("Paper 01"), a rejection or absence of that paper undermines this one. Addressed:
+- AutoBot checkpoint + converted data = infrastructure (like a pretrained backbone or a
+  public dataset), not a cited finding.
+- The AV2 → nuScenes coverage-drop number behind H3 is now **computed by this paper's own
+  code** (`src/coverage_selfcheck.py` + `src/conformal.py`, copied not imported), from raw
+  model prediction dumps. It reproduces closely (94.9% vs 95.0% in-domain at α=0.05) —
+  confirms correctness, not dependency.
+- See `notes/falsification.md` "A note on dependencies" for the citation policy this implies.
+
 ## Needs your decision
 
 1. **Harm definition + α** (blocks every headline number). Data in the addendum of

@@ -105,10 +105,11 @@ exactly the behaviour a fallback produces. Reactive traffic is now the default.
 - LTT needs n ≳ 22 scenarios at zero observed loss to certify α = 0.1 at δ = 0.1, and far
   more near the boundary; n = 2 000 gives room.
 
-### 3. Paper 01's coverage drop is ~3–4 pp — H3's "≥ 5 pp" premise does not hold
+### 3. The coverage drop is ~3–4 pp — H3's "≥ 5 pp" premise does not hold
 
-AV2 → nuScenes, same AV2 calibration (`paper01-coverage-transfer/results/coverage_transfer.json`,
-seed 0): 95 % → 92.2 %, 90 % → 86.0 %, 80 % → 76.8 %. The H3 refutation clause above
+AV2 → nuScenes, same AV2 calibration — **recomputed independently by this paper**
+(`src/coverage_selfcheck.py`, not cited from an external result): 95 % → 92.2 %,
+90 % → 86.7 %, 80 % → 77.2 %. The H3 refutation clause above
 ("…even though open-loop coverage drops by ≥ 5 pp") can therefore never fire as written.
 Suggest restating H3 purely on the closed-loop outcome, e.g. **refuted if the realised miss
 rate on nuScenes, at the λ̂ certified on AV2, has a 95 % CI that includes α** — and note

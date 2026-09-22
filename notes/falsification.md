@@ -4,11 +4,14 @@
 > Copy the hypotheses from PLAN.md section 3 and make them numeric.
 
 **Date written:** 2026-09-22
-**Git SHA at time of writing:** none — this folder is not yet a git repository. **Commit this
-file before the first `av2_test` or nuScenes evaluation**; until then its only timestamp is
-the file system's.
+**Git history:** first committed at `e53c5c4` (repo init, before this file existed in its
+current form). This addendum reframing H3's premise (dependency note, self-computed coverage
+numbers) was added in a later commit — see git log for the exact SHA and diff. Nothing in the
+H1/H2/H3 claims, metrics, or refutation thresholds themselves changed after `e53c5c4`; only
+how the H3 premise is sourced (self-computed vs. cited) was clarified.
 **Written by:** Claude, on the author's explicit instruction ("take the best harm definition
-used in top journal papers and keep working"). The author may amend it up to the first commit.
+used in top journal papers and keep working"). The author may amend it freely before the
+first `av2_test` or nuScenes evaluation is run.
 
 ## What had been seen when this was written (full disclosure)
 
@@ -17,10 +20,30 @@ used in top journal papers and keep working"). The author may amend it up to the
 - Two pilots with a **stub constant-velocity predictor** (no AutoBot, no trigger comparison):
   plumbing checks only. The earlier of them touched `av2_test` (300 scenarios); no
   hypothesis below was evaluated on it.
-- Paper 01's open-loop coverage, AV2 → nuScenes, AV2 calibration: 95 → 92.2 %,
-  90 → 86.0 %, 80 → 76.8 % (seed 0).
+- Open-loop coverage, AV2 → nuScenes: 95 → 92.2 %, 90 → 86.7 %, 80 → 77.2 % (drop 2.7–3.7 pp).
+  **This paper computes that number itself** (`src/coverage_selfcheck.py`, `src/conformal.py`
+  — split conformal prediction, Vovk/Gammerman/Shafer 2005) from raw model prediction dumps.
+  It is not a citation to any external paper's derived result.
 - **Not seen:** any closed-loop result with a real predictor; any trigger comparison; any
   nuScenes closed-loop run.
+
+## A note on dependencies (why this claim doesn't need Paper 01 to exist)
+
+This work uses a trained AutoBot checkpoint and converted scenario data as **infrastructure**
+— the same relationship any paper has to a pretrained backbone or a public dataset. It makes
+no claim that requires a companion paper to be published, accepted, or even cited:
+- AutoBot is a published, citable architecture (Kim et al., ICLR 2022); the checkpoint used
+  here is described directly in this paper's own methods (training data, minADE), not by
+  reference to another paper's evaluation of it.
+- The AV2 → nuScenes coverage-collapse premise behind H3 is **computed by this paper's own
+  code** (above), not asserted on another paper's authority.
+- Split conformal prediction and Learn-then-Test are cited to their original sources
+  (Vovk et al. 2005; Angelopoulos, Bates, Candès, Jordan, Lei 2021), not to any unpublished
+  work.
+
+If a "Paper 01" is ever cited in the manuscript, it should be for the checkpoint/data
+artifact only ("we use a publicly-releasable checkpoint trained on..."), never as the
+authority for a scientific claim this paper needs to stand on its own.
 
 ## Fixed definitions
 
