@@ -376,3 +376,16 @@ pre-empt are evaluated under one consistent assumption about ego's own near-term
 `test_trigger_score_sees_lead_vehicle_not_just_width` still passes; re-running the same
 paired 35-scenario validation now to measure the effect directly (results appended below /
 in STATUS.md once done, rather than assumed).
+
+**Validation result: miss rate 0.000 at every λ tested** (same 35 scenarios, same grid,
+only the corridor model changed) — collapsed from 0.057–0.086 before the fix. "At-fault
+collision" and "any collision" also hit exactly 0. The looser `TTC<1.5s` definition still
+has a small nonzero floor (0.029–0.057), which is expected: a wider TTC threshold catches
+genuine brief near-misses no corridor model will fully anticipate.
+
+**LTT still returns `lam_hat=None` despite zero observed misses — this is correct, not a
+bug.** At n=35, Hoeffding–Bentkus gives p≈0.166 for zero events at α=0.05 (> δ=0.1), so LTT
+correctly refuses to certify: 35 scenarios is not enough evidence at this confidence level,
+regardless of how clean the result looks. CRC (expectation guarantee, less conservative)
+DOES certify at λ=2.0. This is exactly why the pre-registered study uses n≈2 000
+(`notes/falsification.md`) — this 35-scenario run is a diagnostic sample, not a substitute.

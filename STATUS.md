@@ -74,6 +74,29 @@ so no reported result is contaminated — but from now on **development runs use
 `av2_dev`** (AV2 val/train); `av2_cal` is for calibration and `av2_test` is touched only for
 pre-registered evaluations.
 
+## Trigger geometry: two bugs found and fixed, validated (2026-09-22)
+
+First AutoBot pilot showed the risk-calibrated trigger couldn't certify anything at
+alpha=0.05. Root-caused and fixed in two stages, each validated on a paired 35-scenario
+sample (identical scenarios, identical lambda grid, one variable changed at a time):
+
+1. Clearance used vehicle WIDTH only (no LENGTH) -> missed straight-ahead lead vehicles.
+   Fixed: path-relative longitudinal/lateral box margins. Collision-only harm went from
+   "never certifies" to certifying cleanly.
+2. Remaining floor (TTC-only near-misses): ruled out decision latency first (miss rate was
+   IDENTICAL at 2 Hz vs 10 Hz decisions, properly paired -- not the cause). Root cause:
+   the trigger's ego-motion corridor followed the ROUTE's curvature; the harm metric
+   (matching nuPlan's real definition) deliberately does not -- it assumes constant
+   heading, precisely so a driver can't get credit for "the plan says I'll steer away."
+   Divergence between the two models: up to 30 m at a 3 s horizon. AutoBot's own
+   predictions were separately confirmed accurate (0.03 m error) -- not the predictor's fault.
+   Fixed: trigger now uses the same route-agnostic ego model as the harm metric.
+
+**Validated result: miss rate 0.000 at every lambda tested**, same 35 scenarios, down from
+0.057-0.086. LTT still won't certify at n=35 (correctly -- Hoeffding-Bentkus needs more
+evidence than 35 scenarios can give at alpha=0.05, delta=0.1, even at zero observed misses).
+CRC does certify. The pre-registered study needs the full n~2000 calibration set.
+
 ## Dependency posture (2026-09-22)
 
 The author raised a real risk: if a manuscript's claims lean on an unpublished companion
