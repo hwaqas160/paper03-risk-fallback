@@ -332,3 +332,16 @@ now: rerunning at `decide_every=1` (10 Hz, every sim step) on 40 scenarios. If t
 drops substantially, latency (not IDM-vs-human distribution) is the primary cause — still a
 legitimate, reportable finding (Exp 7 is a latency sweep for exactly this reason), but a
 different one from the domain-gap hypothesis above.
+
+## 13. Correction: the first decide_every comparison was invalid (2026-09-22)
+
+The exploratory `decide_every=1` run (n=40, `--n_probe 15`) used a **different probe span**
+than the `decide_every=5` run it was meant to compare against (`--n_probe 30`), so it drew
+scenarios from an earlier, disjoint slice of `av2_dev` seeds. Its higher miss rate
+(0.103 vs 0.073) is therefore NOT evidence about decision cadence — it may simply be a
+harder sample of scenarios. **Do not cite that number.**
+
+Re-running as a properly paired test: identical scenario seeds (`--start 100 --n 36`,
+skipping the probe phase by supplying an explicit `--lams`, so both runs see exactly the
+same scenarios in the same order), varying only `decide_every` ∈ {1, 5}. Results below once
+both finish. This is the controlled version of the §12 hypothesis test.
