@@ -298,3 +298,37 @@ does not change collision/TTC outcomes in the cases observed" — not a stronger
 
 Runtime: 39.4 min for 150 scenarios x 7 rollouts (1 live AutoBot run + 6 replayed) on 3
 workers (commit-capped: AutoBot needs ~2.8 GB/worker vs 1.8 GB for the stub).
+
+## 12. Trigger geometry fix confirmed; a second, distinct floor remains (2026-09-22)
+
+**The length/width fix worked as intended.** Re-running the 150-scenario dev pilot with the
+path-relative box scorer (§11 diagnosis): "at-fault collision" and "any collision" now
+**certify cleanly** at λ=0.564 (miss 0.007–0.02, vs. no certification at all before the
+fix). The headline nuPlan harm (which also counts TTC<0.95s) still does not certify at
+α=0.05: min miss 0.073 (down from 0.080 — a real but small improvement), autonomy up to
+0.76 at the top of a narrower grid (0–1.70 this run; grid width depends on the probe sample).
+
+**Diagnosis of what's left.** Of 11 misses at λ=0, all 11 are TTC-only (no collision) and
+10/11 never triggered at all — but this time NOT because of the width/length bug: spot-
+checking 4 cases (seeds 60, 74, 86, 127), the trigger score was exactly 0.000 at the
+decision tick immediately before each TTC<0.95 event (0.5 s earlier, `decide_every=5`), the
+culprit was a VEHICLE (never a pedestrian) at 9.3–9.6 m gap, and AutoBot's own predicted
+trajectory for that vehicle 0.5 s earlier did not intrude the ego's corridor. So the model's
+prediction itself, not the scoring geometry, missed these.
+
+**Working hypothesis, not yet confirmed:** AutoBot was trained on Paper 01's real human
+driving logs, but this pipeline replays scenarios with `reactive_traffic=True` — other
+vehicles are controlled by MetaDrive's rule-based **IDM**, which can react abruptly (e.g. to
+the ego's own fallback braking) in ways a model trained on human trajectories would not
+anticipate. If true, this is not a bug to patch away: it is exactly the kind of
+train/deployment mismatch the whole 3-paper programme is about, and arguably belongs in the
+paper as a finding, not a limitation to hide. **Not yet tested**: whether the effect is
+specific to IDM-reactive agents (vs. equally present in log-replay) — that comparison would
+confirm or kill the hypothesis directly.
+
+**Alternative, uninteresting explanation also live:** 3 s prediction horizon at 0.5 s
+decision cadence may simply be too infrequent for fast-developing conflicts. Testing this
+now: rerunning at `decide_every=1` (10 Hz, every sim step) on 40 scenarios. If the floor
+drops substantially, latency (not IDM-vs-human distribution) is the primary cause — still a
+legitimate, reportable finding (Exp 7 is a latency sweep for exactly this reason), but a
+different one from the domain-gap hypothesis above.
