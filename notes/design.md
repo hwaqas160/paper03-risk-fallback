@@ -341,7 +341,9 @@ scenarios from an earlier, disjoint slice of `av2_dev` seeds. Its higher miss ra
 (0.103 vs 0.073) is therefore NOT evidence about decision cadence — it may simply be a
 harder sample of scenarios. **Do not cite that number.**
 
-Re-running as a properly paired test: identical scenario seeds (`--start 100 --n 36`,
-skipping the probe phase by supplying an explicit `--lams`, so both runs see exactly the
-same scenarios in the same order), varying only `decide_every` ∈ {1, 5}. Results below once
-both finish. This is the controlled version of the §12 hypothesis test.
+`run_sweep.py` has no `--start` flag; the seed offset is `probe_span`, a pure function of
+`--n_probe` (`ceil(n_probe / 0.7 * 1.3)`) — it doesn't depend on whether `--lams` is given.
+Re-running as a properly paired test: matching `--n_probe 30` (so both runs start at seed
+56) with an explicit `--lams` (skips simulating the probe, but keeps the offset), `--n 36`,
+varying only `decide_every` ∈ {1, 5}. Results below once both finish. Controlled version of
+the §12 hypothesis test.
