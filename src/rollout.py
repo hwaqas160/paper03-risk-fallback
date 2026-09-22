@@ -109,18 +109,34 @@ class ConstantVelocityPredictor:
 
 
 # ------------------------------------------------------------------------------- scoring
-def ego_plan(env, steps: int = PRED_HORIZON) -> np.ndarray:
-    """Where the nominal plan puts the ego over the horizon: reference trajectory at current speed."""
+LON_MARGIN = 1.0   # m, added to the length-based longitudinal half-extent (following distance)
+LAT_MARGIN = 0.5   # m, added to the width-based lateral half-extent (passing clearance)
+
+
+def ego_plan(env, steps: int = PRED_HORIZON) -> tuple[np.ndarray, np.ndarray]:
+    """Where the nominal plan puts the ego over the horizon (position, heading) at current speed."""
     traj = env.agent.navigation.reference_trajectory
     long, _ = traj.local_coordinates(env.agent.position)
     v = max(env.agent.speed, 1.0)
-    return np.array([traj.position(min(long + v * DT * (i + 1), traj.length), 0) for i in range(steps)])
+    longs = [min(long + v * DT * (i + 1), traj.length) for i in range(steps)]
+    pos = np.array([traj.position(s, 0) for s in longs])
+    head = np.array([traj.heading_theta_at(s) for s in longs])
+    return pos, head
 
 
 def trigger_score(env, predictor, other_states: np.ndarray, extents: np.ndarray) -> float:
     """
     Task-relevant uncertainty: how deeply the predicted region of any agent intrudes into
-    the ego's planned corridor over the horizon (metres). 0 = no predicted conflict.
+    the ego's planned corridor over the horizon. 0 = no predicted conflict.
+
+    Intrusion is measured in the ego's path-relative frame at each horizon step: decompose
+    the offset to a predicted agent position into LONGITUDINAL (along the planned heading)
+    and LATERAL (perpendicular) components, and apply separate margins — a length-based
+    longitudinal margin (following distance) and a width-based lateral one (lane clearance).
+    A single isotropic radius cannot represent both without either missing straight-ahead
+    lead vehicles (radius sized by width alone; length ignored — MISSED 11/12 dev misses at
+    lam=0 on 2026-09-22, notes/design.md §11) or over-triggering on adjacent-lane traffic
+    (radius sized by the half-diagonal; SUPERSEDED, notes/design.md §1).
 
     This is the 'plan-intersecting region size' of notes/design.md T3/T4: the score family
     is shared by the conformal and risk-calibrated triggers; only how lam is CHOSEN differs.
@@ -134,15 +150,22 @@ def trigger_score(env, predictor, other_states: np.ndarray, extents: np.ndarray)
         if len(other_states) == 0:
             return 0.0
         preds = predictor.predict(other_states)              # (A,K,T,2)
-    plan = ego_plan(env)                                     # (T,2)
-    # Lateral (width) half-extents, NOT the half-diagonal: with half-diagonals (~2.3 m each)
-    # two cars in adjacent lanes 3.5 m apart would always read as overlapping.
-    ego_r = 0.5 * env.agent.WIDTH
-    other_r = 0.5 * extents[:, 1]                            # (A,)
-    d = np.linalg.norm(preds - plan[None, None, :, :], axis=-1)      # (A,K,T)
-    clearance = d - (ego_r + other_r[:, None, None] + SAFETY_MARGIN)
+    plan, head = ego_plan(env)                                # (T,2), (T,)
+    tangent = np.stack([np.cos(head), np.sin(head)], -1)      # (T,2)
+    normal = np.stack([-np.sin(head), np.cos(head)], -1)      # (T,2)
+
+    d = preds - plan[None, None, :, :]                        # (A,K,T,2)
+    along = np.abs(np.einsum("aktd,td->akt", d, tangent))
+    lat = np.abs(np.einsum("aktd,td->akt", d, normal))
+
+    lon_margin = 0.5 * (env.agent.LENGTH + extents[:, 0]) + LON_MARGIN   # (A,)
+    lat_margin = 0.5 * (env.agent.WIDTH + extents[:, 1]) + LAT_MARGIN    # (A,)
+    # elliptical penetration depth in [0, lat_margin]: 0 outside the margin box, lat_margin
+    # at the ego's own position. Smoother than a hard box indicator (keeps lam sweepable).
+    r = np.sqrt((along / lon_margin[:, None, None]) ** 2 + (lat / lat_margin[:, None, None]) ** 2)
+    intrusion = np.clip(1.0 - r, 0.0, 1.0) * lat_margin[:, None, None]
     # worst over time, then the most pessimistic mode, then the most threatening agent
-    return float(max(0.0, -np.min(clearance)))
+    return float(np.max(intrusion))
 
 
 # ------------------------------------------------------------------------------- metrics

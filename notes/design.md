@@ -257,3 +257,44 @@ as a property of the testbed.
 **Miss-floor diagnosis (stub predictor, dev).** Of 13 misses at λ = 0, 10 never triggered:
 the stub's score stayed exactly 0 because the harmful agent was never predicted into the ego
 corridor. The floor is a predictor limitation, which is what AutoBot should reduce.
+
+## 11. First AutoBot-driven pilot (2026-09-22, dev split, 150 scenarios)
+
+|              | lam=0 (aggressive) | lam=2.40 (permissive) |
+|---|---|---|
+| miss rate    | 0.080 | 0.113 |
+| autonomy     | 0.587 | 0.900 |
+| unnecessary stop | 0.360 | 0.080 |
+| induced collision | 0.040 | 0.007 |
+
+No-trigger base rate (nuPlan headline harm): 0.127. **LTT does not certify at α=0.05 for the
+headline harm definition at any grid point** — even lam=0 (score threshold 0, the most
+aggressive setting tested) leaves a 0.080 miss rate. It DOES certify for narrower
+definitions on the same rollouts: "at-fault collision only" and "any collision" both
+certify at lam=0.471 (rescored post hoc from the same data, no re-simulation).
+
+**Diagnosis: the miss floor is a detection gap in the trigger score, not the harm
+definition.** Of 12 misses at lam=0, 11 never triggered at all because `trigger_score()`
+stayed exactly 0 for the whole rollout — AutoBot predicted the conflicting agent, but its
+predicted mode never intersected the ego's *nominal* plan corridor (a constant-speed
+extrapolation of the reference trajectory) closely enough to register. This is the same
+failure mode seen with the stub predictor (§ note above: 10/13 misses, "never triggered
+because score stayed 0"), so switching predictors alone does not fix it. Candidate causes
+worth investigating before claiming H2: the "ego plan" proxy ignores that IDM itself
+brakes/turns in response to traffic (so the corridor is wrong exactly when it matters most);
+`SAFETY_MARGIN` and the corridor width may be too narrow; scoring the single worst timestep
+across K modes may under-weight a threat that is real but not the argmax mode.
+
+**Score-trace reuse: exact where it matters, honest where it doesn't.** 3/150 scenarios
+(all at the most permissive lam, all `triggered=False`) showed `diverged=True` — but in
+every case the harm label and collision count were IDENTICAL between the live and replayed
+run; only the ego's exact position drifted by centimetres. Root cause: MetaDrive is not
+bit-repeatable across two independently-run full-length episodes of the same seed (the
+same simulator-level noise already noted for post-trigger runs in §10, now also observed
+pre-trigger at low rate — 2% of never-triggered scenarios here). This does not corrupt any
+loss label in this run and LTT does not require a deterministic simulator, but the earlier
+claim "reuse is exact" should be read as "exact up to simulator-level physics noise that
+does not change collision/TTC outcomes in the cases observed" — not a stronger guarantee.
+
+Runtime: 39.4 min for 150 scenarios x 7 rollouts (1 live AutoBot run + 6 replayed) on 3
+workers (commit-capped: AutoBot needs ~2.8 GB/worker vs 1.8 GB for the stub).

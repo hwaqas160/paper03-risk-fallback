@@ -17,7 +17,7 @@ import simenv  # noqa: E402
 
 simenv.block_torch()
 from rollout import (ConstantVelocityPredictor, DT, make_fallback_policy_cls,  # noqa: E402
-                     rollout, sweep_scenario, trigger_score)
+                     rollout, sweep_scenario, trigger_score, ego_plan)
 
 
 def _env(n=6):
@@ -110,6 +110,25 @@ def test_score_trace_reuse_is_exact(env, pred):
             assert live.trigger_step == rep.trigger_step, (seed, lam)
             k = live.trigger_step if live.triggered else live.steps
             assert live.ttc_trace[:k] == rep.ttc_trace[:k], (seed, lam)
+
+
+def test_trigger_score_sees_lead_vehicle_not_just_width(env, pred):
+    """
+    A stopped car directly ahead, offset from ego by less than the vehicle LENGTH but more
+    than the WIDTH, must score as a threat. A width-only radius (the pre-2026-09-22 scorer)
+    misses this and was the diagnosed cause of 11/12 dev misses at the most aggressive
+    threshold (notes/design.md #11).
+    """
+    env.reset(seed=0)
+    for _ in range(3):
+        env.step([0.0, 0.0])
+    plan, head = ego_plan(env)
+    ahead = plan[10] + 3.0 * np.array([np.cos(head[10]), np.sin(head[10])])  # 3 m ahead: inside
+    # length-based margin, outside a width-based one (car width ~1.9-2.3 m)
+    states = np.array([[ahead[0], ahead[1], 0.0, 0.0]])
+    extents = np.array([[4.5, 1.9]])
+    u = trigger_score(env, pred, states, extents)
+    assert u > 0.0, "lead vehicle 3 m ahead was not scored as a threat"
 
 
 if __name__ == "__main__":
