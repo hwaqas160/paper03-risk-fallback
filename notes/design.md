@@ -1,0 +1,259 @@
+# Paper 03 — Technical Design (draft, 2026-09-15)
+
+Working design derived from PLAN.md + the five reference papers. Decisions marked
+**[OPEN]** need the author's call before experiments; nothing here is pre-registered —
+that happens in `falsification.md`.
+
+---
+
+## 1. Closed-loop stack (what runs inside MetaDrive, headless)
+
+```
+ScenarioNet scenario (AV2 / nuScenes, replayed)
+   │  other agents: logged replay (default) or IDM-reactive  [OPEN: reactive_traffic]
+   ▼
+Ego nominal policy  ── TrajectoryIDMPolicy following the logged ego route
+   │
+   ├─ every decision tick Δ (e.g. 1 Hz; latency sweep = Exp 7)
+   │     predictor  f(history)  →  K modes per nearby agent        (Paper 01 AutoBot)
+   │     uncertainty u_t         →  one of the 4 triggers below
+   │     trigger     u_t > λ     →  FALLBACK
+   ▼
+Fallback = minimum-risk manoeuvre: brake to stop at ≤ a_max in the current lane,
+           hold until the conflict clears or the episode ends.
+```
+
+Outcome metrics per episode (PLAN §7 wk 3–5): collision (any), TTC < 1.5 s violation,
+**unnecessary stop** (fallback fired, but the counterfactual no-fallback rollout of the
+same scenario is collision-free), **stopped-in-live-lane** duration, route completion,
+comfort (peak |jerk|, peak decel).
+
+The counterfactual "unnecessary stop" label is cheap here: every scenario is also run
+once with the trigger disabled (λ = ∞). This is the measurement open-loop papers can't make.
+
+**Implemented** in `src/rollout.py` (2026-09-15): `FallbackIDMPolicy` keeps the lane-keeping
+PID steering and commands a fixed brake, so the ego stops *in its lane* — the failure mode
+the paper is about. `sweep_scenario()` produces the per-scenario `loss` / `stop` /
+`triggered` rows that `src/risk_control.py` consumes. A miss requires the trigger to fire
+*strictly before* the first harmful step — firing afterwards is not an intervention.
+
+Measurement choices that turned out to matter (both were bugs first):
+- Vehicle extents must be **lateral half-widths**, not half-diagonals. With half-diagonals
+  (~2.3 m each) two cars in adjacent lanes 3.5 m apart always read as overlapping, which
+  made min-TTC 0 in every scenario.
+- TTC uses constant-velocity **closest point of approach**, counting an agent only if its
+  closest approach falls inside the combined half-widths + 0.5 m, minus the half-lengths
+  over closing speed so a rear-end approach is not credited extra time.
+
+**[SUPERSEDED by §7 and the falsification addendum]** The "~2 %" IDM crash rate below was
+a measurement bug (the benchmark only checked the final step); the true figures are 11.1 %
+under log replay and 3.7 % with reactive traffic. Original note:
+With the stub predictor, 4 of 7 pilot scenarios contain a TTC < 1.5 s event,
+i.e. a ~55 % base rate of "harm". That is high for replayed logs and is driven by the TTC
+threshold, not by collisions (IDM crash rate is ~2 %). Either the threshold or the
+violation definition (instantaneous vs sustained) needs tightening before any real claim —
+a base rate that high makes α = 0.1 unreachable by construction.
+
+## 2. The four triggers (Exp 2)
+
+| # | Trigger | u_t |
+|---|---|---|
+| T1 | Fixed confidence threshold | 1 − max mode probability of the most conflicting agent |
+| T2 | Ensemble variance | spread of endpoints across M AutoBot seeds (M = 5, 1.5 M params each — fits P2000/CPU) |
+| T3 | Conformal region size | Paper 01 split-CP radius q̂ on the predicted modes, intersected with the ego plan (region overlaps ego corridor within horizon) |
+| T4 | **Risk-calibrated (ours)** | same score family as T3, but λ chosen by the procedure in §3, with a guarantee on the *decision outcome* |
+
+T1–T3 thresholds are "hand-tuned": swept, and the best on the calibration split is
+reported (a strong, honest baseline — H2 is refuted if a well-tuned T1–T3 matches T4).
+
+## 3. Formalisation — fallback as selective prediction with a decision-level guarantee
+
+For a scenario X and threshold λ, run the closed loop and record the bounded loss
+
+    L(X, λ) = 1{ a harmful event (collision or TTC violation) occurs and no fallback fired before it }
+
+i.e. the **missed-intervention** indicator, measured *in closed loop under λ*.
+Goal: choose λ̂ such that
+
+    P( E_X[ L(X, λ̂) ] ≤ α ) ≥ 1 − δ
+
+while maximising autonomy (minimising unnecessary-stop rate).
+
+Why not plain split CP: the loss depends on the whole closed-loop rollout under λ (the
+fallback changes the future), so it is neither a coverage event nor guaranteed monotone
+in λ. **Learn-then-Test** (Angelopoulos, Bates, Candès, Jordan, Lei 2021) handles exactly
+this: for a grid λ₁ > λ₂ > … (less → more conservative), compute on n calibration
+scenarios the empirical risk R̂(λ_j), a Hoeffding–Bentkus p-value for H_j: R(λ_j) > α,
+and apply fixed-sequence testing from the most permissive λ. Every λ that rejects is
+valid with FWER δ; pick the most permissive one. If monotonicity does hold empirically,
+Conformal Risk Control (Angelopoulos et al. 2022) gives the tighter single-λ version —
+report both.
+
+Guarantee holds under exchangeability of calibration and test *scenarios*. H3 is then a
+direct statement: cross-dataset shift (AV2 → nuScenes) breaks exchangeability, and the
+realised miss rate exceeds α. The Paper 01 recalibration methods (weighted CP via
+`domain_classifier_weights`) extend to weighted LTT — a natural repair experiment.
+
+Compute cost: |grid| × n_cal closed-loop rollouts (+1 counterfactual per scenario).
+E.g. 20 λ × 2 000 scenarios = 40 000 rollouts → this is why the throughput gate matters.
+Measured with the stub predictor: ~38 s per scenario for a 9-λ grid + counterfactual in one
+process (scoring costs ~3× the bare sim: 17 vs 45 steps/s).
+
+**The λ grid must come from the data.** A grid fixed a priori is useless: the score is in
+metres of predicted intrusion, so every λ below the bulk of the distribution triggers always
+(autonomy 0) and every λ above it never (autonomy 1). `run_sweep.py` runs a *probe* set at
+λ = ∞ and puts the grid on quantiles of the per-scenario peak score. Probe scenarios are not
+reused for calibration — that would break exchangeability and void the guarantee.
+
+Relation to the reference papers:
+- **SafePath** — CP set → act / delegate; guarantee is on set membership, closed loop only
+  in highway-env with synthetic traffic. We guarantee the *closed-loop outcome* on replayed
+  real scenarios and measure the cost of delegating (unnecessary stops).
+- **Task-relevant failure detection (Farid et al.)** — cost-based p-quantile anomaly with
+  FPR/FNR bounds, evaluated open-loop against hand labels. Their QAD is a fifth candidate
+  trigger **[OPEN: include as baseline?]**; their "task-relevance" motivates using
+  plan-intersecting region size in T3/T4 rather than raw region size.
+- **Robust CP under shift (Rahaman et al.)** — robust quantile inflation with a nuisance
+  parameter, ORCA toy corridor. Candidate shift-repair arm for H3.
+- **CVaR safety (Chapman et al.)** — vocabulary for a severity-aware variant: replace the
+  0/1 loss by min-TTC shortfall and bound CVaR_β instead of the mean **[OPEN: stretch]**.
+
+## 4. Data
+
+| Role | Source | Status (2026-09-15) |
+|---|---|---|
+| Calibration + in-domain test | AV2 val `av2_splits/val/{cal,test}` (4 971 / 5 027) | converted, **replays headless ✔** |
+| Shifted test (H3, Exp 6) | nuScenes | prediction-challenge `val` conversion partial (val_4..7 still `_tmp`); those snippets are ~2.5 s — **too short for closed loop** |
+| | nuScenes full logs (`v1.0-trainval`, ~20 s scenes) | not converted; metadata + maps are already on disk, no sensor blobs needed **[OPEN]** |
+
+AV2 scenarios are 11 s (≈110 steps at 10 Hz). ~2 of the first 11 have a static ego
+(< 10 m travel) and must be filtered, as ScenarioNet does.
+
+## 5. Dependencies on Paper 01
+
+- **Trained AutoBot checkpoint** — needed for T1–T4 and everything in H1/H3. As of today
+  `av2_full_v1` (GPU) died at epoch 0 step 34 on 2026-09-11; `av2_cpu_v1` (60 k scenes,
+  10 epochs) is ~73 % through epoch 0 at ~7.5 s/it. Until a checkpoint exists, Paper 03
+  proceeds with plumbing + an oracle/noisy-GT predictor stub so the triggers and LTT
+  machinery can be built and tested end-to-end.
+- **Closed-loop predictor adapter** — AutoBot consumes UniTraj-format agent-centric
+  tensors built from ScenarioNet scenario dicts (`unitraj_bridge.build_loader`). This is
+  the largest plumbing item and the main schedule risk. Two routes:
+  - *(a) Offline cache (recommended first).* With log-replayed traffic the other agents'
+    histories at every tick are fixed, so predictions for every (scenario, tick, agent)
+    can be computed once in batch — re-slicing each scenario at `current_time_index = t`
+    — and looked up during rollout. Decouples the sim (CPU, 18 cores) from the network
+    and makes the λ sweep cheap. Cost: the ego's *deviated* history is not seen by the
+    predictor (it sees the logged ego). Consistent with non-reactive traffic.
+  - *(b) Online.* Build a truncated scenario dict from sim state at each tick and run the
+    UniTraj preprocess + AutoBot in the loop. Needed only if `reactive_traffic=True`.
+  **[OPEN]** (a) vs (b) — decides whether other agents may react to the ego's stop.
+- `conformal.py` — ported (imported, not copied) from Paper 01.
+
+## 6. Environment
+
+Reusing Paper 01's venv (`F:\CLAUDE\AI1\shared\envs\unitraj`, Python 3.10.11,
+metadrive-simulator 0.4.2.3, scenarionet editable from Paper 01's clone) — the same
+versions that converted the data. The clones under `code/` (MetaDrive 0.4.3) are **not**
+installed, to avoid changing packages under Paper 01's running jobs.
+
+---
+
+## 7. Decisions forced by data (2026-09-21)
+
+**Reactive traffic is the default.** Pure log replay tripled collisions (11.1 % vs 3.7 %
+on 1 000 dev scenarios) because logged agents cannot react to an ego that leaves its logged
+trajectory — and a fallback *is* such a deviation. Keeping replay would bake a simulator
+artifact into "freezing is unsafe". `run_sweep.py` uses `reactive_traffic=True`; `--replay`
+exists only to reproduce the contrast. This resolves the §1 **[OPEN]** on traffic mode.
+
+**Consequence for the predictor adapter (§5).** With reactive agents, other agents'
+histories depend on what the ego did, so route (a) "offline cache" is only exact until the
+ego first deviates from its log. Options, in order of preference:
+1. *Online* AutoBot in the loop (route b) at the decision rate, batched per tick on CPU —
+   correct by construction; cost to be measured.
+2. *Hybrid*: offline cache until the first trigger / first deviation > x m, online after.
+3. Offline cache as an approximation, with the approximation error reported.
+
+**Common random numbers.** Every rollout of a scenario reseeds the (stochastic) predictor
+from the scenario seed, so different λ see identical noise. Without it the trigger was not
+monotone in λ (autonomy fell 0.714 → 0.571 as λ rose). Test: `test_rollouts_are_reproducible`.
+The 5 % "non-monotone in λ" rate reported from the first (pre-fix) pilot was most likely
+this bug: with CRN + reactive traffic, 300 scenarios show **0 %**. Non-monotonicity is
+therefore NOT an established finding; LTT stays the default because it doesn't need it.
+
+**Harm definition is post hoc.** Rollouts store the per-step TTC trace and collision step;
+`rollout.HarmDef` scores any definition afterwards, and `run_sweep.py` reports LTT under
+every candidate from one set of simulations. Choosing the headline definition is the
+author's call (`notes/falsification_proposal.md`, addendum).
+
+---
+
+## 8. Harm definition adopted: nuPlan (2026-09-22)
+
+On the author's instruction ("take the best harm definition used in top journal papers"),
+the headline harm is the **nuPlan closed-loop benchmark** pair (Karnchanachari et al.,
+ICRA 2024; nuplan-devkit metrics, constants verified in the devkit source):
+`no_ego_at_fault_collisions` + `time_to_collision_within_bound` (TTC < 0.95 s, 3 s horizon,
+0.1 s step, skipped while ego stopped, tracks behind ego ignored). Implemented in
+`src/nuplan_metrics.py` (6 unit tests), deviations listed in its docstring.
+
+Why it fits this paper specifically: nuPlan does **not** blame the ego for being rear-ended
+or hit while stopped. Those are exactly the collisions a fallback *causes*. So they are
+scored as `induced_collision` (a cost of over-conservatism) and can never be counted as a
+"miss" — the accounting separates the two failure modes the paper is about.
+
+Base rates, 1 000 dev scenarios, reactive traffic, no fallback: nuPlan harm **12.9 %**
+[11.0, 15.1]; at-fault collision alone 3.1 %; any collision 3.7 %. Chosen α = 0.05, δ = 0.1.
+
+Also fixed on the way: MetaDrive's `info["crash"]` includes sidewalk / boundary contact;
+collisions now use agent contact only (vehicle, human, object), with road-edge contact
+tracked separately as `offroad` (nuPlan's drivable-area metric). Pedestrians and cyclists
+are now included in both TTC and the trigger score (previously vehicles only).
+
+## 9. AutoBot in the loop (2026-09-22)
+
+`src/autobot_predictor.py` runs Paper 01's `epoch08-minADE1.349` checkpoint online:
+- builds UniTraj's track table from the **simulator's** recorded 2.1 s history, reuses
+  UniTraj's own `process()` / `collate_fn` (map features cached per scenario), rotates the
+  agent-frame output back to world coordinates;
+- vehicles only (Paper 01 trained with `object_type: ['VEHICLE']`); pedestrians / cyclists
+  fall back to constant velocity — a stated limitation;
+- cost on one CPU thread: ~0.35 s + 0.16 s per predicted vehicle per tick; a whole scenario
+  scored at 10 Hz ≈ 98 s, at 2 Hz ≈ 26 s; ~2.8 GB commit per worker.
+
+**Score-trace reuse (exact, not an approximation).** The sim is deterministic under common
+random numbers, so every λ-rollout equals the λ = ∞ reference run until its own trigger,
+and after the trigger no score is needed. The reference run's score trace is therefore
+replayed for all λ; a per-step ego-position check (`diverged`) verifies the identity and
+must report 0. Test: `test_score_trace_reuse_is_exact` (3 scenarios × 3 λ, identical
+trigger step, length, collisions and TTC trace). Predictor cost drops from
+|λ grid| + 1 runs per scenario to 1.
+
+Budget for the pre-registered study at 10 Hz: 4 000 scenarios × ~100 s / 8 workers ≈ 14 h.
+
+## 10. Fallback manoeuvre = UN R157 MRM; episode length; simulator determinism (2026-09-22)
+
+**The fallback was an emergency stop — fixed.** The first `FallbackIDMPolicy` commanded a
+fixed brake action (0.5), which MetaDrive turned into ~10 m/s² peak deceleration (p50 9.9,
+p90 13.2). The rear-end "induced collisions" measured with it (26/300 dev scenarios) are
+therefore an artifact and are NOT reported as evidence that stopping is unsafe.
+The fallback is now the regulatory minimum-risk manoeuvre of **UN R157 (ALKS) §5.5.1**:
+slow down inside the lane with deceleration demand ≤ 4.0 m/s². A P-controller tracks
+v(t) = max(v0 − 4.0 t, 0): measured median 4.0 m/s², brief transients ≤ 5.6 m/s², stops in
+v0/4 s. Test: `tests/test_mrm.py`. Induced collisions must be re-measured under it.
+
+**Episode length.** With the gentler stop, a stopped ego never "arrives", and episodes ran
+to the 1 000-step horizon (100 s) on 11 s scenarios. Episodes now end 2 s (20 steps) after
+the logged scenario (`allowed_more_steps=20`): ~7× less simulation per stopped rollout, and
+no traffic driving on past its log.
+
+**Determinism.** Pre-trigger, runs of a scenario are identical across λ (0 divergences), so
+score-trace reuse stays exact. Post-trigger MetaDrive is not bit-repeatable: two identical
+live runs differed in 2/30 (scenario, λ) pairs. LTT treats each scenario's closed-loop loss
+as a random variable and does not require a deterministic simulator; the rate is reported
+as a property of the testbed.
+
+**Miss-floor diagnosis (stub predictor, dev).** Of 13 misses at λ = 0, 10 never triggered:
+the stub's score stayed exactly 0 because the harmful agent was never predicted into the ego
+corridor. The floor is a predictor limitation, which is what AutoBot should reduce.

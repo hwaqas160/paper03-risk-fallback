@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+results/*.npz
+results/*.jsonl
+results/*.log
+results/*.json
+!results/.gitkeep
+
+# vendored clones — reference upstream repos, not part of Paper 03's own work
+code/metadrive/
+code/scenarionet/
