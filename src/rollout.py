@@ -113,8 +113,9 @@ LON_MARGIN = 1.0   # m, added to the length-based longitudinal half-extent (foll
 LAT_MARGIN = 0.5   # m, added to the width-based lateral half-extent (passing clearance)
 
 
-def ego_plan(env, steps: int = PRED_HORIZON) -> tuple[np.ndarray, np.ndarray]:
-    """Where the nominal plan puts the ego over the horizon (position, heading) at current speed."""
+def ego_plan_route(env, steps: int = PRED_HORIZON) -> tuple[np.ndarray, np.ndarray]:
+    """Where the route says the ego will be over the horizon (follows the reference path's
+    curvature at current speed). NOT used by trigger_score as of 2026-09-22 — see ego_plan_kinematic."""
     traj = env.agent.navigation.reference_trajectory
     long, _ = traj.local_coordinates(env.agent.position)
     v = max(env.agent.speed, 1.0)
@@ -122,6 +123,29 @@ def ego_plan(env, steps: int = PRED_HORIZON) -> tuple[np.ndarray, np.ndarray]:
     pos = np.array([traj.position(s, 0) for s in longs])
     head = np.array([traj.heading_theta_at(s) for s in longs])
     return pos, head
+
+
+def ego_plan_kinematic(env, steps: int = PRED_HORIZON) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Where the ego will be if it keeps its CURRENT heading and speed — no route curvature.
+    Matches nuplan_metrics.ttc_nuplan's ego extrapolation exactly (both nuPlan's own
+    definition and this codebase's harm label use this model, not route-following).
+
+    This is the corridor trigger_score uses (since 2026-09-22). Using ego_plan_route instead
+    made the trigger MISS real near-misses: on a curve, the route corridor diverged from this
+    kinematic line by up to ~8 m at a 1 s horizon and ~30 m at 3 s (seeds 60/74, dev split) —
+    the trigger was effectively "trusting" that steering would avoid a conflict that the
+    kinematic TTC metric (deliberately route-agnostic, as a raw safety check) flags as risky.
+    Scoring against the corridor the harm metric can't see into defeats the trigger's purpose.
+    """
+    p0 = np.asarray(env.agent.position, float)
+    v, h = env.agent.speed, env.agent.heading_theta
+    ts = np.arange(1, steps + 1) * DT
+    pos = p0[None, :] + v * np.array([np.cos(h), np.sin(h)])[None, :] * ts[:, None]
+    return pos, np.full(steps, h)
+
+
+ego_plan = ego_plan_kinematic
 
 
 def trigger_score(env, predictor, other_states: np.ndarray, extents: np.ndarray) -> float:

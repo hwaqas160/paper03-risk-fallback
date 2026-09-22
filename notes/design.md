@@ -347,3 +347,32 @@ Re-running as a properly paired test: matching `--n_probe 30` (so both runs star
 56) with an explicit `--lams` (skips simulating the probe, but keeps the offset), `--n 36`,
 varying only `decide_every` ∈ {1, 5}. Results below once both finish. Controlled version of
 the §12 hypothesis test.
+
+## 14. Paired decide_every result (valid); root cause of the near-miss floor found
+
+**Decision cadence is not the cause.** Properly paired (identical 35 scenarios, identical
+λ grid, only `decide_every` varied): miss rate was IDENTICAL at every λ between 2 Hz
+(`decide_every=5`) and 10 Hz (`decide_every=1`) decisions — 0.057, 0.057, 0.086, 0.086,
+0.086 in both. Autonomy was marginally lower at 10 Hz (more frequent checks catch a few
+more borderline triggers), but the miss floor itself did not move at all. §12/13's earlier,
+invalid numbers are superseded; this is the number to cite.
+
+**Root cause of the floor: the trigger's ego-motion model disagreed with the harm metric's.**
+`trigger_score()` compared predicted agent positions to a corridor built from
+`ego_plan_route()` — the ego's position along the **route's** curved reference path at
+current speed. The harm label (`nuplan_metrics.ttc_nuplan`) — both here and in the real
+nuPlan definition — extrapolates ego with a **route-agnostic constant-heading** kinematic
+model instead (deliberately: assuming the driver's planned steering will save them is
+exactly the complacency a safety metric should not grant). Measured divergence between the
+two ego-position models on the two spot-checked near-misses: up to 8 m at a 1 s horizon,
+30 m at 3 s (seeds 60, 74). Separately confirmed AutoBot's own agent-position prediction was
+accurate (0.03 m error against the eventual culprit position) — the predictor was not at
+fault; the trigger was scoring against the wrong notion of where the EGO would be.
+
+**Fix:** `trigger_score()` now uses `ego_plan_kinematic()` — same route-agnostic
+constant-heading model as the harm metric — so the score and the thing it is trying to
+pre-empt are evaluated under one consistent assumption about ego's own near-term motion.
+`ego_plan_route()` is kept (unused by default) for a future ablation. Regression test
+`test_trigger_score_sees_lead_vehicle_not_just_width` still passes; re-running the same
+paired 35-scenario validation now to measure the effect directly (results appended below /
+in STATUS.md once done, rather than assumed).
