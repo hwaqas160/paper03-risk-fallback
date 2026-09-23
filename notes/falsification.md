@@ -110,3 +110,46 @@ authority for a scientific claim this paper needs to stand on its own.
 
 **Rule:** if a hypothesis is refuted, report it. A clearly reported negative result is
 publishable and is worth more than a positive result nobody can reproduce.
+
+---
+
+## Amendment 1 — 2026-09-23, BEFORE any calibration- or test-split data was collected with the final pipeline
+
+Every change below was made on the development split or on engineering grounds. The
+refutation thresholds for H1–H3 are **unchanged**; only how they are operationalized is
+made concrete.
+
+1. **Decision rate: 2 Hz (every 5 steps), not 10 Hz.** A paired dev-split test (35 identical
+   scenarios, identical λ grid) gave bit-for-bit identical miss rates at 2 Hz and 10 Hz
+   (notes/design.md §14). A 10 Hz replication on a 300-scenario subset of `av2_test` is
+   reported as a robustness check.
+2. **Predictor: `av2_cpu_v2/epoch03` (minADE₆ 1.092)** instead of `av2_cpu_v1/epoch08`
+   (1.349). Same architecture; verified drop-in.
+3. **Evaluation is exact from per-tick rollouts.** Each scenario stores one reference run
+   with every trigger's score trace, plus one rollout forced to fire at each decision tick.
+   Every method is a lookup on identical physics (`src/evaluate.py`,
+   `test_fire_step_reproduces_lambda_trigger`).
+4. **Baseline set for H2**, each evaluated on the same test scenarios:
+   T1 tuned confidence threshold; T2 tuned MC-dropout ensemble spread (5 passes; a deep
+   ensemble is an additional arm when trained); T3 open-loop conformal — inflate predicted
+   modes by the split-conformal radius of the predictor's own 3 s open-loop error on held-out
+   AV2 logs, fire on contact with the ego corridor (same α); tuned geometric score (isolates
+   the calibrator); CDT (Lekeufack et al. 2024) and ACI (Gibbs & Candès 2021), online, best
+   step size per method; oracle in hindsight (upper bound, not deployable). **H2 is refuted
+   if any deployable baseline is within 3 pp of T4's unnecessary-stop rate at realized miss
+   ≤ α**, as pre-registered.
+5. **H1 operationalized:** open-loop quality = AUROC of each score's scenario peak for
+   predicting harm in the no-fallback run (the metric open-loop failure-detection work
+   reports); closed-loop quality = unnecessary-stop rate at that score's LTT-certified λ. Scores
+   ranked: conf, ens, gap, geom, geom_route, geom_iso. Refutation rule unchanged (τ ≥ 0.8 and
+   same top-ranked score).
+6. **Guarantee validity:** 200 random half/half resplits of the pooled AV2 cal+test scenarios;
+   LTT's violation frequency P(test miss > α) must be ≤ δ.
+7. **H3 target data:** nuScenes prediction-challenge val scenarios (8.1 s each, 9041 total,
+   merged at `data/ns_val_merged`), not full ~20 s logs. The earlier note that these were
+   "~2.5 s, too short" was wrong. H3's refutation rule is unchanged. **Added arm:** density-ratio-
+   weighted LTT as the shift repair, weights from a domain classifier on pre-deployment scenario
+   covariates only (`rollout.FEATURE_NAMES`).
+8. **n:** 2 000 `av2_cal`, 2 000 `av2_test`, 1 500 `ns_val` (non-static scenarios).
+9. **Sensitivity arms (reported, not used for H1–H3):** log-replay traffic and a 2.0 m/s²
+   comfort MRM, each on 500 `av2_test` scenarios.

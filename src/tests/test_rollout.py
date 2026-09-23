@@ -18,7 +18,8 @@ import simenv  # noqa: E402
 simenv.block_torch()
 from rollout import (ConstantVelocityPredictor, DT, make_fallback_policy_cls,  # noqa: E402
                      score_geometric,
-                     rollout, sweep_scenario, trigger_score, ego_plan, score_confidence, predict_agents)
+                     rollout, sweep_scenario, trigger_score, ego_plan, score_confidence, predict_agents,
+                     sweep_scenario_ticks, SCORE_FNS)
 
 
 def _env(n=6):
@@ -172,6 +173,37 @@ def test_score_key_selects_which_trigger_fires(env, pred):
     assert a.score_key == "geom" and b.score_key == "conf"
     # the stub's confidence score is identically 0 (uninformative), so lam=2.0 never fires
     assert not b.triggered
+
+
+def test_fire_step_reproduces_lambda_trigger(env, pred):
+    """
+    The campaign design rests on this: a rollout forced to fire at step k is the same
+    rollout as a lambda-triggered one that happens to fire at k (up to the simulator's
+    documented post-trigger noise, which is why only trigger step + pre-trigger trace are
+    compared, as in test_score_trace_reuse_is_exact).
+    """
+    for seed in (0, 1):
+        ref = rollout(env, seed, float("inf"), pred, decide_every=5, record_all=True)
+        assert set(ref.score_traces) == set(SCORE_FNS), ref.score_traces.keys()
+        for lam in (0.5, 1.8):
+            live = rollout(env, seed, lam, pred, decide_every=5)
+            if not live.triggered:
+                continue
+            forced = rollout(env, seed, float("inf"), None, decide_every=5,
+                             fire_step=live.trigger_step, ref_ego=ref.ego_trace)
+            assert forced.trigger_step == live.trigger_step
+            assert not forced.diverged
+            k = live.trigger_step
+            assert forced.ttc_trace[:k] == live.ttc_trace[:k]
+
+
+def test_sweep_scenario_ticks_shape(env, pred):
+    row = sweep_scenario_ticks(env, 0, pred, decide_every=5)
+    assert row["n_diverged"] == 0
+    ticks = sorted(int(k) for k in row["fired"])
+    assert ticks[0] == 0 and all(b - a == 5 for a, b in zip(ticks, ticks[1:]))
+    assert len(row["ref"]["score_traces"]["geom"]) == len(ticks)
+    assert len(row["ref"]["feats"]) == 7
 
 
 if __name__ == "__main__":

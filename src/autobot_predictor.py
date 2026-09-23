@@ -34,6 +34,7 @@ P01 = Path(r"F:\CLAUDE\AI1\paper01-coverage-transfer")
 DEFAULT_CKPT = P01 / "results" / "ckpts" / "av2_cpu_v2" / "epoch03-minADE1.092.ckpt"
 PRED_RADIUS = 60.0        # m; only predict vehicles this close to ego (the rest cannot matter in 3 s)
 MAX_CENTER = 16           # cap per tick; nearest first
+MC_AGENTS = 4             # T2: MC-dropout passes only for the nearest vehicles
 
 _TYPE = {"SVehicle": "VEHICLE", "Pedestrian": "PEDESTRIAN", "Cyclist": "CYCLIST"}
 
@@ -48,13 +49,15 @@ def _import_bridge():
 
 class AutoBotPredictor:
     def __init__(self, ckpt: str | Path = DEFAULT_CKPT, device: str = "cpu",
-                 threads: int = 1, horizon: int = 30):
+                 threads: int = 1, horizon: int = 30, mc: int = 5):
         import torch
         torch.set_num_threads(threads)
         bridge = _import_bridge()
         self.model, self.cfg = bridge.build_model("autobot", str(ckpt), device)
         self.device = device
         self.horizon = horizon
+        self.mc = mc                       # MC-dropout passes for T2 (0 = off)
+        self.last_spread = {}
         self.past = int(self.cfg["past_len"])
         self.future = int(self.cfg["future_len"])
 
@@ -176,6 +179,10 @@ class AutoBotPredictor:
             for b, n in enumerate(ids):
                 preds[n], probs[n] = np.stack([wx[b], wy[b]], -1), pp[b]
             self.last_timing = dict(process_s=t1 - t0, model_s=t2 - t1, n_center=len(veh))
+            self.last_spread = self._mc_spread(samples, ids) if self.mc > 0 else {}
+            self.last_timing["mc_s"] = time.perf_counter() - t2
+        else:
+            self.last_spread = {}
 
         # everyone not predicted by AutoBot: constant velocity, one mode replicated
         k = 6
@@ -191,3 +198,36 @@ class AutoBotPredictor:
             E.append([s[3], s[4]])
         self.last_timing["total_s"] = time.perf_counter() - t0
         return np.stack(P), np.stack(Q), np.asarray(E)
+
+    def _mc_spread(self, samples, ids) -> dict:
+        """
+        T2 (ensemble variance) via MC dropout (Gal & Ghahramani, 2016): `mc` stochastic passes
+        with dropout active, batched into ONE forward call, over the MC_AGENTS nearest vehicles
+        (the only ones a fallback trigger acts on). Spread = norm of the across-pass std of the
+        probability-weighted mean endpoint at the scoring horizon, in metres. A deep ensemble of
+        independently trained checkpoints is the stronger variant and is a separate arm.
+        """
+        import torch
+        k = min(MC_AGENTS, len(samples))
+        rep = [samples[i] for i in range(k)] * self.mc
+        batch = self.ds.collate_fn(rep)
+        inp = batch["input_dict"]
+        for key, v in list(inp.items()):
+            if torch.is_tensor(v):
+                inp[key] = v.to(self.device)
+        stoch = [m for m in self.model.modules()
+                 if isinstance(m, (torch.nn.Dropout, torch.nn.MultiheadAttention))]
+        for m in stoch:
+            m.train()
+        try:
+            with torch.no_grad():
+                out = self.model.predict(batch)
+        finally:
+            for m in stoch:
+                m.eval()
+        traj = out["predicted_trajectory"][..., :2].cpu().numpy()[:, :, self.horizon - 1]   # (kM,K,2)
+        pp = out["predicted_probability"].cpu().numpy()                                        # (kM,K)
+        endpoint = (pp[..., None] * traj).sum(1) / pp.sum(1, keepdims=True)                   # (kM,2)
+        endpoint = endpoint.reshape(self.mc, k, 2)
+        spread = np.linalg.norm(endpoint.std(0), axis=-1)                                      # (k,)
+        return {ids[i]: float(spread[i]) for i in range(k)}

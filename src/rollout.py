@@ -28,7 +28,7 @@ STOPPED_SPEED = 0.5         # m/s, 'stopped' for the stopped-duration metric (nu
 
 
 # ------------------------------------------------------------------------------ policies
-def make_fallback_policy_cls():
+def make_fallback_policy_cls(mrm_decel: float = 4.0):
     """
     TrajectoryIDMPolicy + a minimum-risk manoeuvre. Built lazily so the module can be
     imported before MetaDrive (block_torch must run first in sim workers).
@@ -45,7 +45,7 @@ def make_fallback_policy_cls():
     from metadrive.policy.idm_policy import TrajectoryIDMPolicy
 
     class FallbackIDMPolicy(TrajectoryIDMPolicy):
-        MRM_DECEL = 4.0     # m/s², UN R157 §5.5.1 upper bound
+        MRM_DECEL = mrm_decel   # m/s²; 4.0 = UN R157 §5.5.1 upper bound (headline), 2.0 = comfort variant
         KP = 0.4            # action per (m/s) of speed error
         HOLD = -0.3         # brake action once stopped
         DT = 0.1
@@ -172,6 +172,45 @@ def predict_agents(env, predictor, other_states: np.ndarray, extents: np.ndarray
     return preds, probs, extents
 
 
+def _intrusion(env, preds: np.ndarray, extents: np.ndarray, plan: np.ndarray, head: np.ndarray) -> float:
+    """Path-relative box intrusion of predicted agents into an ego corridor (see score_geometric)."""
+    if len(preds) == 0:
+        return 0.0
+    tangent = np.stack([np.cos(head), np.sin(head)], -1)
+    normal = np.stack([-np.sin(head), np.cos(head)], -1)
+    d = preds - plan[None, None, :, :]
+    along = np.abs(np.einsum("aktd,td->akt", d, tangent))
+    lat = np.abs(np.einsum("aktd,td->akt", d, normal))
+    lon_margin = 0.5 * (env.agent.LENGTH + extents[:, 0]) + LON_MARGIN
+    lat_margin = 0.5 * (env.agent.WIDTH + extents[:, 1]) + LAT_MARGIN
+    r = np.sqrt((along / lon_margin[:, None, None]) ** 2 + (lat / lat_margin[:, None, None]) ** 2)
+    return float(np.max(np.clip(1.0 - r, 0.0, 1.0) * lat_margin[:, None, None]))
+
+
+def score_geometric_isotropic(env, preds: np.ndarray, extents: np.ndarray) -> float:
+    """
+    ABLATION ONLY ("geom_iso"): the pre-2026-09-22 scorer — a single isotropic clearance
+    radius sized from vehicle WIDTH alone (length ignored), against the kinematic corridor.
+    Kept to measure how much the length-aware box margin of score_geometric actually buys.
+    """
+    if len(preds) == 0:
+        return 0.0
+    plan, _ = ego_plan_kinematic(env)
+    d = np.linalg.norm(preds - plan[None, None, :, :], axis=-1)
+    clearance = d - (0.5 * env.agent.WIDTH + 0.5 * extents[:, 1][:, None, None] + SAFETY_MARGIN)
+    return float(max(0.0, -np.min(clearance)))
+
+
+def score_geometric_route(env, preds: np.ndarray, extents: np.ndarray) -> float:
+    """
+    ABLATION ONLY ("geom_route"): score_geometric's box margin, but against the ROUTE-following
+    corridor (ego_plan_route) instead of the route-agnostic kinematic one. Kept to measure
+    how much aligning the trigger's ego-motion model with the harm metric's actually buys.
+    """
+    plan, head = ego_plan_route(env)
+    return _intrusion(env, preds, extents, plan, head)
+
+
 def score_geometric(env, preds: np.ndarray, extents: np.ndarray) -> float:
     """
     T3/T4 score family (notes/design.md Sec. 2): how deeply the predicted region of any
@@ -224,7 +263,48 @@ def score_confidence(env, preds: np.ndarray, probs: np.ndarray) -> float:
     return float(np.max(1.0 - probs.max(axis=1)))
 
 
-SCORE_FNS = {"geom": score_geometric, "conf": score_confidence}
+def score_gap(env, preds: np.ndarray, extents: np.ndarray) -> float:
+    """
+    Negative box gap in metres: -min over (agent, mode, t) of the Chebyshev gap between a
+    predicted agent position and the ego's kinematic corridor, after the same length/width
+    margins as score_geometric. <= 0 inside = overlap. Firing when the gap drops below q
+    is exactly "inflate every predicted mode by radius q and fire if it touches the ego" --
+    so the classic OPEN-LOOP conformal trigger (T3: q = the split-conformal radius of the
+    predictor's error, a guarantee on the prediction, not the decision) is the threshold
+    lam = -q on this one stored trace, for any alpha, with no extra simulation.
+    """
+    if len(preds) == 0:
+        return -100.0
+    plan, head = ego_plan_kinematic(env)
+    tangent = np.stack([np.cos(head), np.sin(head)], -1)
+    normal = np.stack([-np.sin(head), np.cos(head)], -1)
+    d = preds - plan[None, None, :, :]
+    along = np.abs(np.einsum("aktd,td->akt", d, tangent))
+    lat = np.abs(np.einsum("aktd,td->akt", d, normal))
+    lon_m = 0.5 * (env.agent.LENGTH + extents[:, 0])[:, None, None]
+    lat_m = 0.5 * (env.agent.WIDTH + extents[:, 1])[:, None, None]
+    gap = np.maximum(along - lon_m, lat - lat_m)
+    return float(-min(np.min(gap), 100.0))
+
+
+SCORE_FNS = {
+    "gap": score_gap,                          # T3 (open-loop conformal) + tuned-gap baselines
+    "geom": score_geometric,                   # T3/T4 (ours): kinematic corridor, box margin
+    "conf": score_confidence,                  # T1: 1 - max mode probability
+    "geom_route": score_geometric_route,       # ablation: route-following corridor
+    "geom_iso": score_geometric_isotropic,     # ablation: width-only isotropic radius
+}
+
+
+def all_scores(env, preds: np.ndarray, probs: np.ndarray, extents: np.ndarray) -> dict:
+    """Every trigger score from ONE predictor call, so one reference rollout serves all triggers."""
+    return {
+        "gap": score_gap(env, preds, extents),
+        "geom": score_geometric(env, preds, extents),
+        "conf": score_confidence(env, preds, probs),
+        "geom_route": score_geometric_route(env, preds, extents),
+        "geom_iso": score_geometric_isotropic(env, preds, extents),
+    }
 
 
 def trigger_score(env, predictor, other_states: np.ndarray, extents: np.ndarray,
@@ -233,7 +313,7 @@ def trigger_score(env, predictor, other_states: np.ndarray, extents: np.ndarray,
     preds, probs, extents = predict_agents(env, predictor, other_states, extents)
     if score_key == "conf":
         return score_confidence(env, preds, probs)
-    return score_geometric(env, preds, extents)
+    return SCORE_FNS[score_key](env, preds, extents)
 
 
 # ------------------------------------------------------------------------------- metrics
@@ -258,6 +338,8 @@ class RolloutResult:
     arrive: bool = False
     peak_decel: float = 0.0
     scores: list = field(default_factory=list)
+    score_traces: dict = field(default_factory=dict)  # key -> per-decision-tick score (reference run only)
+    feats: list = field(default_factory=list)          # pre-deployment scenario covariates (shift weighting)
     ttc_trace: list = field(default_factory=list)   # per-step nuPlan TTC (s), capped at TTC_CAP
     ego_trace: list = field(default_factory=list)   # per-step ego [x, y]; kept in memory, not saved
 
@@ -334,6 +416,34 @@ def _trigger_inputs(agents: np.ndarray):
     return np.stack([agents[:, 0], agents[:, 1], vx, vy], 1), agents[:, 4:6]
 
 
+FEATURE_NAMES = ["n_vehicles_50m", "n_pedestrians_50m", "n_cyclists_50m", "ego_speed0",
+                 "mean_agent_speed_50m", "min_gap0", "route_length"]
+
+
+def scenario_features(env) -> list:
+    """
+    Covariates observable BEFORE deployment (at t = 0), used only to estimate the density
+    ratio for shift-weighted calibration (evaluate.py). Nothing here looks at outcomes.
+    """
+    import nuplan_metrics as nm
+    ego = _ego(env)
+    p0 = np.array([ego["x"], ego["y"]])
+    counts = {"SVehicle": 0, "Pedestrian": 0, "Cyclist": 0}
+    speeds = []
+    for o in env.engine.get_objects().values():
+        if o is env.agent or not hasattr(o, "velocity"):
+            continue
+        if np.linalg.norm(np.asarray(o.position[:2]) - p0) <= 50.0:
+            name = type(o).__name__
+            counts[name if name in counts else "SVehicle"] += 1
+            speeds.append(float(o.speed))
+    agents = _agents(env)
+    gap = float(np.min(nm.box_gap(ego, agents))) if len(agents) else 100.0
+    return [counts["SVehicle"], counts["Pedestrian"], counts["Cyclist"], float(ego["v"]),
+            float(np.mean(speeds)) if speeds else 0.0, min(gap, 100.0),
+            float(env.agent.navigation.reference_trajectory.length)]
+
+
 def _agent_contact(v) -> bool:
     """Contact with a road user or traffic object. MetaDrive's info['crash'] also includes
     sidewalk / boundary / building contact, which nuPlan scores separately (drivable area)."""
@@ -343,7 +453,8 @@ def _agent_contact(v) -> bool:
 def rollout(env, seed: int, lam: float, predictor, decide_every: int = 1,
             latency_steps: int = 0, max_steps: int = 1000,
             score_trace: list | None = None, ref_ego: list | None = None,
-            score_key: str = "geom") -> RolloutResult:
+            score_key: str = "geom", fire_step: int | None = None,
+            record_all: bool = False) -> RolloutResult:
     """
     One closed-loop episode. The fallback engages the first time the score exceeds lam
     (after `latency_steps` of actuation delay) and stays engaged. lam = inf disables it,
@@ -363,11 +474,19 @@ def rollout(env, seed: int, lam: float, predictor, decide_every: int = 1,
     any mismatch sets `diverged` (reported by run_sweep; must be zero). A replayed trace was
     necessarily recorded under ONE score_key; reusing it under a different key would silently
     mix triggers, so score_trace and score_key are the caller's joint responsibility.
+
+    fire_step: force the fallback at exactly this step, with no scoring at all. A rollout's
+    physical outcome depends only on WHEN the fallback fires, not on which score or threshold
+    caused it (pre-trigger runs are identical — test_score_trace_reuse_is_exact). So one
+    reference run that records every score (record_all=True) plus one fire_step rollout per
+    decision tick lets ANY trigger, threshold, online method or latency be evaluated exactly
+    after the fact (src/evaluate.py). This supersedes the "each trigger needs its own
+    rollouts" note above.
     """
     import nuplan_metrics as nm
 
     env.reset(seed=seed)
-    live = predictor is not None and score_trace is None
+    live = predictor is not None and score_trace is None and fire_step is None
     if live and hasattr(predictor, "begin_scenario"):
         predictor.begin_scenario(env)
     elif live and hasattr(predictor, "reseed"):
@@ -376,13 +495,24 @@ def rollout(env, seed: int, lam: float, predictor, decide_every: int = 1,
     pol.fallback_engaged = False
     pol._mrm_t = None          # never inherit manoeuvre state from a previous episode
     r = RolloutResult(seed=seed, lam=lam, score_key=score_key)
-    fire_at = None
+    r.feats = scenario_features(env)
+    fire_at = fire_step
     prev_speed = env.agent.speed
     in_contact = False
 
     for step in range(max_steps):
         if (live or score_trace is not None) and step % decide_every == 0 and not r.triggered:
-            if live:
+            if live and record_all:
+                states, extents = _trigger_inputs(_agents(env))
+                preds, probs, ext = predict_agents(env, predictor, states, extents)
+                sc = all_scores(env, preds, probs, ext)
+                # T2: MC-dropout ensemble spread of the nearest vehicles (0 if unavailable)
+                sp = getattr(predictor, "last_spread", {}) or {}
+                sc["ens"] = float(max(sp.values())) if sp else 0.0
+                for k, v in sc.items():
+                    r.score_traces.setdefault(k, []).append(round(v, 4))
+                u = sc[score_key]
+            elif live:
                 states, extents = _trigger_inputs(_agents(env))
                 u = trigger_score(env, predictor, states, extents, score_key=score_key)
             else:
@@ -477,6 +607,31 @@ def sweep_scenario(env, seed: int, lams, predictor, harm: HarmDef = DEFAULT_HARM
     return dict(seed=seed, counterfactual=slim(cf), rollouts=[slim(x) for x in rows],
                 loss=loss, stop=stop, triggered=trig, induced=ind,
                 diverged=[float(x.diverged) for x in rows])
+
+
+OUTCOME_KEYS = ("steps", "collision", "collision_step", "at_fault_step", "collisions", "offroad",
+                "min_ttc", "ttc_violations", "triggered", "trigger_step", "diverged",
+                "stopped_steps", "route_completion", "arrive", "peak_decel", "ttc_trace")
+
+
+def sweep_scenario_ticks(env, seed: int, predictor, decide_every: int = 5, **kw) -> dict:
+    """
+    The campaign unit. One live reference run (lambda = inf) records EVERY trigger score at
+    every decision tick; then one fallback rollout is forced at each decision tick. Every
+    trigger / threshold / online method / latency is then an exact lookup
+    (src/evaluate.py) — no approximation, no per-method simulation.
+    """
+    cf = rollout(env, seed, float("inf"), predictor, decide_every=decide_every,
+                 record_all=True, **kw)
+    fired = {}
+    for k in range(0, cf.steps, decide_every):
+        r = rollout(env, seed, float("inf"), None, decide_every=decide_every,
+                    fire_step=k, ref_ego=cf.ego_trace)
+        fired[str(k)] = {key: getattr(r, key) for key in OUTCOME_KEYS}
+    ref = {key: getattr(cf, key) for key in OUTCOME_KEYS}
+    ref.update(score_traces=cf.score_traces, feats=cf.feats)
+    return dict(seed=seed, decide_every=decide_every, ref=ref, fired=fired,
+                n_diverged=sum(int(v["diverged"]) for v in fired.values()))
 
 
 

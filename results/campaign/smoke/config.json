@@ -1,0 +1,14 @@
+{
+  "db": "av2_dev",
+  "n": 8,
+  "workers": 4,
+  "start": 0,
+  "decide_every": 5,
+  "mc": 5,
+  "mrm_decel": 4.0,
+  "replay": false,
+  "ckpt": "F:\\CLAUDE\\AI1\\paper01-coverage-transfer\\results\\ckpts\\av2_cpu_v2\\epoch03-minADE1.092.ckpt",
+  "out": "results/campaign/smoke",
+  "total_in_db": 14990,
+  "span": 15
+}
