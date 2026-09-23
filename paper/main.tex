@@ -1,0 +1,459 @@
+\documentclass[lettersize,journal]{IEEEtran}
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{algorithmic}
+\usepackage{algorithm}
+\usepackage{array}
+\usepackage[caption=false,font=normalsize,labelfont=sf,textfont=sf]{subfig}
+\usepackage{textcomp}
+\usepackage{url}
+\usepackage{graphicx}
+\usepackage{cite}
+\usepackage{booktabs}
+\hyphenation{op-tical net-works semi-conduc-tor IEEE-Xplore}
+
+\begin{document}
+
+\title{Risk-Calibrated Fallback: A Selective-Prediction Approach\\
+to Minimum-Risk-Manoeuvre Triggering in Closed-Loop\\
+Autonomous Driving}
+
+\author{Hassan~Waqas~Saleem
+\thanks{H.~W.~Saleem is with the School of Electrical Engineering and
+Computer Science (SEECS), National University of Sciences and Technology
+(NUST), H-12, Islamabad 44000, Pakistan (e-mail:
+hsaleem.msee20seecs@seecs.edu.pk).}%
+\thanks{Manuscript in preparation.}}
+
+\markboth{IEEE Transactions on Intelligent Vehicles}%
+{Saleem: Risk-Calibrated Fallback}
+
+\maketitle
+
+%=======================================================================
+\begin{abstract}
+Every deployed autonomous vehicle has a minimum-risk manoeuvre (MRM) —
+pull over, slow down, hand control back to a driver — and when to trigger
+it is almost universally a hand-tuned threshold on a confidence score.
+That score is precisely the quantity known to be untrustworthy under
+distribution shift, so the trigger for the safety behaviour rests on a
+calibration that can silently expire exactly when the vehicle needs it
+most. Prior conformal-prediction work in this space is almost entirely
+open-loop: it produces prediction regions and stops, so it cannot see
+that a conservative region drives an MRM trigger, and that triggering
+itself has a safety cost — freezing in a live lane. We formalise MRM
+triggering as a selective-prediction problem with a guarantee on the
+\emph{decision}, not merely on the prediction, using Learn-then-Test to
+certify a trigger threshold against a bounded miss-rate target under
+exchangeability, and Conformal Risk Control as a tighter alternative when
+the closed-loop loss is empirically monotone in the threshold. We
+evaluate in closed loop on real, replayed driving scenarios (Argoverse~2,
+nuScenes) under reactive traffic, using a fallback manoeuvre compliant
+with UN Regulation No.~157's minimum-risk-manoeuvre deceleration bound
+and harm labelled by the nuPlan closed-loop safety definition
+(at-fault collision or time-to-collision below 0.95\,s). We report both
+the missed-intervention rate the calibrated trigger is built to bound and
+the unnecessary-stop rate open-loop evaluation cannot see, and we show
+that the two are inseparable: any trigger design that only reports one
+is reporting half the picture.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Autonomous driving, conformal prediction, selective prediction, minimum-risk
+manoeuvre, closed-loop safety evaluation, trajectory prediction, risk
+calibration, distribution shift.
+\end{IEEEkeywords}
+
+%=======================================================================
+\section{Introduction}
+\IEEEPARstart{A}{utonomous} vehicles that lack confidence in their own
+situational understanding are expected to fall back on a minimum-risk
+manoeuvre: slow to a stop, pull to the shoulder, or otherwise hand
+control back to a human. The decision of \emph{when} to invoke this
+behaviour is, in nearly every deployed and published system, a
+hand-tuned threshold on some scalar confidence or uncertainty score
+produced by a perception or prediction module. That practice has a
+specific and largely unexamined weakness: the very quantity the
+threshold is applied to — a learned model's uncertainty estimate — is
+exactly what has been shown to degrade under the kind of distribution
+shift a vehicle experiences when it enters a new city, a new weather
+condition, or simply a stretch of road unlike anything in its
+calibration set. A threshold tuned under one operating distribution
+carries no guarantee once that distribution has moved, and the failure
+is silent: the system continues to report a confidence number, and nothing
+in the number itself signals that the number is now wrong.
+
+Conformal prediction offers a principled alternative: rather than a
+point confidence score, it produces a prediction region with a
+distribution-free, finite-sample coverage guarantee under
+exchangeability. A substantial and fast-growing literature has applied
+conformal prediction to trajectory forecasting and to planning under
+uncertainty in autonomous driving. Almost without exception, however,
+this literature is \emph{open-loop}: it constructs a prediction region,
+reports its coverage and its size, and stops. Two things are invisible
+from that vantage point. First, a region's effect on a downstream
+control decision — specifically, whether it is used to trigger a
+fallback — is not evaluated at all; open-loop coverage and closed-loop
+safety outcome are simply assumed to move together. Second, and more
+consequentially, \emph{triggering the fallback is not free}. A vehicle
+that stops in a live lane because its uncertainty region grew large is
+not obviously safer than one that continues; an evaluation that reports
+only coverage, or only collision rate under the fallback, cannot see the
+trade-off between the two, and cannot see that a policy which triggers
+whenever it is asked to would trivially achieve a good miss rate while
+being useless.
+
+This paper studies fallback triggering as a decision problem with a
+formal guarantee attached to the decision itself, evaluated where that
+guarantee actually has to hold: in closed loop, on real driving
+scenarios, with a trigger threshold that has consequences for what the
+vehicle does next. We make three contributions.
+
+\begin{enumerate}
+\item We formalise minimum-risk-manoeuvre triggering as
+\emph{selective prediction} with a guarantee on the closed-loop miss
+rate — the probability that a harmful event occurs without the fallback
+having fired first — rather than on marginal coverage of a static
+prediction region. We calibrate the trigger threshold with
+Learn-then-Test~\cite{ltt2021}, which requires no assumption that the
+closed-loop loss be monotone in the threshold, and report Conformal
+Risk Control~\cite{crc2022} as a tighter alternative on the
+scenarios where monotonicity is observed to hold.
+\item We evaluate entirely in closed loop, on scenarios replayed from
+real driving logs (Argoverse~2 and nuScenes, via
+ScenarioNet~\cite{scenarionet2023} and MetaDrive) under reactive traffic,
+and we report the unnecessary-stop rate alongside the missed-intervention
+rate at every operating point — the over-conservatism trade-off that an
+open-loop study structurally cannot see.
+\item We connect the closed-loop outcome to the underlying predictor's
+calibration under dataset shift, asking directly whether a
+degradation in open-loop conformal coverage translates into a
+measurable degradation in closed-loop safety, and report the answer
+honestly whether or not it supports the premise.
+\end{enumerate}
+
+The remainder of the paper is organised as follows.
+Section~\ref{sec:related} situates this work against open-loop
+conformal prediction for driving, task-relevant failure detection, and
+closed-loop safety evaluation more broadly. Section~\ref{sec:method}
+formalises the triggering problem and the calibration procedure.
+Section~\ref{sec:setup} describes the closed-loop evaluation
+environment, the fallback manoeuvre, and the harm labelling used to
+score every rollout. Section~\ref{sec:results} reports results.
+Section~\ref{sec:discussion} discusses limitations, and
+Section~\ref{sec:conclusion} concludes.
+
+%=======================================================================
+\section{Related Work}
+\label{sec:related}
+
+\subsection{Conformal prediction for autonomous driving}
+Conformal prediction~\cite{vovk2005} constructs prediction sets with a
+distribution-free, finite-sample marginal coverage guarantee under
+exchangeability between calibration and test data, and has been applied
+extensively to trajectory forecasting and to safe planning under
+uncertainty. Lindemann~\emph{et al.} embed conformal prediction regions
+directly into a model predictive controller to obtain probabilistic
+safety guarantees, but their guarantee collapses once the deployment
+distribution shifts away from the calibration distribution — a
+limitation Rahaman~\emph{et al.}~\cite{robustcp2026} address with robust
+conformal prediction driven by a conditional generative model of the
+shift, evaluated in a synthetic multi-agent corridor. SafePath
+\cite{safepath2025} integrates conformal prediction into an LLM-based
+path-planning pipeline, providing a guarantee that a set of candidate
+paths contains a safe one with a user-specified probability, and reports
+both open-loop (nuScenes) and closed-loop (highway-env, synthetic
+traffic) results. In all three cases the guarantee is on the
+\emph{prediction} — a region contains the truth, or a path set contains
+a safe path — rather than on the eventual control decision the region is
+used to make, and none evaluates a fallback-triggering decision on
+real, replayed driving logs under reactive traffic. This paper's
+guarantee is instead on the decision: the probability that a
+minimum-risk manoeuvre fires before a harmful event, evaluated
+end-to-end in closed loop.
+
+\subsection{Task-relevant and closed-loop failure detection}
+Farid~\emph{et al.}~\cite{taskrelevant2022} propose a run-time monitor
+for trajectory-prediction failures that is \emph{task-relevant} by
+construction: it flags a misprediction only when the resulting planning
+cost is anomalous relative to the predicted cost distribution, with
+data-free false-positive and false-negative rate bounds. Their detector
+is evaluated against hand-labelled scenarios in an open-loop and
+semi-reactive setting, and — like the conformal-prediction literature
+above — does not close the loop through an actuated fallback and
+re-measure the outcome. Their central insight, that a
+task-irrelevant misprediction should not count against a detector, is
+reflected in this paper's harm labelling: a collision the ego vehicle
+suffers while already stopped or while being struck from behind is
+scored as a distinct \emph{induced-collision} cost of the fallback
+itself, never as a missed intervention.
+
+\subsection{Risk-sensitive safety analysis}
+Chapman~\emph{et al.}~\cite{cvar2022} develop risk-sensitive safe sets
+using Conditional Value-at-Risk to assess the severity, not merely the
+probability, of constraint violation along a stochastic trajectory,
+providing the risk-sensitive vocabulary this paper borrows in
+motivating why a mean missed-intervention rate is the appropriate
+quantity to control at a chosen operating point, even though a
+tail-severity extension (Section~\ref{sec:discussion}) is left to future
+work.
+
+\subsection{Closed-loop simulation infrastructure}
+ScenarioNet~\cite{scenarionet2023} unifies heterogeneous real-world
+driving logs — including Argoverse~2, nuScenes, nuPlan, and Lyft
+Level~5 — into a common scenario description that can be replayed
+interactively in the MetaDrive simulator, with either logged-trajectory
+replay or reactive rule-based (IDM) traffic. This work is built directly
+on that infrastructure: every scenario reported in
+Section~\ref{sec:results} is a real logged driving scenario, replayed
+headless with reactive traffic, not a synthetic or hand-crafted one.
+
+%=======================================================================
+\section{Problem Formulation and Method}
+\label{sec:method}
+
+\subsection{Fallback triggering as selective prediction}
+\label{sec:formulation}
+Consider a closed-loop rollout of a scenario $X$ under a fallback
+policy governed by a scalar threshold $\lambda$: at every decision tick
+the vehicle computes an uncertainty score $u_t(X)$ from a trajectory
+predictor's output for nearby agents, and engages the minimum-risk
+manoeuvre the first time $u_t(X) > \lambda$, remaining engaged for the
+rest of the episode. Define the closed-loop loss
+\begin{equation}
+L(X,\lambda) = \mathbb{1}\bigl[\, \text{harm in } X \text{ under }
+\lambda,\ \text{MRM not first} \,\bigr],
+\label{eq:loss}
+\end{equation}
+the \emph{missed-intervention} indicator, and the complementary
+over-conservatism quantity
+\begin{equation}
+S(X,\lambda) = \mathbb{1}\bigl[\, \text{MRM fires under } \lambda,\
+X \text{ harm-free at } \lambda=\infty \,\bigr],
+\label{eq:stop}
+\end{equation}
+the \emph{unnecessary stop} indicator, evaluated against the
+counterfactual rollout of the same scenario with the trigger disabled.
+The goal is to choose $\hat\lambda$ such that
+\begin{equation}
+\Pr_{X_1,\dots,X_n}\Bigl(\, \mathbb{E}_X\bigl[L(X,\hat\lambda)\bigr] \le
+\alpha \,\Bigr) \ge 1-\delta,
+\label{eq:guarantee}
+\end{equation}
+while minimising $\mathbb{E}_X[S(X,\hat\lambda)]$ — the smallest
+autonomy loss compatible with the risk target $\alpha$.
+
+Equation~\eqref{eq:guarantee} is not a conformal coverage statement:
+$L(X,\lambda)$ depends on the entire closed-loop rollout under
+$\lambda$, since engaging the fallback changes every subsequent state,
+so it is neither a marginal coverage event on a static prediction nor
+guaranteed to be monotone in $\lambda$ a priori. We therefore calibrate
+$\hat\lambda$ with Learn-then-Test~\cite{ltt2021}: for a
+finite grid $\lambda_1 > \lambda_2 > \cdots > \lambda_J$ ordered from
+least to most conservative, compute the empirical risk
+$\hat R(\lambda_j) = \tfrac{1}{n}\sum_i L(X_i,\lambda_j)$ on $n$
+calibration scenarios, a Hoeffding--Bentkus $p$-value for the null
+hypothesis $H_j: \mathbb{E}[L(\cdot,\lambda_j)] > \alpha$, and apply
+fixed-sequence testing starting from the most conservative $\lambda$;
+every $\lambda_j$ whose null is rejected satisfies
+\eqref{eq:guarantee} simultaneously, with family-wise error controlled
+at $\delta$, and $\hat\lambda$ is the least conservative such $\lambda_j$
+(largest autonomy). Where the empirical loss is observed to be monotone
+in $\lambda$ across the calibration set, we additionally report
+Conformal Risk Control~\cite{crc2022}, whose expectation guarantee is
+tighter but requires that monotonicity assumption; where it is violated
+we report the violation rate directly rather than silently falling back
+to the weaker method.
+
+\subsection{Trigger score}
+\label{sec:trigger-score}
+At each decision tick the trigger score $u_t$ measures how far a
+predicted future position of any nearby agent intrudes into the ego
+vehicle's own near-term extent. Writing the ego's constant-heading,
+constant-speed extrapolation over a horizon of $T$ steps as
+$\{p^{\mathrm{ego}}_\tau\}_{\tau=1}^{T}$ — the same route-agnostic
+motion model used by the harm metric in
+Section~\ref{sec:harm}, deliberately \emph{not} the vehicle's planned,
+route-following path, so that the trigger cannot credit itself for
+steering behaviour the safety label does not assume — and a
+predictor's $K$-mode forecast for agent $i$ as
+$\{\hat p^{(i,k)}_\tau\}$, each predicted offset is decomposed into a
+longitudinal component $a^{(i,k)}_\tau$ (along the ego heading) and a
+lateral component $\ell^{(i,k)}_\tau$ (perpendicular to it), each
+compared against a separate margin: a length-based longitudinal margin
+$m^{\mathrm{lon}}_i = \tfrac{1}{2}(L_{\mathrm{ego}}+L_i)+c_{\mathrm{lon}}$
+and a width-based lateral margin
+$m^{\mathrm{lat}}_i = \tfrac{1}{2}(W_{\mathrm{ego}}+W_i)+c_{\mathrm{lat}}$.
+The intrusion at $(i,k,\tau)$ is
+\begin{equation}
+\rho^{(i,k)}_\tau = \max\!\left(0,\ 1 - \sqrt{
+\left(\frac{a^{(i,k)}_\tau}{m^{\mathrm{lon}}_i}\right)^{\!2} +
+\left(\frac{\ell^{(i,k)}_\tau}{m^{\mathrm{lat}}_i}\right)^{\!2}}\;
+\right) m^{\mathrm{lat}}_i,
+\label{eq:score}
+\end{equation}
+and $u_t = \max_{i,k,\tau} \rho^{(i,k)}_\tau$. A single isotropic
+clearance radius cannot represent both margins without either missing a
+straight-ahead lead vehicle (a radius set by width alone) or
+over-triggering on adjacent-lane traffic (a radius set by the vehicle's
+half-diagonal); the decomposition in \eqref{eq:score} is required for
+correctness, not merely convenient, a fact confirmed empirically during
+development (Section~\ref{sec:setup}).
+
+\subsection{Fallback manoeuvre}
+\label{sec:mrm}
+On triggering, the vehicle executes the minimum-risk manoeuvre defined
+by UN Regulation No.~157 (Automated Lane Keeping Systems)
+\S\,5.5.1~\cite{unr157}: decelerate inside the current lane with a
+deceleration demand not exceeding $4.0\,\mathrm{m/s^2}$, lane-keeping
+control otherwise unchanged, holding the vehicle stationary once
+stopped. This is enforced by a proportional controller tracking the
+target speed profile $v(t) = \max(v_0 - 4.0\,t,\,0)$ from the moment of
+triggering.
+
+%=======================================================================
+\section{Experimental Setup}
+\label{sec:setup}
+
+\subsection{Simulation environment}
+All rollouts are executed headless in MetaDrive, replaying scenarios
+converted by ScenarioNet~\cite{scenarionet2023} from Argoverse~2 Motion
+Forecasting and nuScenes. Non-ego traffic is controlled reactively
+(rule-based, IDM), not replayed open-loop from the log: pure log
+replay was found to roughly triple the no-fallback collision rate on a
+1{,}000-scenario diagnostic sample, because logged agents cannot react
+to an ego vehicle that deviates from its logged trajectory — precisely
+the deviation a fallback manoeuvre produces. Reporting results under
+non-reactive replay would therefore misrepresent the cost of stopping,
+which is a central quantity this paper reports.
+
+\subsection{Harm labelling}
+\label{sec:harm}
+A rollout is labelled harmful using the nuPlan closed-loop safety
+definition~\cite{nuplan2024}: an at-fault collision, or a
+time-to-collision below $0.95\,\mathrm{s}$ computed over a $3.0\,$s
+horizon at $0.1\,$s resolution, not evaluated while the ego is
+stationary and not evaluated against tracks behind the ego. Fault
+attribution follows the nuPlan convention: a collision the ego suffers
+while stationary, or while being struck from behind, is \emph{not}
+at-fault and is never counted as a missed intervention; it is instead
+recorded as an \emph{induced collision} — the concrete, measurable cost
+of a false or premature trigger.
+
+\subsection{Predictor}
+The trajectory predictor is AutoBot, run online inside the closed loop
+so that its input reflects the actual — possibly ego-deviated —
+simulator history rather than the original log, which is necessary
+once traffic is reactive. [Predictor training data, checkpoint
+selection, and validation minADE to be finalised in the camera-ready
+version alongside Section~\ref{sec:results}.]
+
+\subsection{Splits and pre-registration}
+Design decisions were made on a held-out development split, disjoint
+from both the calibration split used to select $\hat\lambda$ and the
+test split used only for the reported evaluation. The harm definition,
+risk level $\alpha$, confidence level $\delta$, and the refutation
+criteria for every hypothesis below were fixed and recorded before any
+calibration- or test-split scenario was evaluated.
+
+%=======================================================================
+\section{Results}
+\label{sec:results}
+
+\emph{Results in this section are pending the full-scale calibration
+and test-split evaluation ($n\!\approx\!2{,}000$ scenarios per split) and
+are not yet reported. Diagnostic runs at small scale
+($n\!\le\!300$) were used exclusively to validate the pipeline
+described in Sections~\ref{sec:method}--\ref{sec:setup} — in particular,
+to identify and correct two errors in the trigger-score geometry of
+\eqref{eq:score} before any pre-registered evaluation — and are not
+reported here as results.}
+
+\subsection{H1: does open-loop ranking predict closed-loop ranking?}
+[Pending.]
+
+\subsection{H2: does calibrated triggering dominate hand-tuned thresholds?}
+[Pending.]
+
+\subsection{H3: does open-loop coverage collapse translate to closed-loop harm?}
+[Pending.]
+
+%=======================================================================
+\section{Discussion}
+\label{sec:discussion}
+[To be completed alongside Section~\ref{sec:results}. Planned content
+includes: sensitivity of $\hat\lambda$ to decision latency and decision
+rate; the CVaR-style tail-severity extension motivated by
+\cite{cvar2022}, replacing the mean missed-intervention rate in
+\eqref{eq:guarantee} with a tail bound on a continuous
+time-to-collision shortfall; and the limits of the reactive-IDM traffic
+model as a proxy for real driver response to a decelerating vehicle.]
+
+%=======================================================================
+\section{Conclusion}
+\label{sec:conclusion}
+[To be completed once Section~\ref{sec:results} is populated.]
+
+%=======================================================================
+\section*{Acknowledgment}
+The author thanks the maintainers of MetaDrive and ScenarioNet for
+releasing the simulation infrastructure this work builds on.
+
+%=======================================================================
+\begin{thebibliography}{99}
+
+\bibitem{vovk2005}
+V.~Vovk, A.~Gammerman, and G.~Shafer, \emph{Algorithmic Learning in a
+Random World}. Berlin, Germany: Springer-Verlag, 2005.
+
+\bibitem{ltt2021}
+A.~N.~Angelopoulos, S.~Bates, E.~J.~Cand\`es, M.~I.~Jordan, and L.~Lei,
+``Learn then test: Calibrating predictive algorithms to achieve risk
+control,'' \emph{arXiv preprint arXiv:2110.01052}, 2021.
+
+\bibitem{crc2022}
+A.~N.~Angelopoulos, S.~Bates, A.~Fisch, L.~Lei, and T.~Schuster,
+``Conformal risk control,'' \emph{arXiv preprint arXiv:2208.02814},
+2022.
+
+\bibitem{robustcp2026}
+K.~Rahaman, J.~V.~Deshmukh, A.~R.~Hota, and L.~Lindemann, ``When
+environments shift: Safe planning with generative priors and robust
+conformal prediction,'' in \emph{Proc. 8th Annu. Conf. Learn. Dyn.
+Control (L4DC)}, 2026.
+
+\bibitem{safepath2025}
+A.~Doula, M.~M\"uhlh\"auser, and A.~S.~Guinea, ``SafePath: Conformal
+prediction for safe LLM-based autonomous navigation,''
+\emph{arXiv preprint arXiv:2505.09427}, 2025.
+
+\bibitem{taskrelevant2022}
+A.~Farid, S.~Veer, B.~Ivanovic, K.~Leung, and M.~Pavone, ``Task-relevant
+failure detection for trajectory predictors in autonomous vehicles,''
+in \emph{Proc. 6th Conf. Robot Learn. (CoRL)}, Auckland, New Zealand,
+2022.
+
+\bibitem{cvar2022}
+M.~P.~Chapman, R.~Bonalli, K.~M.~Smith, I.~Yang, M.~Pavone, and
+C.~J.~Tomlin, ``Risk-sensitive safety analysis using conditional
+value-at-risk,'' \emph{IEEE Trans. Autom. Control}, vol.~67, no.~12,
+pp.~6521--6536, Dec. 2022.
+
+\bibitem{scenarionet2023}
+Q.~Li, Z.~Peng, L.~Feng, Z.~Liu, C.~Duan, W.~Mo, and B.~Zhou,
+``ScenarioNet: Open-source platform for large-scale traffic scenario
+simulation and modeling,'' in \emph{Proc. 37th Conf. Neural Inf.
+Process. Syst. (NeurIPS), Track Datasets and Benchmarks}, 2023.
+
+\bibitem{nuplan2024}
+N.~Karnchanachari \emph{et al.}, ``Towards learning-based planning: The
+nuPlan benchmark for real-world autonomous driving,'' in \emph{Proc.
+IEEE Int. Conf. Robot. Autom. (ICRA)}, 2024.
+
+\bibitem{unr157}
+United Nations Economic Commission for Europe, ``UN Regulation No.~157
+--- Uniform provisions concerning the approval of vehicles with regard
+to Automated Lane Keeping Systems,'' Rev.~1, 2025.
+
+\end{thebibliography}
+
+\end{document}
