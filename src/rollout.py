@@ -148,10 +148,37 @@ def ego_plan_kinematic(env, steps: int = PRED_HORIZON) -> tuple[np.ndarray, np.n
 ego_plan = ego_plan_kinematic
 
 
-def trigger_score(env, predictor, other_states: np.ndarray, extents: np.ndarray) -> float:
+def predict_agents(env, predictor, other_states: np.ndarray, extents: np.ndarray):
     """
-    Task-relevant uncertainty: how deeply the predicted region of any agent intrudes into
-    the ego's planned corridor over the horizon. 0 = no predicted conflict.
+    Run the predictor once per decision tick and return (preds, probs, extents) in one
+    common shape — (A,K,T,2), (A,K), (A,2) — regardless of predictor type, so every trigger
+    score is computed from a SINGLE predictor call. Splitting this out of trigger scoring
+    (2026-09-23) is what makes T1 (confidence) and T3/T4 (geometric) cheap to compute
+    together: before, each scorer called the predictor itself, and AutoBot inference is the
+    dominant cost of a rollout (Section 9, notes/design.md).
+
+    The constant-velocity stub has no real notion of confidence: probs is uniform over its
+    K modes. T1 (score_confidence) is therefore only meaningful with a trained predictor —
+    this is disclosed, not hidden, since it directly limits what T1's baseline can show
+    when run against the stub.
+    """
+    if hasattr(predictor, "predict_env"):                    # AutoBot: needs sim history
+        preds, probs, extents = predictor.predict_env(env)
+        return preds[:, :, :PRED_HORIZON], probs, extents
+    if len(other_states) == 0:
+        return np.zeros((0, 1, PRED_HORIZON, 2)), np.zeros((0, 1)), np.zeros((0, 2))
+    preds = predictor.predict(other_states)                  # (A,K,T,2)
+    probs = np.full(preds.shape[:2], 1.0 / preds.shape[1])   # uniform: stub has no confidence
+    return preds, probs, extents
+
+
+def score_geometric(env, preds: np.ndarray, extents: np.ndarray) -> float:
+    """
+    T3/T4 score family (notes/design.md Sec. 2): how deeply the predicted region of any
+    agent intrudes into the ego's planned corridor over the horizon. 0 = no predicted
+    conflict. T3 and T4 share this exact score; they differ only in how lam is CHOSEN
+    (T3: a plain split-conformal quantile, swept; T4: Learn-then-Test / Conformal Risk
+    Control on the closed-loop loss, Section 3).
 
     Intrusion is measured in the ego's path-relative frame at each horizon step: decompose
     the offset to a predicted agent position into LONGITUDINAL (along the planned heading)
@@ -161,19 +188,9 @@ def trigger_score(env, predictor, other_states: np.ndarray, extents: np.ndarray)
     lead vehicles (radius sized by width alone; length ignored — MISSED 11/12 dev misses at
     lam=0 on 2026-09-22, notes/design.md §11) or over-triggering on adjacent-lane traffic
     (radius sized by the half-diagonal; SUPERSEDED, notes/design.md §1).
-
-    This is the 'plan-intersecting region size' of notes/design.md T3/T4: the score family
-    is shared by the conformal and risk-calibrated triggers; only how lam is CHOSEN differs.
     """
-    if hasattr(predictor, "predict_env"):                    # AutoBot: needs sim history
-        preds, _, extents = predictor.predict_env(env)
-        if len(preds) == 0:
-            return 0.0
-        preds = preds[:, :, :PRED_HORIZON]
-    else:
-        if len(other_states) == 0:
-            return 0.0
-        preds = predictor.predict(other_states)              # (A,K,T,2)
+    if len(preds) == 0:
+        return 0.0
     plan, head = ego_plan(env)                                # (T,2), (T,)
     tangent = np.stack([np.cos(head), np.sin(head)], -1)      # (T,2)
     normal = np.stack([-np.sin(head), np.cos(head)], -1)      # (T,2)
@@ -192,11 +209,39 @@ def trigger_score(env, predictor, other_states: np.ndarray, extents: np.ndarray)
     return float(np.max(intrusion))
 
 
+def score_confidence(env, preds: np.ndarray, probs: np.ndarray) -> float:
+    """
+    T1 (notes/design.md Sec. 2): the "fixed confidence threshold" baseline everyone actually
+    ships today. u_t = 1 - max_k P(mode k), taken over the LEAST confident of the agents the
+    predictor was asked about (already restricted to nearby, potentially-conflicting vehicles
+    by the predictor itself — see PRED_RADIUS/MAX_CENTER in autobot_predictor.py). Unlike
+    score_geometric, T1 has no notion of geometry or distance at all: an agent far away that
+    the predictor is simply unsure about scores exactly the same as one about to collide.
+    That blindness is the point of including it as a baseline, not a flaw to fix.
+    """
+    if len(probs) == 0:
+        return 0.0
+    return float(np.max(1.0 - probs.max(axis=1)))
+
+
+SCORE_FNS = {"geom": score_geometric, "conf": score_confidence}
+
+
+def trigger_score(env, predictor, other_states: np.ndarray, extents: np.ndarray,
+                  score_key: str = "geom") -> float:
+    """Backward-compatible single-score entry point (one predictor call per tick)."""
+    preds, probs, extents = predict_agents(env, predictor, other_states, extents)
+    if score_key == "conf":
+        return score_confidence(env, preds, probs)
+    return score_geometric(env, preds, extents)
+
+
 # ------------------------------------------------------------------------------- metrics
 @dataclass
 class RolloutResult:
     seed: int
     lam: float
+    score_key: str = "geom"
     steps: int = 0
     collision: bool = False              # any contact with an agent or traffic object
     collision_step: int | None = None
@@ -297,18 +342,27 @@ def _agent_contact(v) -> bool:
 
 def rollout(env, seed: int, lam: float, predictor, decide_every: int = 1,
             latency_steps: int = 0, max_steps: int = 1000,
-            score_trace: list | None = None, ref_ego: list | None = None) -> RolloutResult:
+            score_trace: list | None = None, ref_ego: list | None = None,
+            score_key: str = "geom") -> RolloutResult:
     """
     One closed-loop episode. The fallback engages the first time the score exceeds lam
     (after `latency_steps` of actuation delay) and stays engaged. lam = inf disables it,
     which is the counterfactual used to label unnecessary stops. predictor=None skips
     scoring entirely (~3x faster) for studies that only need the no-fallback outcome.
 
+    score_key selects which trigger drives the fallback: "geom" (T3/T4 family,
+    score_geometric) or "conf" (T1, score_confidence) — see SCORE_FNS. This changes the
+    physical rollout (a different score fires the MRM at a different step), so — unlike the
+    harm definition, which is rescored post hoc from a stored trace — comparing triggers
+    needs its own set of rollouts per trigger, not a single shared sweep.
+
     score_trace / ref_ego: replay the scores of a reference (lam = inf) run instead of
     calling the predictor. Exact, not an approximation: with common random numbers the sim
     is deterministic, so a lam-rollout is identical to the reference until its own trigger,
     and after the trigger no score is needed. `ref_ego` verifies that identity step by step;
-    any mismatch sets `diverged` (reported by run_sweep; must be zero).
+    any mismatch sets `diverged` (reported by run_sweep; must be zero). A replayed trace was
+    necessarily recorded under ONE score_key; reusing it under a different key would silently
+    mix triggers, so score_trace and score_key are the caller's joint responsibility.
     """
     import nuplan_metrics as nm
 
@@ -321,7 +375,7 @@ def rollout(env, seed: int, lam: float, predictor, decide_every: int = 1,
     pol = env.engine.get_policy(env.agent.name)
     pol.fallback_engaged = False
     pol._mrm_t = None          # never inherit manoeuvre state from a previous episode
-    r = RolloutResult(seed=seed, lam=lam)
+    r = RolloutResult(seed=seed, lam=lam, score_key=score_key)
     fire_at = None
     prev_speed = env.agent.speed
     in_contact = False
@@ -330,7 +384,7 @@ def rollout(env, seed: int, lam: float, predictor, decide_every: int = 1,
         if (live or score_trace is not None) and step % decide_every == 0 and not r.triggered:
             if live:
                 states, extents = _trigger_inputs(_agents(env))
-                u = trigger_score(env, predictor, states, extents)
+                u = trigger_score(env, predictor, states, extents, score_key=score_key)
             else:
                 u = score_trace[step // decide_every]
             r.scores.append(round(u, 3))

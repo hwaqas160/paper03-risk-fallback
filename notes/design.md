@@ -389,3 +389,60 @@ correctly refuses to certify: 35 scenarios is not enough evidence at this confid
 regardless of how clean the result looks. CRC (expectation guarantee, less conservative)
 DOES certify at λ=2.0. This is exactly why the pre-registered study uses n≈2 000
 (`notes/falsification.md`) — this 35-scenario run is a diagnostic sample, not a substitute.
+
+## 15. T1/T3 baselines implemented; checkpoint switched; H3 data resolved (2026-09-23)
+
+**Checkpoint switched to `av2_cpu_v2/epoch03-minADE1.092`** (was `av2_cpu_v1/epoch08`,
+minADE 1.349). Verified before switching: same architecture (zero missing/unexpected
+state_dict keys), same past/future length (21/60), predicts correctly through the adapter —
+a drop-in swap, not a new integration. `av2_cpu_v2` is Paper 01's own LR-decay fine-tune of
+`av2_cpu_v1`'s best checkpoint (`run/train_cpu_v2.cmd`).
+
+**Correction: the "nuScenes clips are ~2.5s, too short for closed loop" note (§4, §7) was
+wrong.** They are 81 steps @ 0.1s = 8.1s — comparable to AV2's ~11s, workable for the MRM
+(a stop from 11 m/s at 4.0 m/s² takes 2.75s). No new conversion was needed: Paper 01 had
+already produced a larger, chunked conversion (`convert_ns_chunked.py`, val_0/1/2, 9041
+scenarios total) that this session hadn't seen before. Merged the three chunks into a single
+database via `scenarionet.merge` (copy-free — only summary/mapping pkls, no scenario data
+duplicated) at `data/ns_val_merged`, wired in as `simenv.DBS["ns_val"]`. Verified: loads,
+9041 scenarios, replays correctly. **H3's data blocker is resolved.**
+
+**T1 and T3 baseline triggers implemented** (`src/rollout.py`):
+- Refactored trigger scoring so the predictor is called ONCE per decision tick
+  (`predict_agents`) and every score is computed from that one call
+  (`SCORE_FNS = {"geom": score_geometric, "conf": score_confidence}`) — `score_geometric` is
+  the existing T3/T4 family unchanged; `score_confidence` is new: T1's
+  "1 − max mode probability", restricted to the same nearby-vehicle set the predictor
+  already scores. `rollout()`/`sweep_scenario()`/`run_sweep.py --score {geom,conf}` select
+  which one drives the physical fallback — unlike the harm definition, the active trigger
+  changes the rollout itself, so T1 vs T3/T4 needs its own set of rollouts, not post-hoc
+  rescoring.
+- T3's threshold is a plain split-conformal quantile (Vovk et al. 2005, reusing
+  `src/conformal.py`) of calibration peak scores under the `score_geometric` family — "hand-
+  tuned via conformal calibration", explicitly without the closed-loop LTT/CRC guarantee.
+  Computed for free from the λ=∞ rollouts already in the sweep, no extra simulation.
+- 2 new tests (13/13 passing): `test_confidence_score_ignores_geometry` pins T1's defining
+  property precisely — for the stub predictor (uniform, uninformative probabilities), the
+  score is the *constant* 1−1/K, unchanged when the same agent is moved 500 m away, proving
+  the score is invariant to geometry by construction, not by accident. First version of this
+  test asserted the wrong constant (0.0, when 1−1/K≈0.83 is correct — uniform probabilities
+  are the LOWEST-confidence case a distribution can report, not the highest); caught and
+  fixed before it could hide a real bug.
+- `test_score_key_selects_which_trigger_fires` confirms `score_key` actually changes which
+  score drives the rollout.
+
+**A real, load-bearing empirical finding from a smoke test (n=20, real AutoBot, not the
+stub):** the T1 confidence score was the SAME constant (0.833) across all 15 probe
+scenarios, collapsing the λ grid to one point. AutoBot's per-scenario mode-probability
+output has essentially no discriminative range in this sample — T1 cannot usefully rank
+scenarios by risk here. This is exactly the "hand-tuned confidence threshold is a weak
+baseline" result H2 is built to show, not a bug to chase down; whether it holds at n≈2000 is
+an open question for the pre-registered run, and if the flatness turns out to trace to a
+narrower cause (e.g. the "most conflicting agent" selection always landing on a similarly-
+scored agent) that is itself worth reporting, not hiding.
+
+Not yet done: **T2 (ensemble variance across 5 independently-trained AutoBot seeds)**
+requires training 4 additional checkpoints — multiple hours of CPU time each, a substantial,
+disruptive compute commitment on a machine shared with other active projects. Deliberately
+not launched unprompted this session; flagged for a decision rather than silently deferred
+or silently started.

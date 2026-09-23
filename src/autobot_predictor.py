@@ -27,7 +27,11 @@ from pathlib import Path
 import numpy as np
 
 P01 = Path(r"F:\CLAUDE\AI1\paper01-coverage-transfer")
-DEFAULT_CKPT = P01 / "results" / "ckpts" / "av2_cpu_v1" / "epoch08-minADE1.349.ckpt"
+# av2_cpu_v2 is a same-architecture LR-decay fine-tune of av2_cpu_v1's best checkpoint
+# (Paper 01's run/train_cpu_v2.cmd), minADE6 1.092 vs v1's 1.349. Verified 2026-09-23: loads
+# with zero missing/unexpected state_dict keys, same past_len/future_len (21/60), predicts
+# correctly through this adapter -- a safe drop-in swap, not a new integration.
+DEFAULT_CKPT = P01 / "results" / "ckpts" / "av2_cpu_v2" / "epoch03-minADE1.092.ckpt"
 PRED_RADIUS = 60.0        # m; only predict vehicles this close to ego (the rest cannot matter in 3 s)
 MAX_CENTER = 16           # cap per tick; nearest first
 

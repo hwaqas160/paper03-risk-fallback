@@ -15,6 +15,13 @@ DBS = {
     "av2_cal": r"F:\CLAUDE\AI1\paper01-coverage-transfer\data\av2_splits\val\cal",
     "av2_test": r"F:\CLAUDE\AI1\paper01-coverage-transfer\data\av2_splits\val\test",
     "ns_val0": r"F:\CLAUDE\AI1\paper01-coverage-transfer\data\nuscenes_scenarionet\val\val_0",
+    # Merged val_0+val_1+val_2 (9041 scenarios total), built 2026-09-23 via `scenarionet.merge`
+    # (copy-free: only dataset_summary.pkl/dataset_mapping.pkl live here, scenario data stays
+    # in Paper 01's folder). H3's shifted test set. Correction to an earlier note: these
+    # nuScenes prediction-challenge scenarios are 81 steps @ 0.1s = 8.1s, NOT "~2.5s, too
+    # short for closed loop" as previously written in notes/design.md -- comparable to AV2's
+    # ~11s and workable for the MRM (a stop from 11 m/s at 4.0 m/s^2 takes 2.75s).
+    "ns_val": r"F:\CLAUDE\AI3\paper03-risk-fallback\data\ns_val_merged",
 }
 
 # ScenarioNet's own filter: drop scenarios where the ego moves < 10 m.

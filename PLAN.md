@@ -92,8 +92,8 @@ done and paid for.
   count now rather than discovering it in month 11.
 
 ### Weeks 3–5 · Baseline fallback policies
-- [ ] Implement three triggers: fixed confidence threshold; ensemble variance; conformal
-      region size.
+- [x] Implement three triggers: fixed confidence threshold; ~~ensemble variance~~ (needs
+      4 more trained checkpoints, deferred pending a decision); conformal region size.
 - [ ] Define the outcome metric set: collision rate, time-to-collision violations,
       **unnecessary stops**, route completion, comfort.
 - **GATE:** all three baselines run end-to-end in closed loop.

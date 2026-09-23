@@ -53,7 +53,7 @@ def _worker(job):
     else:
         predictor = ConstantVelocityPredictor(spread=job["spread"])
     env = se.make_env(db, start, count, policy=make_fallback_policy_cls(), **job["overrides"])
-    kw = dict(decide_every=job["decide_every"], latency_steps=job["latency_steps"])
+    kw = dict(decide_every=job["decide_every"], latency_steps=job["latency_steps"], score_key=job["score_key"])
     out, seed = [], start
     try:
         while len(out) < want and seed < start + count:
@@ -110,6 +110,8 @@ def main():
     ap.add_argument("--n_lams", type=int, default=9)
     ap.add_argument("--predictor", choices=["cv", "autobot"], default="cv",
                     help="cv = constant-velocity stub; autobot = Paper 01 checkpoint, online")
+    ap.add_argument("--score", choices=list(__import__("rollout").SCORE_FNS), default="geom",
+                    help="geom = T3/T4 plan-intersection family; conf = T1 fixed-confidence baseline")
     ap.add_argument("--spread", type=float, default=3.0, help="cv stub only")
     ap.add_argument("--alpha", type=float, default=0.10)
     ap.add_argument("--delta", type=float, default=0.10)
@@ -131,7 +133,8 @@ def main():
         raise SystemExit("not enough free commit for even one worker")
     total = len(read_dataset_summary(simenv.DBS[args.db])[1])
     base = dict(db=args.db, predictor=args.predictor, spread=args.spread, decide_every=args.decide_every,
-                latency_steps=args.latency_steps, overrides=dict(reactive_traffic=not args.replay))
+                latency_steps=args.latency_steps, score_key=args.score,
+                overrides=dict(reactive_traffic=not args.replay))
     t0 = time.time()
 
     # ---- phase 1: probe block, held out --------------------------------------------------
@@ -182,6 +185,19 @@ def main():
     crc = conformal_risk_control(lams, L, args.alpha)
     print(f"LTT lam_hat={ltt['lam_hat']}   CRC lam_hat={crc['lam_hat']}   "
           f"non-monotone scenarios: {crc['monotone_violations']:.3f}")
+
+    # T3 (notes/design.md Sec. 2): the SAME score family as T4, but lam chosen by a plain
+    # split-conformal quantile of the calibration peak scores (Vovk et al. 2005) -- "hand-
+    # tuned via conformal calibration", NOT a closed-loop decision guarantee. Peak scores
+    # come from the already-computed lam=inf rollouts of THIS sweep, so no extra simulation.
+    from conformal import split_conformal_quantile
+    peaks = np.array([max(r["counterfactual"]["scores"]) if r["counterfactual"]["scores"] else 0.0
+                      for r in rows])
+    lam_t3 = split_conformal_quantile(peaks, args.alpha)
+    j_t3 = int(np.argmin(np.abs(lams - lam_t3))) if np.isfinite(lam_t3) else len(lams) - 1
+    print(f"T3 (plain conformal, alpha={args.alpha}) lam_hat={lam_t3:.3f}  "
+          f"(nearest grid point lam={lams[j_t3]:.3f}: miss={rc['risk'][j_t3]:.3f}, "
+          f"autonomy={rc['autonomy'][j_t3]:.3f}, unnec.stop={rc['unnecessary_stop'][j_t3]:.3f})")
 
     # every candidate harm definition, from the same rollouts
     print(f"\n{'harm definition':<34} {'no-trigger':>10} {'min miss':>9} {'miss@max-auton':>15}  LTT lam_hat @alpha={args.alpha}")

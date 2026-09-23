@@ -74,6 +74,24 @@ so no reported result is contaminated — but from now on **development runs use
 `av2_dev`** (AV2 val/train); `av2_cal` is for calibration and `av2_test` is touched only for
 pre-registered evaluations.
 
+## Checkpoint, H3 data, T1/T3 baselines (2026-09-23)
+
+- **Checkpoint switched** to `av2_cpu_v2/epoch03-minADE1.092` (was `av2_cpu_v1/epoch08`,
+  1.349) — verified compatible (same arch, zero missing/unexpected keys) before switching.
+- **H3's data blocker is gone.** Earlier note that nuScenes clips are "~2.5s, too short"
+  was wrong -- they're 8.1s, workable for the MRM. Paper 01 already had a larger converted
+  set (9041 scenarios) this session hadn't seen; merged into `data/ns_val_merged`
+  (`simenv.DBS["ns_val"]`), verified loads and replays.
+- **T1 (fixed confidence) and T3 (plain conformal quantile) baselines implemented and
+  tested** (13/13 tests pass). `run_sweep.py --score {geom,conf}` selects the active trigger.
+- **A real finding from a small smoke test**: AutoBot's confidence score was the exact same
+  constant across all 15 probe scenarios -- T1 may have near-zero discriminative power in
+  this setup. Not yet confirmed at scale; flagged honestly rather than either hidden or
+  over-claimed.
+- **Deliberately not started**: T2 (ensemble variance) needs training 4 more AutoBot
+  checkpoints -- multiple hours of CPU each, a real resource commitment on a shared machine.
+  Flagging for a decision rather than launching it or silently dropping it.
+
 ## Trigger geometry: two bugs found and fixed, validated (2026-09-22)
 
 First AutoBot pilot showed the risk-calibrated trigger couldn't certify anything at

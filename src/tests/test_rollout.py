@@ -17,7 +17,8 @@ import simenv  # noqa: E402
 
 simenv.block_torch()
 from rollout import (ConstantVelocityPredictor, DT, make_fallback_policy_cls,  # noqa: E402
-                     rollout, sweep_scenario, trigger_score, ego_plan)
+                     score_geometric,
+                     rollout, sweep_scenario, trigger_score, ego_plan, score_confidence, predict_agents)
 
 
 def _env(n=6):
@@ -129,6 +130,48 @@ def test_trigger_score_sees_lead_vehicle_not_just_width(env, pred):
     extents = np.array([[4.5, 1.9]])
     u = trigger_score(env, pred, states, extents)
     assert u > 0.0, "lead vehicle 3 m ahead was not scored as a threat"
+
+
+def test_confidence_score_ignores_geometry(env, pred):
+    """
+    T1 (score_confidence) sees only mode probability, never distance. The stub predictor has
+    no real notion of confidence, so it reports UNIFORM probability over its K modes -- the
+    LOWEST possible max-probability (1/K) a proper distribution can have, which makes
+    score_confidence = 1 - 1/K, a CONSTANT at its highest attainable value, identical whether
+    or not any agent is actually nearby. That is a real, disclosed limitation of running T1
+    against this stub (notes/design.md, predict_agents docstring), not a bug: the score is
+    doing exactly what "1 - max mode probability" says, the stub just has nothing informative
+    to report. score_geometric, by contrast, correctly reacts to the same scene.
+    """
+    env.reset(seed=0)
+    for _ in range(3):
+        env.step([0.0, 0.0])
+    plan, head = ego_plan(env)
+    ahead = plan[10] + 3.0 * np.array([np.cos(head[10]), np.sin(head[10])])
+    states = np.array([[ahead[0], ahead[1], 0.0, 0.0]])
+    extents = np.array([[4.5, 1.9]])
+    stub = ConstantVelocityPredictor(spread=3.0, noise=0.0, bias=0.0, k=6)
+    preds, probs, ext2 = predict_agents(env, stub, states, extents)
+    assert probs.shape == (1, stub.k)
+    assert np.allclose(probs, 1.0 / stub.k), "stub predictor must report uniform (uninformative) confidence"
+    u_conf = score_confidence(env, preds, probs)
+    u_geom = score_geometric(env, preds, ext2)
+    expected = 1.0 - 1.0 / stub.k
+    assert abs(u_conf - expected) < 1e-9, f"expected the constant 1-1/K={expected:.4f}, got {u_conf}"
+    assert u_geom > 0.0, "the same lead vehicle should register on the geometric score"
+    # move the agent far away: score_confidence must not change (it never looks at position)
+    far_states = np.array([[ahead[0] + 500.0, ahead[1] + 500.0, 0.0, 0.0]])
+    preds2, probs2, _ = predict_agents(env, stub, far_states, extents)
+    assert score_confidence(env, preds2, probs2) == u_conf, "T1 must be invariant to agent distance"
+
+
+def test_score_key_selects_which_trigger_fires(env, pred):
+    """rollout(..., score_key=...) actually changes which score drives the fallback."""
+    a = rollout(env, 0, 2.0, pred, score_key="geom")
+    b = rollout(env, 0, 2.0, pred, score_key="conf")
+    assert a.score_key == "geom" and b.score_key == "conf"
+    # the stub's confidence score is identically 0 (uninformative), so lam=2.0 never fires
+    assert not b.triggered
 
 
 if __name__ == "__main__":
