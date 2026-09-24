@@ -1,144 +1,93 @@
 # Paper 03 — Status
 
-_Updated 2026-09-21 (evening)_
+_Updated 2026-09-24 (morning)_
 
-## Where things stand
+## One-line hook (the paper's single claim)
 
-| Area | State |
-|---|---|
-| Headless closed-loop sim on Paper 01's scenarios | **working** (AV2 + nuScenes; replay + reactive IDM traffic) |
-| Week-2 throughput gate | **PASSED**: 17.9 k rollouts/h at 8 workers, near-linear, 0 errors in 867 scenarios |
-| Rollout harness (fallback policy, metrics, counterfactual) | **working + tested** (9/9), `src/rollout.py` |
-| Decision-level risk calibration (LTT, CRC) | **working + tested** (4/4), `src/risk_control.py` |
-| Parallel λ sweep + post-hoc rescoring under any harm definition | **working**, `src/run_sweep.py` |
-| Harm base rates (1 000 dev scenarios, replay vs reactive) | **measured**, `src/harm_base_rate.py` |
-| **First certified threshold** (stub predictor, 300 scenarios) | **done** — below |
-| Trained predictor from Paper 01 | available: `av2_cpu_v1` epoch 8, minADE₆ 1.349 — **not yet wired in** |
-| Paper 01 cross-dataset coverage | **known**: AV2→nuScenes drops 3–4 pp (90 % → 86.0 %) |
-| Falsification note | proposal + dated addendum in `notes/falsification_proposal.md`; **yours to commit** |
+**The first finite-sample guarantee on *when to trigger* a minimum-risk manoeuvre that is
+stated on the closed-loop consequence of the decision — and that counts the harm the
+fallback itself causes.**
 
-## Pilot: first certified threshold (STUB predictor — plumbing, NOT a paper result)
+Closest prior work is Conformal Decision Theory (Lekeufack et al., ICRA 2024): it also
+calibrates decisions, but bounds a long-run *average* risk at rate O(1/t) for a continuously
+acting planner parameter (pedestrian navigation). An MRM trigger is a one-shot, irreversible
+decision with two error currencies (missed interventions *and* the harm of stopping) that
+needs its certificate *before* deployment. CDT and ACI are both implemented as baselines.
 
-300 AV2 **test** scenarios (40-scenario probe held out), reactive traffic, 8 λ + counterfactual
-per scenario, 19 min on 8 workers. Harm = collision or TTC < 1 s sustained ≥ 3 steps
-(no-trigger base rate 15.3 %). α = δ = 0.1.
+## Live: data campaign (Task Scheduler `P03_Campaign`, resumable)
 
-| λ | miss rate | autonomy | unnecessary stops | |
-|---|---|---|---|---|
-| 0.00 | 0.027 | 0.287 | 0.587 | |
-| 1.67 | 0.057 | 0.450 | 0.447 | ← **LTT λ̂** (guarantee w.p. ≥ 0.9) |
-| 2.12 | 0.070 | 0.520 | 0.380 | |
-| 2.45 | 0.093 | 0.673 | 0.253 | ← **CRC λ̂** (guarantee in expectation) |
-| 2.52 | 0.110 | 0.757 | 0.183 | |
-| 2.60 | 0.120 | 0.840 | 0.113 | |
+| Arm | Target | Done | Notes |
+|---|---|---|---|
+| `av2_cal` | 2 000 | **2 000 ✔** | 0 errors, 9.76 h at 8 workers, unattended overnight |
+| `av2_test` | 2 000 | ~1 140 (running) | auto-throttled 8→6 workers when free commit dropped to 24 GB |
+| `ns_val` (H3 shift) | 1 500 | queued | |
+| `av2_test_replay` (log-replay traffic) | 500 | queued | sensitivity |
+| `av2_test_mrm2` (2.0 m/s² MRM) | 500 | queued | sensitivity |
+| `av2_test_10hz` | 300 | queued | decision-rate robustness |
 
-Reading it:
-- **The pipeline certifies.** Calibration → LTT → a threshold with a stated guarantee on the
-  closed-loop outcome, end to end, on replayed real scenarios.
-- **The price of the guarantee is visible.** At the LTT threshold the stub trigger stops
-  unnecessarily in 45 % of scenarios. That is the over-conservatism open-loop evaluation
-  cannot see, and the number a real predictor (T1–T4) must drive down. A constant-velocity
-  stub is a deliberately weak baseline, so this is the floor to beat, not a finding.
-- **LTT vs CRC:** LTT is more conservative (high-probability guarantee + FWER control);
-  CRC's λ̂ buys 22 pp more autonomy but only guarantees risk in expectation and needs
-  per-scenario monotonicity — which held in **0 %-violation** here.
-- **"Collision only" makes the problem trivial:** base rate 3.0 % < α, so "never trigger"
-  already satisfies α = 0.1. The definition and α must be chosen together (see addendum).
+Crash-safe: one fsynced JSON line per scenario; re-running `run\campaign.cmd` resumes.
+Runs below-normal priority so Paper 01 / AI2 jobs on this machine keep priority.
+Stop: `schtasks /end /tn P03_Campaign`. Log: `results\campaign\campaign.log`.
 
-### Correction
+## What is built (all committed; 19 tests across 4 suites)
 
-The first pilot (2026-09-15, log replay) reported 5 % of scenarios non-monotone in λ and
-I cited that as evidence for LTT over CRC. That run had a bug: the stub predictor drew
-different noise for each λ. With common random numbers the rate is **0 %**, so that
-evidence doesn't stand. Whether real closed-loop losses are ever non-monotone is now an
-open empirical question for the real-predictor runs. LTT remains the safe default because
-it doesn't need monotonicity, but "we observed non-monotonicity" isn't a claim we can make.
+- **Exact per-tick evaluation** (`rollout.sweep_scenario_ticks`, `src/evaluate.py`): a rollout's
+  outcome depends only on *when* the fallback fires. One reference run records every trigger's
+  score; one rollout is forced to fire at each decision tick. Every trigger/threshold/online
+  method/latency is then an exact lookup on identical physics. Verified: 0 divergences.
+- **Methods (ours):** LTT and CRC on the closed-loop miss indicator; density-ratio-weighted LTT
+  with Kish effective sample size (refuses to certify when data can't support it).
+- **Baselines (7):** T1 tuned confidence; T2 tuned MC-dropout ensemble; T3 open-loop conformal
+  (radius from the predictor's own held-out error); tuned geometric (isolates the calibrator);
+  CDT; ACI; oracle upper bound.
+- **Ablations:** route-following vs kinematic corridor; width-only isotropic vs length-aware box;
+  confidence/ensemble vs geometric score; LTT vs CRC vs empirical tuning; latency 0/1/2 ticks.
+- **Validity study:** 200 random resplits, violation frequency P(test miss > α) vs δ.
+- **H1 / H3 / harm-sensitivity** outputs in `evaluate.py`.
 
-## Paper 01 changes since 2026-09-15
+## Honest check against the eight publication goals
 
-- CPU training `av2_cpu_v1` finished 2026-09-16; best `epoch08-minADE1.349` (still above
-  Paper 01's ~0.85 kill threshold — a Paper 01 decision).
-- Coverage, AV2-calibrated, seed 0: in-domain holds (95.0 % at nominal 95 %); on nuScenes
-  95 → 92.2 %, 90 → 86.0 %, 80 → 76.8 %.
+| Goal | Status | What's still needed |
+|---|---|---|
+| Clear novelty hook | ✔ stated above; positioned against CDT/ACI in Related Work | keep every section pointing at it |
+| Strong baselines (3–5 recent SOTA) | **Partial.** Genuinely recent decision-level SOTA: CDT (2024), ACI (2021). Others are deployed practice or open-loop conformal. | Add Farid et al. (CoRL 2022) task-relevant failure detector (QAD) as a baseline — already read, implementable from the K predicted modes; be explicit about the approximation. A stronger predictor arm (Wayformer/MTR via UniTraj) would show results aren't AutoBot-specific. |
+| Ablation study | ✔ implemented (score components, calibrator, latency) | run on campaign data |
+| Multiple datasets/settings | **2 datasets, one shift direction.** Plus 3 traffic/MRM/rate sensitivity settings. | Free upgrade: also report the *reverse* shift (nuScenes-calibrated → AV2) by splitting `ns_val` rows — no new simulation. Waymo/nuPlan need licences only you can accept. |
+| Framed limitations | ✔ "Scope and Future Work" section rewritten as scope choices | fill numbers once results exist |
+| Reproducibility | ✔ pre-registration with dated amendment, per-scenario records, resumable campaign, configs | release repo + archive at submission; state hyper-parameters in an appendix table |
+| Practical/theoretical value | ✔ certificate + priced trade-off + refuse-to-certify diagnostic | quantify in the abstract once results exist |
+| One consistent story | ✔ title/abstract/intro/method/baselines all aimed at the hook | re-read for consistency after results land |
 
-## Incident log
+## Paper (`paper/main.tex`, IEEE T-IV template, compiles clean, 6 pages)
 
-2026-09-15: my 4-worker benchmark exhausted Windows commit and crashed Paper 01's CPU
-training (auto-resumed, ~30 min lost; the run later finished). Workers are now commit-
-capped and torch-free.
+Title, abstract, four contributions, Related Work (incl. new CDT/ACI subsection), Method
+(+ shift-weighted certification, + exact evaluation), Setup (data, baselines, metrics,
+pre-registration), Results skeleton (one slot per table/figure the campaign produces), Scope
+and Future Work, 15 references. **Corrected a wrong citation:** AutoBot is Girgis et al.
+(ICLR 2022), not "Kim et al." as written in earlier notes.
 
-## Split hygiene
+## Findings so far (dev split, before pre-registered runs — reported, not headline)
 
-Both stub pilots ran on `av2_test`. No hypothesis was tested and the predictor was a stub,
-so no reported result is contaminated — but from now on **development runs use
-`av2_dev`** (AV2 val/train); `av2_cal` is for calibration and `av2_test` is touched only for
-pre-registered evaluations.
+- Decision rate: 2 Hz vs 10 Hz gave identical miss rates on 35 paired scenarios.
+- A trigger scored against a route-following corridor missed near-misses that a route-agnostic
+  TTC metric flags (divergence up to 30 m at 3 s); aligning the two collapsed the miss rate.
+- AutoBot's confidence score was a constant across 15 probe scenarios (T1 may carry little
+  risk information) — to be confirmed at scale; the ablation table will show it either way.
+- Fallback braking must be UN R157-compliant (≤ 4.0 m/s²); an earlier ~10 m/s² stop produced
+  rear-end collisions that were an artifact of that choice.
 
-## Checkpoint, H3 data, T1/T3 baselines (2026-09-23)
+## Needs from you
 
-- **Checkpoint switched** to `av2_cpu_v2/epoch03-minADE1.092` (was `av2_cpu_v1/epoch08`,
-  1.349) — verified compatible (same arch, zero missing/unexpected keys) before switching.
-- **H3's data blocker is gone.** Earlier note that nuScenes clips are "~2.5s, too short"
-  was wrong -- they're 8.1s, workable for the MRM. Paper 01 already had a larger converted
-  set (9041 scenarios) this session hadn't seen; merged into `data/ns_val_merged`
-  (`simenv.DBS["ns_val"]`), verified loads and replays.
-- **T1 (fixed confidence) and T3 (plain conformal quantile) baselines implemented and
-  tested** (13/13 tests pass). `run_sweep.py --score {geom,conf}` selects the active trigger.
-- **A real finding from a small smoke test**: AutoBot's confidence score was the exact same
-  constant across all 15 probe scenarios -- T1 may have near-zero discriminative power in
-  this setup. Not yet confirmed at scale; flagged honestly rather than either hidden or
-  over-claimed.
-- **Deliberately not started**: T2 (ensemble variance) needs training 4 more AutoBot
-  checkpoints -- multiple hours of CPU each, a real resource commitment on a shared machine.
-  Flagging for a decision rather than launching it or silently dropping it.
-
-## Trigger geometry: two bugs found and fixed, validated (2026-09-22)
-
-First AutoBot pilot showed the risk-calibrated trigger couldn't certify anything at
-alpha=0.05. Root-caused and fixed in two stages, each validated on a paired 35-scenario
-sample (identical scenarios, identical lambda grid, one variable changed at a time):
-
-1. Clearance used vehicle WIDTH only (no LENGTH) -> missed straight-ahead lead vehicles.
-   Fixed: path-relative longitudinal/lateral box margins. Collision-only harm went from
-   "never certifies" to certifying cleanly.
-2. Remaining floor (TTC-only near-misses): ruled out decision latency first (miss rate was
-   IDENTICAL at 2 Hz vs 10 Hz decisions, properly paired -- not the cause). Root cause:
-   the trigger's ego-motion corridor followed the ROUTE's curvature; the harm metric
-   (matching nuPlan's real definition) deliberately does not -- it assumes constant
-   heading, precisely so a driver can't get credit for "the plan says I'll steer away."
-   Divergence between the two models: up to 30 m at a 3 s horizon. AutoBot's own
-   predictions were separately confirmed accurate (0.03 m error) -- not the predictor's fault.
-   Fixed: trigger now uses the same route-agnostic ego model as the harm metric.
-
-**Validated result: miss rate 0.000 at every lambda tested**, same 35 scenarios, down from
-0.057-0.086. LTT still won't certify at n=35 (correctly -- Hoeffding-Bentkus needs more
-evidence than 35 scenarios can give at alpha=0.05, delta=0.1, even at zero observed misses).
-CRC does certify. The pre-registered study needs the full n~2000 calibration set.
-
-## Dependency posture (2026-09-22)
-
-The author raised a real risk: if a manuscript's claims lean on an unpublished companion
-paper ("Paper 01"), a rejection or absence of that paper undermines this one. Addressed:
-- AutoBot checkpoint + converted data = infrastructure (like a pretrained backbone or a
-  public dataset), not a cited finding.
-- The AV2 → nuScenes coverage-drop number behind H3 is now **computed by this paper's own
-  code** (`src/coverage_selfcheck.py` + `src/conformal.py`, copied not imported), from raw
-  model prediction dumps. It reproduces closely (94.9% vs 95.0% in-domain at α=0.05) —
-  confirms correctness, not dependency.
-- See `notes/falsification.md` "A note on dependencies" for the citation policy this implies.
-
-## Needs your decision
-
-1. **Harm definition + α** (blocks every headline number). Data in the addendum of
-   `notes/falsification_proposal.md`. The pilot used "collision or TTC<1 s × 3" at α = 0.1
-   as a placeholder; α = 0.05 would make the task harder and more meaningful.
-2. **Predictor route under reactive traffic** — online AutoBot in the loop (correct) vs
-   hybrid/offline cache (faster, approximate). `notes/design.md` §7. Recommend online.
-3. **nuScenes full logs** (~20 s scenes) for closed-loop H3; current snippets are ~2.5 s.
-4. PLAN.md §13: Paper 02 doesn't exist on disk; continuing Paper 03 is a deliberate choice.
+1. **Nothing blocking the campaign.** It is running unattended.
+2. **Optional, high-value:** accept the Waymo Open Motion and nuPlan licences if you want a 3rd/4th
+   dataset — only you can. Everything downstream (ScenarioNet conversion) is standard.
+3. **Decision:** train a second/third predictor (Wayformer via UniTraj) as a robustness arm?
+   Costs CPU-days on a shared machine; I'd do it after the campaign finishes.
 
 ## Next steps
 
-1. Wire AutoBot (`epoch08`) into the loop and measure its per-tick cost on CPU.
-2. Implement T1–T3 score variants on the real predictor; rerun this pilot per trigger.
-3. Convert nuScenes full logs → first H3 run.
+1. Finish the campaign (`av2_test` → `ns_val` → sensitivity arms).
+2. Run `src/evaluate.py` → every table; check the pre-registered refutation rules honestly.
+3. Add the QAD baseline and the reverse-shift analysis (both need no new simulation beyond
+   what's queued).
+4. Fill Results/Discussion/Conclusion, generate figures, finalize abstract numbers.

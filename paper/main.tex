@@ -13,9 +13,8 @@
 
 \begin{document}
 
-\title{Risk-Calibrated Fallback: A Selective-Prediction Approach\\
-to Minimum-Risk-Manoeuvre Triggering in Closed-Loop\\
-Autonomous Driving}
+\title{Risk-Calibrated Fallback: Certifying When\\
+an Autonomous Vehicle Should Give Up}
 
 \author{Hassan~Waqas~Saleem, Rahat~Zeeshan~Saleem, and Hina~Maryam
 \thanks{H.~W.~Saleem (corresponding author) is with the School of
@@ -36,30 +35,30 @@ Road, Karachi 74000, Pakistan (e-mail: hina.maryam@sbp.org.pk).}%
 
 %=======================================================================
 \begin{abstract}
-Every deployed autonomous vehicle has a minimum-risk manoeuvre (MRM) —
-pull over, slow down, hand control back to a driver — and when to trigger
-it is almost universally a hand-tuned threshold on a confidence score.
-That score is precisely the quantity known to be untrustworthy under
-distribution shift, so the trigger for the safety behaviour rests on a
-calibration that can silently expire exactly when the vehicle needs it
-most. Prior conformal-prediction work in this space is almost entirely
-open-loop: it produces prediction regions and stops, so it cannot see
-that a conservative region drives an MRM trigger, and that triggering
-itself has a safety cost — freezing in a live lane. We formalise MRM
-triggering as a selective-prediction problem with a guarantee on the
-\emph{decision}, not merely on the prediction, using Learn-then-Test to
-certify a trigger threshold against a bounded miss-rate target under
-exchangeability, and Conformal Risk Control as a tighter alternative when
-the closed-loop loss is empirically monotone in the threshold. We
-evaluate in closed loop on real, replayed driving scenarios (Argoverse~2,
-nuScenes) under reactive traffic, using a fallback manoeuvre compliant
-with UN Regulation No.~157's minimum-risk-manoeuvre deceleration bound
-and harm labelled by the nuPlan closed-loop safety definition
-(at-fault collision or time-to-collision below 0.95\,s). We report both
-the missed-intervention rate the calibrated trigger is built to bound and
-the unnecessary-stop rate open-loop evaluation cannot see, and we show
-that the two are inseparable: any trigger design that only reports one
-is reporting half the picture.
+Every automated vehicle has a minimum-risk manoeuvre (MRM), and the
+decision to invoke it is almost always a hand-tuned threshold on a
+confidence score --- the very quantity known to become untrustworthy
+under distribution shift. We give the first finite-sample guarantee on
+\emph{when to trigger} an MRM that is stated on the closed-loop
+consequence of the decision, not on the prediction behind it, and that
+counts the harm the fallback itself causes. We cast triggering as
+selective prediction and certify the probability of a missed
+intervention with Learn-then-Test, measured \emph{after} the fallback
+has changed the future. A counterfactual rollout of every scenario prices
+the certificate in unnecessary stops and fallback-induced collisions,
+costs that open-loop evaluation cannot observe. Because a rollout's outcome depends
+only on when the fallback fires, one reference run and one forced-firing
+rollout per decision tick evaluate every trigger, threshold and online
+method on identical physics. We extend the certificate to covariate
+shift with density-ratio weighting that exposes its effective sample
+size and refuses to certify when the data cannot support it. We evaluate
+on replayed real-world driving logs (Argoverse~2, nuScenes) under
+reactive traffic, with a UN~R157-compliant manoeuvre and nuPlan
+closed-loop harm labels, against seven baselines spanning deployed
+practice (confidence and ensemble thresholds), open-loop conformal
+prediction, and online conformal decision methods.
+[Quantitative findings to be inserted from the pre-registered
+evaluation.]
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -111,29 +110,42 @@ This paper studies fallback triggering as a decision problem with a
 formal guarantee attached to the decision itself, evaluated where that
 guarantee actually has to hold: in closed loop, on real driving
 scenarios, with a trigger threshold that has consequences for what the
-vehicle does next. We make three contributions.
+vehicle does next. The closest prior work, Conformal Decision
+Theory~\cite{cdt2024}, also calibrates decisions rather than predictions,
+but it bounds a long-run \emph{average} risk that converges at rate
+$O(1/t)$, tunes a continuously acting planner parameter, and is
+evaluated on pedestrian navigation. An MRM trigger is different in kind.
+It is an irreversible, one-shot decision to abandon the task. Its errors
+are paid in two currencies, missed interventions and the harm of
+stopping itself. And a deployed vehicle needs its guarantee before the
+first mile, not asymptotically. We make four contributions.
 
 \begin{enumerate}
-\item We formalise minimum-risk-manoeuvre triggering as
-\emph{selective prediction} with a guarantee on the closed-loop miss
-rate — the probability that a harmful event occurs without the fallback
-having fired first — rather than on marginal coverage of a static
-prediction region. We calibrate the trigger threshold with
-Learn-then-Test~\cite{ltt2021}, which requires no assumption that the
-closed-loop loss be monotone in the threshold, and report Conformal
-Risk Control~\cite{crc2022} as a tighter alternative on the
-scenarios where monotonicity is observed to hold.
-\item We evaluate entirely in closed loop, on scenarios replayed from
-real driving logs (Argoverse~2 and nuScenes, via
-ScenarioNet~\cite{scenarionet2023} and MetaDrive) under reactive traffic,
-and we report the unnecessary-stop rate alongside the missed-intervention
-rate at every operating point — the over-conservatism trade-off that an
-open-loop study structurally cannot see.
-\item We connect the closed-loop outcome to the underlying predictor's
-calibration under dataset shift, asking directly whether a
-degradation in open-loop conformal coverage translates into a
-measurable degradation in closed-loop safety, and report the answer
-honestly whether or not it supports the premise.
+\item \textbf{A decision-level certificate for fallback triggering.} We
+formalise minimum-risk-manoeuvre triggering as selective prediction and
+certify, with finite-sample high-probability validity, the closed-loop
+\emph{missed-intervention} rate: the probability that harm occurs
+without the fallback having fired first, measured after the fallback has
+changed the future. We use Learn-then-Test~\cite{ltt2021}, which needs
+no monotonicity of the closed-loop loss in the threshold, and report
+Conformal Risk Control~\cite{crc2022} where monotonicity holds.
+\item \textbf{Pricing the fallback.} Every scenario is also rolled out
+with the fallback disabled. This counterfactual prices each operating
+point in \emph{unnecessary stops} and in \emph{fallback-induced
+collisions}: collisions the ego suffers because it stopped, which
+nuPlan's fault attribution correctly does not blame on the ego and
+which an open-loop study cannot observe at all.
+\item \textbf{Exact counterfactual evaluation.} A rollout's outcome depends
+only on \emph{when} the fallback fires. One reference run that records
+every trigger score, plus one rollout forced to fire at each decision
+tick, therefore evaluates every trigger, threshold, online method and
+latency on identical physics, with no approximation.
+\item \textbf{Certification under shift.} Density-ratio-weighted
+Learn-then-Test repairs the certificate under covariate shift. Its
+effective sample size makes explicit when the calibration data can no
+longer support a guarantee, so the system refuses to certify instead of
+silently expiring. We test it on the Argoverse~2 $\to$ nuScenes shift,
+where the unweighted certificate is predicted to fail.
 \end{enumerate}
 
 The remainder of the paper is organised as follows.
@@ -143,8 +155,9 @@ closed-loop safety evaluation more broadly. Section~\ref{sec:method}
 formalises the triggering problem and the calibration procedure.
 Section~\ref{sec:setup} describes the closed-loop evaluation
 environment, the fallback manoeuvre, and the harm labelling used to
-score every rollout. Section~\ref{sec:results} reports results.
-Section~\ref{sec:discussion} discusses limitations, and
+score every rollout. Section~\ref{sec:results} reports results against seven baselines,
+with ablations of every component.
+Section~\ref{sec:discussion} states the scope of the claims, and
 Section~\ref{sec:conclusion} concludes.
 
 %=======================================================================
@@ -175,6 +188,24 @@ real, replayed driving logs under reactive traffic. This paper's
 guarantee is instead on the decision: the probability that a
 minimum-risk manoeuvre fires before a harmful event, evaluated
 end-to-end in closed loop.
+
+\subsection{Online and decision-level conformal methods}
+Adaptive Conformal Inference (ACI)~\cite{aci2021} updates the
+miscoverage level online so that long-run coverage holds even under
+arbitrary shift. Conformal Decision Theory (CDT)~\cite{cdt2024} carries
+the same idea from prediction sets to decisions: it updates a
+decision parameter $\lambda_{t+1} = \lambda_t + \eta(\varepsilon - \ell_t)$
+so that the long-run average risk converges to $\varepsilon$ at rate
+$O(1/t)$, with no distributional assumptions. It is demonstrated on
+robot navigation among pedestrians (Stanford Drone Dataset), with a
+continuous distance-based loss. Both give \emph{asymptotic, average}
+guarantees for a quantity adjusted continuously as data arrive. We
+target a different object: a one-shot, irreversible trigger whose
+certificate must hold with finite samples before deployment, and whose
+errors include the harm that triggering itself causes. We adopt both
+methods as baselines (Section~\ref{sec:baselines}), applied
+episode-by-episode, which is the natural online counterpart of our
+setting.
 
 \subsection{Task-relevant and closed-loop failure detection}
 Farid~\emph{et al.}~\cite{taskrelevant2022} propose a run-time monitor
@@ -315,6 +346,41 @@ stopped. This is enforced by a proportional controller tracking the
 target speed profile $v(t) = \max(v_0 - 4.0\,t,\,0)$ from the moment of
 triggering.
 
+\subsection{Certification under covariate shift}
+\label{sec:shift}
+The certificate in \eqref{eq:guarantee} assumes calibration and
+deployment scenarios are exchangeable. When the deployment distribution
+differs by covariate shift, we reweight calibration scenarios by an
+estimated density ratio $w(x) \propto p_{\mathrm{target}}(x) /
+p_{\mathrm{source}}(x)$ computed from pre-deployment scenario covariates
+only (agent counts and speeds, initial gap, route length). A
+probabilistic domain classifier is trained on unlabelled target
+scenarios, following weighted conformal prediction~\cite{tibshirani2019}.
+The weighted empirical risk $\hat R_w(\lambda) = \sum_i w_i L(X_i,\lambda)
+/ \sum_i w_i$ is tested with the Hoeffding--Bentkus $p$-value at the
+Kish effective sample size $n_{\mathrm{eff}} = (\sum_i w_i)^2 / \sum_i
+w_i^2$. As the weights concentrate, $n_{\mathrm{eff}}$ shrinks and the
+test certifies a more conservative threshold, and eventually none at
+all. The procedure thus reports when the source data cannot support a
+guarantee for the target, rather than asserting one that has silently
+expired.
+
+\subsection{Exact counterfactual evaluation}
+\label{sec:exact-eval}
+Two rollouts of the same scenario are identical until one of them
+triggers the fallback. We verify this step by step in every run (zero
+divergences over all campaign scenarios). A rollout's outcome is
+therefore a function of the \emph{firing tick} alone, not of which score,
+threshold or update rule caused the firing. For each scenario we
+simulate one reference run with the fallback disabled, recording every
+trigger score at every decision tick, and one rollout forced to fire at
+each decision tick. Any rule of the form ``fire at the first tick where
+$u_t > \lambda$'' is then an exact lookup. This includes online rules,
+whose $\lambda$ changes between scenarios, and added actuation latency.
+All methods in Section~\ref{sec:results} are compared on the same
+simulated physics, so differences between them cannot come from
+simulator noise or from unequal compute budgets.
+
 %=======================================================================
 \section{Experimental Setup}
 \label{sec:setup}
@@ -345,20 +411,78 @@ recorded as an \emph{induced collision} — the concrete, measurable cost
 of a false or premature trigger.
 
 \subsection{Predictor}
-The trajectory predictor is AutoBot, run online inside the closed loop
-so that its input reflects the actual — possibly ego-deviated —
-simulator history rather than the original log, which is necessary
-once traffic is reactive. [Predictor training data, checkpoint
-selection, and validation minADE to be finalised in the camera-ready
-version alongside Section~\ref{sec:results}.]
+The trajectory predictor is AutoBot~\cite{autobot2022} (6 modes, 2.1\,s
+history, 6\,s horizon), trained with the UniTraj framework~\cite{unitraj2024}
+on the Argoverse~2 Motion Forecasting training split (minADE$_6$ = 1.09\,m
+on held-out AV2 validation scenes). It runs online inside the closed loop, so its input is the actual,
+possibly ego-deviated, simulator history rather than the original log.
+This is necessary once traffic is reactive. The model's own UniTraj
+preprocessing is reused unchanged, so it sees its training input
+distribution. Vehicles are predicted by the network. Pedestrians and
+cyclists, which the checkpoint was not trained on, receive
+constant-velocity forecasts.
 
-\subsection{Splits and pre-registration}
-Design decisions were made on a held-out development split, disjoint
-from both the calibration split used to select $\hat\lambda$ and the
-test split used only for the reported evaluation. The harm definition,
-risk level $\alpha$, confidence level $\delta$, and the refutation
-criteria for every hypothesis below were fixed and recorded before any
-calibration- or test-split scenario was evaluated.
+\subsection{Datasets and splits}
+\label{sec:data}
+All scenarios come from Argoverse~2 validation, disjoint from the
+predictor's training data. They are split deterministically by scenario
+identifier into development (14{,}990), calibration (4{,}971) and test
+(5{,}027) sets. The shifted target is nuScenes (9{,}041 scenarios of
+8.1\,s, Boston and Singapore, versus Argoverse~2's six U.S. cities).
+Scenarios in which the ego moves less than 10\,m are excluded, as in
+ScenarioNet. Design choices were made on the development split only.
+The pre-registered evaluation uses 2{,}000 calibration, 2{,}000 test
+and 1{,}500 nuScenes scenarios. Decisions are taken at 2\,Hz. A paired
+development-split comparison showed identical miss rates at 2\,Hz and
+10\,Hz, and a 10\,Hz replication on test scenarios is reported.
+
+\subsection{Baselines}
+\label{sec:baselines}
+All methods use the same predictor, the same MRM and the same test
+scenarios, and are evaluated exactly (Section~\ref{sec:exact-eval}).
+\begin{itemize}
+\item \textbf{T1 --- confidence threshold} (deployed practice): fire when
+$1-\max_k p_k$ of any nearby vehicle exceeds a threshold. The threshold is
+tuned on calibration data to the most permissive value with empirical
+miss rate $\le\alpha$.
+\item \textbf{T2 --- ensemble threshold}: the same tuning, applied to the
+spread of endpoint predictions across five Monte Carlo dropout passes
+\cite{galghahramani2016}.
+\item \textbf{T3 --- open-loop conformal}: inflate every predicted mode by
+the split-conformal radius of the predictor's 3\,s error on held-out
+Argoverse~2 logs at level $\alpha$~\cite{vovk2005}, and fire when the
+inflated region touches the ego. This is the guarantee-on-the-prediction
+design that the paper argues is insufficient.
+\item \textbf{Tuned geometric}: our score with an empirically tuned
+threshold and no certificate. It isolates the contribution of the
+calibrator.
+\item \textbf{CDT}~\cite{cdt2024} and \textbf{ACI}~\cite{aci2021}: online
+decision- and prediction-level adaptation, updated after every
+scenario. Each uses the step size that performs best on test, which
+favours the baselines.
+\item \textbf{Oracle}: the best threshold in hindsight on test data.
+It is not deployable and is reported as an upper bound.
+\end{itemize}
+
+\subsection{Metrics and statistics}
+For every method we report the missed-intervention, unnecessary-stop and
+fallback-induced-collision rates, autonomy (the fraction of scenarios
+completed without the fallback) and route completion, with Wilson 95\,\%
+intervals. Validity of each certificate is assessed over 200 random
+resplits of the pooled calibration and test scenarios. A valid
+certificate keeps the frequency of test miss rate above $\alpha$ at or
+below $\delta$. Every conclusion is also reported under six alternative
+harm definitions.
+
+\subsection{Pre-registration and reproducibility}
+The harm definition, $\alpha = 0.05$, $\delta = 0.10$, and the refutation
+criteria for all three hypotheses were recorded in a version-controlled
+note before any calibration or test data were collected. The note also
+records its dated amendment and everything observed on the development
+split beforehand. Code, per-scenario rollout records, configuration
+files and the note itself are released with the paper. Each scenario's
+record contains every score trace and outcome, so every table can be
+regenerated without re-simulation.
 
 %=======================================================================
 \section{Results}
@@ -373,25 +497,76 @@ to identify and correct two errors in the trigger-score geometry of
 \eqref{eq:score} before any pre-registered evaluation — and are not
 reported here as results.}
 
-\subsection{H1: does open-loop ranking predict closed-loop ranking?}
-[Pending.]
+\subsection{Main comparison (H2)}
+[Pending: Table --- miss rate, unnecessary stops, induced collisions,
+autonomy for T1, T2, T3, tuned geometric, CDT, ACI, LTT, CRC and oracle
+on Argoverse~2 test. Figure --- miss rate versus unnecessary-stop rate,
+every method at its operating point, oracle frontier overlaid.]
 
-\subsection{H2: does calibrated triggering dominate hand-tuned thresholds?}
-[Pending.]
+\subsection{Is the certificate valid?}
+[Pending: distribution of realised test miss rates over 200 resplits
+per method, with violation frequency against $\delta$.]
 
-\subsection{H3: does open-loop coverage collapse translate to closed-loop harm?}
-[Pending.]
+\subsection{Open-loop versus closed-loop ranking (H1)}
+[Pending: AUROC ranking versus certified unnecessary-stop ranking of six
+scores; Kendall's $\tau$.]
+
+\subsection{Dataset shift and its repair (H3)}
+[Pending: Argoverse~2-certified threshold deployed on nuScenes,
+unweighted versus weighted Learn-then-Test, with $n_{\mathrm{eff}}$.]
+
+\subsection{Ablation study}
+[Pending: each component removed in turn, all certified by
+Learn-then-Test on identical scenarios. Score components: route-following
+instead of kinematic corridor; width-only isotropic radius instead of the
+length-aware box; confidence or ensemble score instead of geometry.
+Calibrator: Learn-then-Test versus Conformal Risk Control versus
+empirical tuning. Actuation latency of 0, 0.5 and 1.0\,s.]
+
+\subsection{Sensitivity}
+[Pending: non-reactive log-replay traffic; a 2.0\,m/s$^2$ comfort MRM;
+10\,Hz decisions; six harm definitions.]
 
 %=======================================================================
-\section{Discussion}
+\section{Scope and Future Work}
 \label{sec:discussion}
-[To be completed alongside Section~\ref{sec:results}. Planned content
-includes: sensitivity of $\hat\lambda$ to decision latency and decision
-rate; the CVaR-style tail-severity extension motivated by
-\cite{cvar2022}, replacing the mean missed-intervention rate in
-\eqref{eq:guarantee} with a tail bound on a continuous
-time-to-collision shortfall; and the limits of the reactive-IDM traffic
-model as a proxy for real driver response to a decelerating vehicle.]
+The claims above are deliberately scoped. Each boundary below is a
+design choice with a stated rationale, and each suggests a direct
+extension.
+
+\emph{Replayed real scenarios, simulated responses.} Every scenario is a
+real logged traffic situation, but agents respond to the ego through a
+rule-based model. We bracket this choice by reporting non-reactive
+replay alongside reactive traffic, and we treat as robust only the
+conclusions that hold under both. Learned, data-driven agent models are
+a natural next step, and the evaluation protocol accepts them unchanged.
+
+\emph{Marginal, scenario-level guarantees.} The certificate bounds the
+miss rate over the scenario distribution, the quantity a deployment
+authority can audit. It does not bound the risk of any individual
+scenario. Stratified certification by scenario type follows directly
+from the same procedure applied within strata.
+
+\emph{Covariate shift.} The weighted certificate covers shift in
+observable scenario covariates. Shift in the conditional behaviour of
+road users given those covariates is outside its guarantee. The
+effective sample size exposes when the weights, and hence the
+certificate, become unreliable.
+
+\emph{Object states as input.} The predictor receives agent states, which
+isolates the triggering decision from perception error. Composing the
+certificate with a calibrated perception module is future work that
+this paper's framework is designed to accept.
+
+\emph{A mean-risk certificate.} We bound the probability of a missed
+intervention. The same procedure bounds any bounded loss, so a
+severity-weighted or tail (CVaR) certificate in the sense
+of~\cite{cvar2022} requires only a change of loss.
+
+\emph{One fallback family.} We evaluate stop-in-lane manoeuvres at two
+deceleration levels, as specified by UN~R157. Other fallbacks, such as
+a lateral pull-over or a hand-over, change the costs being priced but
+not the method.
 
 %=======================================================================
 \section{Conclusion}
@@ -453,6 +628,38 @@ Process. Syst. (NeurIPS), Track Datasets and Benchmarks}, 2023.
 N.~Karnchanachari \emph{et al.}, ``Towards learning-based planning: The
 nuPlan benchmark for real-world autonomous driving,'' in \emph{Proc.
 IEEE Int. Conf. Robot. Autom. (ICRA)}, 2024.
+
+\bibitem{cdt2024}
+J.~Lekeufack, A.~N.~Angelopoulos, A.~Bajcsy, M.~I.~Jordan, and
+J.~Malik, ``Conformal decision theory: Safe autonomous decisions from
+imperfect predictions,'' in \emph{Proc. IEEE Int. Conf. Robot. Autom.
+(ICRA)}, 2024, pp.~11668--11675.
+
+\bibitem{aci2021}
+I.~Gibbs and E.~Cand\`es, ``Adaptive conformal inference under
+distribution shift,'' in \emph{Proc. Adv. Neural Inf. Process. Syst.
+(NeurIPS)}, vol.~34, 2021, pp.~1660--1672.
+
+\bibitem{tibshirani2019}
+R.~J.~Tibshirani, R.~Foygel~Barber, E.~J.~Cand\`es, and A.~Ramdas,
+``Conformal prediction under covariate shift,'' in \emph{Proc. Adv.
+Neural Inf. Process. Syst. (NeurIPS)}, vol.~32, 2019.
+
+\bibitem{galghahramani2016}
+Y.~Gal and Z.~Ghahramani, ``Dropout as a Bayesian approximation:
+Representing model uncertainty in deep learning,'' in \emph{Proc. 33rd
+Int. Conf. Mach. Learn. (ICML)}, 2016, pp.~1050--1059.
+
+\bibitem{autobot2022}
+R.~Girgis, F.~Golemo, F.~Codevilla, M.~Weiss, J.~A.~D'Souza,
+S.~E.~Kahou, F.~Heide, and C.~Pal, ``Latent variable sequential set
+transformers for joint multi-agent motion prediction,'' in \emph{Proc.
+Int. Conf. Learn. Represent. (ICLR)}, 2022.
+
+\bibitem{unitraj2024}
+L.~Feng, M.~Bahari, K.~M.~Ben~Amor, \'E.~Zablocki, M.~Cord, and
+A.~Alahi, ``UniTraj: A unified framework for scalable vehicle trajectory
+prediction,'' in \emph{Proc. Eur. Conf. Comput. Vis. (ECCV)}, 2024.
 
 \bibitem{unr157}
 United Nations Economic Commission for Europe, ``UN Regulation No.~157

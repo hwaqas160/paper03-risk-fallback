@@ -32,7 +32,7 @@ first `av2_test` or nuScenes evaluation is run.
 This work uses a trained AutoBot checkpoint and converted scenario data as **infrastructure**
 — the same relationship any paper has to a pretrained backbone or a public dataset. It makes
 no claim that requires a companion paper to be published, accepted, or even cited:
-- AutoBot is a published, citable architecture (Kim et al., ICLR 2022); the checkpoint used
+- AutoBot is a published, citable architecture (Girgis et al., ICLR 2022 -- citation corrected 2026-09-23 from an earlier wrong "Kim et al."); the checkpoint used
   here is described directly in this paper's own methods (training data, minADE), not by
   reference to another paper's evaluation of it.
 - The AV2 → nuScenes coverage-collapse premise behind H3 is **computed by this paper's own

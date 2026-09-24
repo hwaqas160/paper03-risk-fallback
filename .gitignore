@@ -9,3 +9,7 @@ results/*.json
 # vendored clones — reference upstream repos, not part of Paper 03's own work
 code/metadrive/
 code/scenarionet/
+
+# per-scenario campaign records: hundreds of MB, hours of compute, written live by a running job.
+# Released via a data archive at submission, not tracked in git.
+results/campaign/

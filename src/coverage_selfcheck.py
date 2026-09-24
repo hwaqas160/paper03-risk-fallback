@@ -11,7 +11,7 @@ citation. This script recomputes the coverage numbers from scratch, using only:
   (b) raw model prediction dumps (pred_trajs / gt / gt_mask arrays) — the same kind of
       artifact as a downloaded pretrained-model output, not a "finding" of Paper 01's.
 
-AutoBot itself (Kim et al., ICLR 2022) is cited as the predictor architecture; the specific
+AutoBot itself (Girgis et al., ICLR 2022) is cited as the predictor architecture; the specific
 checkpoint is described in Paper 03's own methods (data, training set, minADE) exactly as a
 paper would describe any pretrained backbone it uses. Paper 03 depends on Paper 01's
 INFRASTRUCTURE (converted data, a trained checkpoint) but asserts no claim that requires
