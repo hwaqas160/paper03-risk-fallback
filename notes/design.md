@@ -446,3 +446,42 @@ requires training 4 additional checkpoints — multiple hours of CPU time each, 
 disruptive compute commitment on a machine shared with other active projects. Deliberately
 not launched unprompted this session; flagged for a decision rather than silently deferred
 or silently started.
+
+
+## 16. Correction of §15's T1 finding; two bugs found by inspecting the calibration score distribution (2026-09-24)
+
+**§15's claim — "AutoBot's confidence score is a constant, T1 may be nearly useless" — is
+RETRACTED.** It was a pipeline bug.
+
+1. *Fabricated confidences.* `AutoBotPredictor.predict_env` gives every agent the network did
+   not predict (pedestrians, cyclists, vehicles beyond 60 m or beyond the 16 nearest) a
+   constant-velocity forecast with uniform mode probabilities `1/K`. Their "confidence"
+   `1 − max p = 1 − 1/6 = 0.833` is a constant of the code, not a model output. The T1 score
+   took a maximum over all agents, so any scene containing one pinned it at 0.833 — on 2 000
+   calibration scenarios its scenario-peak had 8 distinct values.
+2. *Wrong agent-selection rule.* The design (§2) always said "most conflicting agent"; the code
+   took the least-confident of ANY agent.
+
+How it was caught: the score distribution of the finished calibration campaign was inspected
+descriptively (no outcomes, no test data) and looked implausibly degenerate; Paper 01's
+independent inference dump (`pred_probs`, not routed through the adapter) showed real
+variation, which located the bug in the adapter. Fix: `predict_env` now exposes
+`last_is_net`; `rollout.agent_table` stores `[conf, gap, dist, ahead, net]` per agent per tick;
+`evaluate.py` derives T1 (`conf_conflict`) from network-predicted agents only, argmin predicted
+gap, plus an `conf_ahead` variant. Regression tests:
+`test_t1_uses_most_conflicting_agent_not_any_agent`,
+`test_t1_ignores_agents_the_network_did_not_predict`.
+
+Consequence for data already collected: the stored `conf` traces (2 000 `av2_cal`, ~1 140
+`av2_test` rows) are unusable. The forced-fire rollouts (all outcomes, ~20 % of cost) are
+valid — they depend only on the firing tick — so a **rescoring pass** (`campaign.py
+--rescore`) re-runs only the reference run (~50 s/scenario, MC dropout off) and writes
+per-agent-table sidecars, merged by seed when the tick count matches. `geom`, `gap`, `ens`
+traces are unaffected.
+
+**Exactness at scale (replaces the "zero divergences" statement).** On 33 761 forced-fire
+rollouts of 2 000 scenarios: 538 (1.59 %) showed ≥ 1 cm pre-fire ego drift from the reference,
+in 71 scenarios (3.6 %); the pre-fire TTC trace differed in 407 (1.21 %); the pre-fire **harm
+status differed in 1 (0.003 %)**. Cause: MetaDrive is not bit-repeatable across independently
+run episodes (§10, §11). Handling: headline uses all scenarios; `evaluate.py --drop_diverged`
+reports the robustness check.

@@ -248,15 +248,57 @@ def score_geometric(env, preds: np.ndarray, extents: np.ndarray) -> float:
     return float(np.max(intrusion))
 
 
+def agent_table(env, preds: np.ndarray, probs: np.ndarray, extents: np.ndarray, is_net=None) -> list:
+    """
+    Per road user, one row [conf, gap, dist, ahead, net]:
+      conf  = 1 - max_k P(mode k)                      (the predictor's stated uncertainty)
+      gap   = min over (mode, t) of the Chebyshev box gap to the ego's kinematic corridor,
+              metres, <= 0 = predicted overlap         (same geometry as score_gap)
+      dist  = distance from ego to the agent's first predicted position, metres
+      ahead = 1 if that position lies ahead of the ego along its heading
+      net   = 1 if the NEURAL NETWORK predicted this agent. 0 = constant-velocity fallback
+              with fabricated uniform probabilities: its `conf` is NOT a model confidence
+              and must be excluded from any confidence-based trigger.
+    Stored per decision tick in the reference run, so ANY agent-selection rule for a
+    confidence baseline (most conflicting, nearest ahead, least confident) is computed
+    offline with no re-simulation.
+    """
+    if len(preds) == 0:
+        return []
+    plan, head = ego_plan_kinematic(env)
+    tangent = np.stack([np.cos(head), np.sin(head)], -1)
+    normal = np.stack([-np.sin(head), np.cos(head)], -1)
+    d = preds - plan[None, None, :, :]
+    along = np.abs(np.einsum("aktd,td->akt", d, tangent))
+    lat = np.abs(np.einsum("aktd,td->akt", d, normal))
+    lon_m = 0.5 * (env.agent.LENGTH + extents[:, 0])[:, None, None]
+    lat_m = 0.5 * (env.agent.WIDTH + extents[:, 1])[:, None, None]
+    gap = np.maximum(along - lon_m, lat - lat_m).reshape(len(preds), -1).min(1)
+    p0 = np.asarray(env.agent.position, float)
+    first = preds[:, :, 0, :].mean(1) - p0                         # (A,2)
+    dist = np.linalg.norm(first, axis=1)
+    ahead = (first @ np.array([np.cos(env.agent.heading_theta), np.sin(env.agent.heading_theta)]) > 0)
+    conf = 1.0 - probs.max(axis=1)
+    net = np.ones(len(preds), bool) if is_net is None else np.asarray(is_net, bool)
+    return [[round(float(c), 4), round(float(min(g, 100.0)), 3), round(float(di), 2), int(a), int(n)]
+            for c, g, di, a, n in zip(conf, gap, dist, ahead, net)]
+
+
 def score_confidence(env, preds: np.ndarray, probs: np.ndarray) -> float:
     """
-    T1 (notes/design.md Sec. 2): the "fixed confidence threshold" baseline everyone actually
-    ships today. u_t = 1 - max_k P(mode k), taken over the LEAST confident of the agents the
-    predictor was asked about (already restricted to nearby, potentially-conflicting vehicles
-    by the predictor itself — see PRED_RADIUS/MAX_CENTER in autobot_predictor.py). Unlike
-    score_geometric, T1 has no notion of geometry or distance at all: an agent far away that
-    the predictor is simply unsure about scores exactly the same as one about to collide.
-    That blindness is the point of including it as a baseline, not a flaw to fix.
+    Confidence of the LEAST confident predicted vehicle ("conf_any"): u = max over up to 16
+    nearby vehicles of 1 - max_k P(mode k).
+
+    THIS IS NOT THE T1 BASELINE AND IS A KNOWN-BROKEN QUANTITY. On 2 000 calibration
+    scenarios its scenario-peak took 8 distinct values (median = max = 0.833 = 1 - 1/K).
+    Cause (found 2026-09-24): the adapter gives every agent the network did NOT predict
+    (pedestrians, cyclists, vehicles beyond 60 m) a constant-velocity forecast with
+    FABRICATED uniform mode probabilities, so any scene containing one pins this score at its
+    ceiling. It is not evidence about AutoBot's confidence -- Paper 01's independent inference
+    path shows real variation (median max-prob 0.25, 462 distinct values of 1-max, AUROC 0.63
+    for high error). T1 is `conf_conflict` (evaluate.py): the confidence of the NETWORK-
+    predicted agent whose modes come closest to the ego -- notes/design.md Sec. 2's
+    "most conflicting agent". This function is kept only so stored traces stay interpretable.
     """
     if len(probs) == 0:
         return 0.0
@@ -339,6 +381,7 @@ class RolloutResult:
     peak_decel: float = 0.0
     scores: list = field(default_factory=list)
     score_traces: dict = field(default_factory=dict)  # key -> per-decision-tick score (reference run only)
+    agent_tables: list = field(default_factory=list)   # per tick: [[conf, gap, dist, ahead], ...] per agent
     feats: list = field(default_factory=list)          # pre-deployment scenario covariates (shift weighting)
     ttc_trace: list = field(default_factory=list)   # per-step nuPlan TTC (s), capped at TTC_CAP
     ego_trace: list = field(default_factory=list)   # per-step ego [x, y]; kept in memory, not saved
@@ -506,6 +549,7 @@ def rollout(env, seed: int, lam: float, predictor, decide_every: int = 1,
                 states, extents = _trigger_inputs(_agents(env))
                 preds, probs, ext = predict_agents(env, predictor, states, extents)
                 sc = all_scores(env, preds, probs, ext)
+                r.agent_tables.append(agent_table(env, preds, probs, ext, getattr(predictor, "last_is_net", None)))
                 # T2: MC-dropout ensemble spread of the nearest vehicles (0 if unavailable)
                 sp = getattr(predictor, "last_spread", {}) or {}
                 sc["ens"] = float(max(sp.values())) if sp else 0.0
@@ -629,7 +673,7 @@ def sweep_scenario_ticks(env, seed: int, predictor, decide_every: int = 5, **kw)
                     fire_step=k, ref_ego=cf.ego_trace)
         fired[str(k)] = {key: getattr(r, key) for key in OUTCOME_KEYS}
     ref = {key: getattr(cf, key) for key in OUTCOME_KEYS}
-    ref.update(score_traces=cf.score_traces, feats=cf.feats)
+    ref.update(score_traces=cf.score_traces, feats=cf.feats, agent_tables=cf.agent_tables)
     return dict(seed=seed, decide_every=decide_every, ref=ref, fired=fired,
                 n_diverged=sum(int(v["diverged"]) for v in fired.values()))
 

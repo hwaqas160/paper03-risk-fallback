@@ -130,6 +130,7 @@ class AutoBotPredictor:
         ego_name = env.agent.name
         names = [n for n in self._hist if n != ego_name and self._hist[n][-1] is not None]
         if not names:
+            self.last_is_net = np.zeros(0, bool)
             return np.zeros((0, 6, self.horizon, 2)), np.zeros((0, 6)), np.zeros((0, 2))
 
         order = list(self._hist)                 # includes ego (needed as context)
@@ -187,9 +188,10 @@ class AutoBotPredictor:
         # everyone not predicted by AutoBot: constant velocity, one mode replicated
         k = 6
         tt = np.arange(1, self.horizon + 1) * 0.1
-        P, Q, E = [], [], []
+        P, Q, E, NET = [], [], [], []
         for n in names:
             s = self._hist[n][-1]
+            NET.append(n in preds)
             if n in preds:
                 P.append(preds[n]); Q.append(probs[n])
             else:
@@ -197,6 +199,11 @@ class AutoBotPredictor:
                 P.append(np.repeat(cv[None], k, 0)); Q.append(np.full(k, 1.0 / k))
             E.append([s[3], s[4]])
         self.last_timing["total_s"] = time.perf_counter() - t0
+        # Agents the NETWORK did not predict (pedestrians, cyclists, vehicles beyond
+        # PRED_RADIUS / MAX_CENTER) get constant-velocity forecasts with FABRICATED uniform mode
+        # probabilities (1/K). Those are not model confidences; a confidence trigger must not
+        # see them. Found 2026-09-24: they pinned a "confidence" score at 1-1/K in every scenario.
+        self.last_is_net = np.asarray(NET, bool)
         return np.stack(P), np.stack(Q), np.asarray(E)
 
     def _mc_spread(self, samples, ids) -> dict:

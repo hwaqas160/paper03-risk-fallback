@@ -48,6 +48,58 @@ def _append(path: Path, obj: dict):
         os.fsync(f.fileno())
 
 
+def _rescore_worker(job):
+    """
+    Re-run ONLY the reference (fallback-disabled) run for scenarios whose stored rows lack
+    per-agent tables (collected before 2026-09-24), and write agents_<wid>.jsonl sidecars.
+    The forced-fire rollouts -- the physics every outcome comes from -- are NOT redone: they
+    depend only on the firing tick, not on any score. Each sidecar also stores the fresh run's
+    'geom' trace and tick count so evaluate.py / the caller can verify the re-run matches the
+    original (same tick count, same geometric score) before trusting it.
+    """
+    os.environ["OMP_NUM_THREADS"] = "1"
+    import simenv as se
+    from rollout import make_fallback_policy_cls, rollout
+    from autobot_predictor import AutoBotPredictor
+
+    out_dir = Path(job["out"])
+    side_f = out_dir / f"agents_{job['wid']:02d}.jsonl"
+    todo = []
+    src = out_dir / f"part_{job['wid']:02d}.jsonl"
+    have = _done(side_f)
+    if src.exists():
+        with open(src) as f:
+            for line in f:
+                try:
+                    r = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                if "ref" in r and not r["ref"].get("agent_tables") and r["seed"] not in have:
+                    todo.append(r["seed"])
+    if not todo:
+        return dict(wid=job["wid"], rows=0, minutes=0.0)
+    predictor = AutoBotPredictor(threads=1, mc=0, ckpt=job["ckpt"])       # MC dropout not needed here
+    env = se.make_env(job["db"], job["start"], job["count"], policy=make_fallback_policy_cls(job["mrm_decel"]),
+                      reactive_traffic=not job["replay"])
+    t0, n = time.time(), 0
+    try:
+        for seed in todo:
+            try:
+                env.reset(seed=seed)
+                ref = rollout(env, seed, float("inf"), predictor, decide_every=job["decide_every"], record_all=True)
+                _append(side_f, dict(seed=seed, n_ticks=len(ref.agent_tables), agent_tables=ref.agent_tables,
+                                     geom=ref.score_traces.get("geom", []), steps=ref.steps))
+                n += 1
+            except Exception as e:  # noqa: BLE001
+                _append(out_dir / f"skip_{job['wid']:02d}.jsonl", dict(seed=seed, reason="rescore_error", error=repr(e)[:300]))
+                env.close()
+                env = se.make_env(job["db"], job["start"], job["count"], policy=make_fallback_policy_cls(job["mrm_decel"]),
+                                  reactive_traffic=not job["replay"])
+    finally:
+        env.close()
+    return dict(wid=job["wid"], rows=n, minutes=(time.time() - t0) / 60)
+
+
 def _worker(job):
     os.environ["OMP_NUM_THREADS"] = "1"
     import simenv as se
@@ -102,6 +154,8 @@ def main():
     ap.add_argument("--mrm_decel", type=float, default=4.0)
     ap.add_argument("--replay", action="store_true", help="non-reactive log-replay traffic (ablation)")
     ap.add_argument("--ckpt", default=None, help="AutoBot checkpoint (default: autobot_predictor.DEFAULT_CKPT)")
+    ap.add_argument("--rescore", action="store_true",
+                    help="re-run only the reference run for stored rows lacking per-agent tables")
     ap.add_argument("--out", required=True)
     a = ap.parse_args()
 
@@ -128,11 +182,13 @@ def main():
     (out / "config.json").write_text(json.dumps(dict(vars(a), ckpt=str(a.ckpt or DEFAULT_CKPT),
                                                      total_in_db=total, span=span), indent=2))
     t0 = time.time()
+    fn = _rescore_worker if a.rescore else _worker
     with ProcessPoolExecutor(max_workers=w, mp_context=mp.get_context("spawn")) as ex:
-        for r in ex.map(_worker, jobs):
+        for r in ex.map(fn, jobs):
             print(f"  worker {r['wid']:02d}: {r['rows']} rows, {r['minutes']:.1f} min", flush=True)
-    n = sum(len(_done(p)) for p in out.glob("part_*.jsonl"))
-    print(f"{a.db}: {n} rows in {out} ({(time.time() - t0) / 3600:.2f} h this run)", flush=True)
+    pat = "agents_*.jsonl" if a.rescore else "part_*.jsonl"
+    n = sum(len(_done(p)) for p in out.glob(pat))
+    print(f"{a.db}: {n} {'rescored' if a.rescore else ''} rows in {out} ({(time.time() - t0) / 3600:.2f} h this run)", flush=True)
 
 
 if __name__ == "__main__":

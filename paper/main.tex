@@ -368,8 +368,13 @@ expired.
 \subsection{Exact counterfactual evaluation}
 \label{sec:exact-eval}
 Two rollouts of the same scenario are identical until one of them
-triggers the fallback. We verify this step by step in every run (zero
-divergences over all campaign scenarios). A rollout's outcome is
+triggers the fallback, up to the simulator's own non-determinism. We
+measure this in every forced-firing rollout. Over the first 33{,}761
+forced-firing rollouts (2{,}000 scenarios), 98.4\,\% agreed with the
+reference run to within 1\,cm before firing. The pre-fire time-to-collision
+trace differed in 1.2\,\% and the pre-fire harm status in one rollout
+(0.003\,\%). We report the result of every analysis both on all scenarios
+and after dropping the 3.6\,\% of scenarios with any flagged drift. A rollout's outcome is
 therefore a function of the \emph{firing tick} alone, not of which score,
 threshold or update rule caused the firing. For each scenario we
 simulate one reference run with the fallback disabled, recording every

@@ -153,3 +153,29 @@ made concrete.
 8. **n:** 2 000 `av2_cal`, 2 000 `av2_test`, 1 500 `ns_val` (non-static scenarios).
 9. **Sensitivity arms (reported, not used for H1–H3):** log-replay traffic and a 2.0 m/s²
    comfort MRM, each on 500 `av2_test` scenarios.
+
+
+## Amendment 2 — 2026-09-24, BEFORE any evaluation of calibration- or test-split outcomes
+
+Found by inspecting the *score distribution* of the finished calibration campaign
+(descriptive; no outcomes, no test data, no hypothesis evaluated). H1–H3 claims, metrics and
+refutation thresholds are **unchanged**.
+
+1. **T1 (confidence threshold) was mis-implemented, and its earlier "finding" is retracted.**
+   The stored confidence score was pinned at 1 − 1/6 in every scenario because the adapter gave
+   agents the network did not predict (pedestrians, cyclists, vehicles beyond 60 m) fabricated
+   uniform mode probabilities (44 % of agent-tick rows in a real-scenario check), and because the
+   code took the least-confident of any agent, not the design's "most conflicting agent".
+   **T1 is now: 1 − max mode probability of the NETWORK-PREDICTED agent whose predicted modes come
+   closest to the ego** (`conf_conflict`), with the nearest-agent-ahead variant (`conf_ahead`)
+   reported alongside. The corrected definition is the strongest reasonable version of a
+   deployed confidence trigger, not a weakened one. See `notes/design.md` §16.
+2. **Exactness at scale (measured, replaces an over-claim).** 538 of 33 761 forced-fire rollouts
+   (1.59 %, 71 of 2 000 scenarios) drifted ≥ 1 cm before firing; pre-fire TTC traces differed in
+   1.21 %; pre-fire **harm status differed in 1 (0.003 %)**. Headline analyses use all scenarios;
+   `--drop_diverged` is reported as a robustness check. Decided here, before any outcome analysis.
+3. **Data handling.** Already-collected rows (2 000 `av2_cal`, 1 139 `av2_test`) keep their
+   forced-fire outcomes (which depend only on the firing tick) and are re-scored by re-running
+   only the reference run; a sidecar is used only when its tick count matches the stored row.
+   Rows that cannot be matched are dropped from analyses needing per-agent tables and the count
+   is reported.

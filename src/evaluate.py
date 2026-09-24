@@ -53,6 +53,27 @@ class Scenario:
         self.seed = row["seed"]
         self.feats = np.asarray(ref.get("feats", []), float)
         self.traces = {k: np.asarray(v, float) for k, v in ref["score_traces"].items()}
+        # The stored "conf" trace is the LEAST-confident-of-any-agent score, which saturates
+        # at 1-1/K (rollout.score_confidence). Rename it and derive the real T1 variants from
+        # the per-agent table (rollout.agent_table) when present.
+        if "conf" in self.traces:
+            self.traces["conf_any"] = self.traces.pop("conf")
+        tabs = ref.get("agent_tables")
+        if tabs:
+            def pick(rule):
+                out = []
+                for tab in tabs:
+                    # only agents the NETWORK predicted carry a real confidence (col 4)
+                    rows_ = [a for a in tab if (len(a) < 5 or a[4] == 1) and (rule == "conflict" or a[3] == 1)]
+                    if not rows_:
+                        out.append(0.0)
+                    elif rule == "conflict":
+                        out.append(min(rows_, key=lambda a: a[1])[0])      # smallest predicted gap
+                    else:
+                        out.append(min(rows_, key=lambda a: a[2])[0])      # nearest ahead
+                return np.asarray(out, float)
+            self.traces["conf_conflict"] = pick("conflict")   # T1 (primary): most conflicting agent
+            self.traces["conf_ahead"] = pick("ahead")         # T1 variant: nearest agent ahead
         self.cummax = {k: np.maximum.accumulate(v) for k, v in self.traces.items()}
         self.n_ticks = len(next(iter(self.traces.values())))
         ref_r = _rr(ref)
@@ -85,8 +106,33 @@ class Scenario:
         return np.minimum(i, self.n_ticks)
 
 
-def load_rows(paths) -> list[dict]:
+def has(scns, key) -> bool:
+    """True if EVERY scenario carries this score trace (a method needing it is skipped otherwise)."""
+    return bool(scns) and all(key in s.traces for s in scns)
+
+
+def load_rows(paths, drop_diverged: bool = False) -> list[dict]:
+    """
+    Rows come from part_*.jsonl. A rescoring pass (campaign.py --rescore) writes
+    agents_*.jsonl sidecars holding a fresh reference run's per-agent tables for scenarios
+    collected before agent tables were recorded; they are merged here by seed, and used only
+    when the tick count matches the stored row (otherwise the scenario keeps no tables and is
+    dropped from analyses that need them -- reported by `coverage_report`).
+    drop_diverged: robustness option -- drop every scenario in which any forced-fire rollout
+    showed >= 1 cm pre-fire drift from the reference (simulator non-determinism).
+    """
     rows = []
+    side = {}
+    for p in paths:
+        if Path(p).is_dir():
+            for f in sorted(Path(p).glob("agents_*.jsonl")):
+                with open(f) as fh:
+                    for line in fh:
+                        try:
+                            d = json.loads(line)
+                        except json.JSONDecodeError:
+                            continue
+                        side[d["seed"]] = d
     for p in paths:
         # part_*.jsonl hold scenario rows; skip_*.jsonl hold static-ego / error markers
         for f in sorted(Path(p).glob("part_*.jsonl")) if Path(p).is_dir() else [Path(p)]:
@@ -100,9 +146,22 @@ def load_rows(paths) -> list[dict]:
                         rows.append(r)
     seen, out = set(), []
     for r in rows:                                 # a resumed campaign can repeat a seed
-        if r["seed"] not in seen:
-            seen.add(r["seed"]); out.append(r)
+        if r["seed"] in seen:
+            continue
+        seen.add(r["seed"])
+        if drop_diverged and r.get("n_diverged", 0) > 0:
+            continue
+        sc = side.get(r["seed"])
+        if sc and not r["ref"].get("agent_tables") and                 len(sc["agent_tables"]) == len(next(iter(r["ref"]["score_traces"].values()))):
+            r["ref"]["agent_tables"] = sc["agent_tables"]
+        out.append(r)
     return out
+
+
+def coverage_report(scns) -> dict:
+    """How many scenarios carry each score the analyses need (so nothing is silently dropped)."""
+    keys = set().union(*[set(s.traces) for s in scns]) if scns else set()
+    return {k: sum(k in s.traces for s in scns) for k in sorted(keys)}
 
 
 # ------------------------------------------------------------------------ core tables
@@ -233,9 +292,13 @@ def headline(cal, test, alpha, delta, pred_err=None, seed=0, etas=(0.01, 0.05, 0
     res = {}
     res["never"] = summarize(test, "geom", np.inf)
     res["always"] = summarize(test, "geom", -np.inf)
-    for key, name in (("conf", "T1 tuned confidence"), ("ens", "T2 tuned ensemble (MC dropout)"),
+    for key, name in (("conf_conflict", "T1 tuned confidence (most conflicting agent)"),
+                      ("conf_ahead", "T1 variant: nearest agent ahead"),
+                      ("ens", "T2 tuned ensemble (MC dropout)"),
                       ("geom", "tuned geometric (ours, no guarantee)")):
-        if key not in test[0].traces:
+        if not (has(cal, key) and has(test, key)):
+            print(f"  [skip] {name}: score '{key}' not available for all scenarios "
+                  f"(run campaign.py --rescore to add per-agent tables)")
             continue
         res[name] = dict(lam=tuned(cal, key, alpha), **summarize(test, key, tuned(cal, key, alpha)))
     if pred_err is not None:
@@ -278,11 +341,12 @@ def validity(scns, alpha, delta, reps=200, seed=0, pred_err=None):
     """
     rng = np.random.default_rng(seed)
     methods = {
-        "T1 tuned confidence": lambda c: ("conf", tuned(c, "conf", alpha)),
         "tuned geometric": lambda c: ("geom", tuned(c, "geom", alpha)),
         "T4 LTT (ours)": lambda c: ("geom", ltt(c, "geom", alpha, delta)),
         "T4 CRC (ours)": lambda c: ("geom", crc(c, "geom", alpha)),
     }
+    if has(scns, "conf_conflict"):
+        methods["T1 tuned confidence"] = lambda c: ("conf_conflict", tuned(c, "conf_conflict", alpha))
     if pred_err is not None:
         methods["T3 open-loop conformal"] = lambda c: ("gap", cp_open_lambda(pred_err, alpha))
     out = {k: [] for k in methods}
@@ -308,9 +372,9 @@ def ablations(cal, test, alpha, delta, lats=(0, 1, 2)):
     for key, name in (("geom", "full (kinematic corridor + length-aware box)"),
                       ("geom_route", "- route-following corridor instead of kinematic"),
                       ("geom_iso", "- width-only isotropic radius instead of box"),
-                      ("conf", "- confidence score instead of geometry"),
+                      ("conf_conflict", "- confidence (most conflicting agent) instead of geometry"),
                       ("ens", "- ensemble spread instead of geometry")):
-        if key not in test[0].traces:
+        if not (has(cal, key) and has(test, key)):
             continue
         lam = ltt(cal, key, alpha, delta)
         res[f"score: {name}"] = dict(lam=lam, **summarize(test, key, lam))
@@ -325,7 +389,8 @@ def ablations(cal, test, alpha, delta, lats=(0, 1, 2)):
     return res
 
 
-def h1_rankings(cal, test, alpha, delta, keys=("conf", "ens", "gap", "geom", "geom_route", "geom_iso")):
+def h1_rankings(cal, test, alpha, delta,
+                keys=("conf_conflict", "ens", "gap", "geom", "geom_route", "geom_iso")):
     """
     H1: does open-loop evaluation rank uncertainty scores the same way closed-loop does?
       open-loop  = AUROC of the scenario's peak score for predicting harm in the no-fallback
@@ -334,7 +399,7 @@ def h1_rankings(cal, test, alpha, delta, keys=("conf", "ens", "gap", "geom", "ge
     Reports both rankings and Kendall's tau between them.
     """
     from scipy.stats import kendalltau
-    keys = [k for k in keys if k in test[0].traces]
+    keys = [k for k in keys if has(cal, k) and has(test, k)]
     y = np.array([s.ref_harmful for s in test], float)
     auroc, stops = {}, {}
     for k in keys:
@@ -380,19 +445,24 @@ def main():
     ap.add_argument("--alpha", type=float, default=0.05)
     ap.add_argument("--delta", type=float, default=0.10)
     ap.add_argument("--reps", type=int, default=200)
+    ap.add_argument("--drop_diverged", action="store_true",
+                    help="robustness: drop scenarios with any >=1cm pre-fire simulator drift")
     ap.add_argument("--out", default="results/eval.json")
     a = ap.parse_args()
 
-    cal = [Scenario(r) for r in load_rows(a.cal)]
-    test = [Scenario(r) for r in load_rows(a.test)]
+    cal = [Scenario(r) for r in load_rows(a.cal, a.drop_diverged)]
+    test = [Scenario(r) for r in load_rows(a.test, a.drop_diverged)]
     pe = pred_error_scores(a.pred_err) if a.pred_err else None
-    out = dict(alpha=a.alpha, delta=a.delta, n_cal=len(cal), n_test=len(test))
+    out = dict(alpha=a.alpha, delta=a.delta, n_cal=len(cal), n_test=len(test),
+               drop_diverged=a.drop_diverged, score_coverage_cal=coverage_report(cal),
+               score_coverage_test=coverage_report(test))
+    print("score availability (cal):", out["score_coverage_cal"])
     out["headline"] = headline(cal, test, a.alpha, a.delta, pe)
     out["ablations"] = ablations(cal, test, a.alpha, a.delta)
     out["validity"] = validity(cal + test, a.alpha, a.delta, a.reps, pred_err=pe)
     out["h1"] = h1_rankings(cal, test, a.alpha, a.delta)
     if a.shift:
-        out["shift"] = shift(cal, [Scenario(r) for r in load_rows(a.shift)], a.alpha, a.delta)
+        out["shift"] = shift(cal, [Scenario(r) for r in load_rows(a.shift, a.drop_diverged)], a.alpha, a.delta)
     Path(a.out).write_text(json.dumps(out, indent=2, default=float))
     for sec in ("headline", "ablations", "shift"):
         if sec not in out:
