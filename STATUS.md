@@ -110,3 +110,21 @@ and Future Work, 15 references. **Corrected a wrong citation:** AutoBot is Girgi
 3. Add the QAD baseline and the reverse-shift analysis (both need no new simulation beyond
    what's queued).
 4. Fill Results/Discussion/Conclusion, generate figures, finalize abstract numbers.
+
+
+## Update 2026-09-28 (evening) — results in, paper reframed
+
+- **Pre-registered verdicts** (`notes/falsification.md`, Outcome log): H1 not refuted but weak (τ 0.60 AV2, 0.47 nuScenes);
+  **H2 refuted** (tuned threshold and CDT stop less than LTT; LTT is the only design whose certificate is valid: 9.5 % vs 43.5 %
+  violation); **H3 supported** (AV2-certified miss 13.2 % on nuScenes). Latency of one tick breaks the target.
+- **Post-hoc, labelled:** 5.0 % of nuScenes scenarios have harm at the first tick (floor = α); reverse shift is safe but
+  conservative on the avoidable subset; few-label recalibration restores validity at 53-81 % stops (Amendments 3b, 3c).
+- **Paper reframed** (ChatGPT suggestion evaluated and adopted with three changes): evaluation-study framing with RQ1-RQ4,
+  no "outperforms" claim, title "Statistical Certification of AV Fallback Triggers: Closed-Loop Evaluation Under Dataset Shift"
+  (recalibration kept OUT of the title because it is exploratory and single-pair), exact evaluation protocol kept as a named
+  contribution, removed the "first guarantee" and "box required for correctness" overclaims. 8 pages, compiles clean.
+- **Waymo** (Amendment 3): 8 shards converted (data/waymo_val), arm `waymo_val` (1 000 scenarios) collecting now, ahead of the
+  sensitivity arms. H3-W pre-registered. Paper has [pending] markers for Waymo and the three sensitivity arms.
+- **Remaining:** Waymo + sensitivity results; figures (risk-vs-stops scatter, validity histogram); Luo et al. / Farid et al. as
+  baselines; second predictor; verify Luo et al. and Waymo (Ettinger et al., ICCV 2021) references; hyper-parameter appendix;
+  code release.
