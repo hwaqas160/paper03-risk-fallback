@@ -47,11 +47,16 @@ def arm_state(name: str, target: int) -> dict:
     for f in sorted(d.glob("skip_*.jsonl")) if d.exists() else []:
         with open(f) as fh:
             errors += sum('"error"' in line for line in fh)
+    unmatched = 0
     for seed, (n_ticks, has) in rows.items():
-        if not has and side.get(seed) != n_ticks:
-            need_tables += 1
+        if has:
+            continue
+        if seed not in side:
+            need_tables += 1          # never rescored yet -> work remains
+        elif side[seed] != n_ticks:
+            unmatched += 1            # rescored but the re-run differs in length: dropped (Amendment 2)
     return dict(name=name, target=target, rows=len(rows), need_tables=need_tables, errors=errors,
-                complete=len(rows) >= target and need_tables == 0)
+                unmatched=unmatched, complete=len(rows) >= target and need_tables == 0)
 
 
 def main():
@@ -60,9 +65,9 @@ def main():
     a = ap.parse_args()
     states = [arm_state(n, t) for n, t in ARMS.items()]
     if not a.quiet:
-        print(f"{'arm':<18}{'rows':>6}/{'target':<6}{'need tables':>13}{'errors':>8}  state")
+        print(f"{'arm':<18}{'rows':>6}/{'target':<6}{'need tables':>13}{'unmatched':>10}{'errors':>8}  state")
         for s in states:
-            print(f"{s['name']:<18}{s['rows']:>6}/{s['target']:<6}{s['need_tables']:>13}{s['errors']:>8}  "
+            print(f"{s['name']:<18}{s['rows']:>6}/{s['target']:<6}{s['need_tables']:>13}{s['unmatched']:>10}{s['errors']:>8}  "
                   f"{'COMPLETE' if s['complete'] else 'in progress'}")
     sys.exit(0 if all(s["complete"] for s in states) else 1)
 

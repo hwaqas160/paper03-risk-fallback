@@ -225,3 +225,30 @@ smoke rows inspected for plumbing only (tick counts, tables present, 0 drift), n
    supports the "decision rate is not load-bearing" statement, for which 100 paired scenarios with
    identical seeds suffice, since Amendment 1 already found bit-identical misses at 2 Hz vs 10 Hz on
    the dev split).
+
+
+## Amendment 3b — 2026-09-28, POST-HOC sensitivity (labelled as such; changes no verdict rule)
+
+Found while running the pre-registered reverse shift (3.6), which returned **"LTT refused to certify"
+on both nuScenes halves** (n_cal = 752 each). Cause, measured: 75 of 1 504 nuScenes scenarios (**5.0 %**)
+already contain harm at the first decision tick, so even "always fire at t=0" misses them — an
+irreducible floor equal to α, so no threshold can be certified at α = 0.05 there. On AV2 the floor is
+0.1 %. (nuScenes snippets start mid-interaction; a TTC < 0.95 s state at the first tick is a property
+of the log, not something a fallback can undo.)
+
+Post-hoc, NOT replacing any pre-registered result (which stand as reported): re-running with those
+"unavoidable-at-start" scenarios excluded.
+
+| Analysis (α = 0.05, δ = 0.10) | Pre-registered / all scenarios | Post-hoc, avoidable only |
+|---|---|---|
+| H3: AV2-certified λ on nuScenes, miss [95 % CI] | 0.132 [0.116, 0.150] | 0.092 [0.078, 0.108] — still excludes α |
+| Weighted-LTT repair on nuScenes | 0.070 (n_eff ≈ 68 in the avoidable set) | 0.022 [0.016, 0.031], unnec. stop 0.545 |
+| Reverse shift, nuScenes-certified → AV2 test | refused to certify (both halves) | miss 0.019 / 0.020 (CIs below α), unnec. stop 0.41 / 0.40 |
+
+Reading: H3 is robust to the exclusion. The shift is **asymmetric**: a threshold certified on the
+harder domain (nuScenes) transfers safely but conservatively to the easier one (AV2 stops 40 % vs
+28.5 % in-domain), while the AV2-certified threshold is unsafe on nuScenes. The weighted repair's
+effective sample size is very small (68), so its "restoration" is bought almost entirely with
+conservatism and must be reported with n_eff. Any "avoidable-harm" refinement of the miss metric is
+a *proposal* for the paper's discussion and is reported next to, never instead of, the
+pre-registered miss definition.

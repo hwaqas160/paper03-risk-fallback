@@ -455,6 +455,25 @@ def shift(cal, target, alpha, delta):
                                      **summarize(target, "geom", oracle(target, "geom", alpha)))}
 
 
+def reverse_shift(ns_rows, av2_test, alpha, delta, seed=0):
+    """
+    Amendment 3.6: certify on a random half of the nuScenes rows, deploy on all of av2_test; and
+    the same with the other half. The AV2 -> nuScenes direction is `shift`; this is the converse.
+    """
+    rng = np.random.default_rng(seed)
+    perm = rng.permutation(len(ns_rows))
+    half = len(ns_rows) // 2
+    out = {}
+    for name, idx in (("half A", perm[:half]), ("half B", perm[half:])):
+        cal = [ns_rows[i] for i in idx]
+        lam = ltt(cal, "geom", alpha, delta)
+        if not np.isfinite(lam):
+            out[name] = dict(n_cal=len(cal), lam=float(lam), certified=False)
+        else:
+            out[name] = dict(n_cal=len(cal), certified=True, lam=lam, **summarize(av2_test, "geom", lam))
+    return out
+
+
 def pred_error_scores(npz_path, horizon=30):
     """Open-loop nonconformity (min-mode worst-step L2 error over `horizon` steps) on held-out logs."""
     from conformal import nonconformity_scores
@@ -468,6 +487,8 @@ def main():
     ap.add_argument("--cal", nargs="+", required=True)
     ap.add_argument("--test", nargs="+", required=True)
     ap.add_argument("--shift", nargs="+", default=None, help="target-domain rows for H3")
+    ap.add_argument("--target", action="append", metavar="NAME=DIR",
+                    help="additional shifted target (e.g. waymo=results/campaign/waymo_val); repeatable")
     ap.add_argument("--pred_err", default=None, help="npz of open-loop predictions on held-out logs (T3)")
     ap.add_argument("--alpha", type=float, default=0.05)
     ap.add_argument("--delta", type=float, default=0.10)
@@ -504,6 +525,15 @@ def main():
         out["n_shift"] = len(tgt)
         out["shift"] = shift(cal, tgt, a.alpha, a.delta)
         out["h1_shift"] = h1_rankings(cal, tgt, a.alpha, a.delta)
+        out["reverse_shift"] = reverse_shift(tgt, test, a.alpha, a.delta)
+    for spec in a.target or []:
+        name, _, path = spec.partition("=")
+        tg = [Scenario(r) for r in load_rows([path], a.drop_diverged)]
+        if a.require_tables:
+            tg = [s for s in tg if "conf_conflict" in s.traces]
+        out[f"n_{name}"] = len(tg)
+        out[f"shift_{name}"] = shift(cal, tg, a.alpha, a.delta)
+        out[f"h1_{name}"] = h1_rankings(cal, tg, a.alpha, a.delta)
     Path(a.out).write_text(json.dumps(out, indent=2, default=float))
     for sec in ("headline", "ablations", "shift"):
         if sec not in out:
@@ -515,7 +545,7 @@ def main():
     print(f"\n== validity over {a.reps} resplits: P(test miss > alpha) must be <= delta={a.delta} for a certificate ==")
     for k, v in out["validity"].items():
         print(f"{k:<52} violation={v['violation_freq']:.3f}  miss mean={v['miss_mean']:.3f} q95={v['miss_q95']:.3f}")
-    for hk in ("h1", "h1_shift"):
+    for hk in [k for k in out if k == "h1" or k.startswith("h1_")]:
         if hk not in out:
             continue
         h = out[hk]
@@ -530,10 +560,28 @@ def main():
         print(f"  {k:<50} diff={v['diff']:+.3f}  95% CI [{v['ci'][0]:+.3f}, {v['ci'][1]:+.3f}]")
     print(f"  T4 LTT test miss={out['headline']['T4 LTT (ours)']['miss']:.3f} "
           f"CI {out['headline']['T4 LTT (ours)']['miss_ci']}")
-    if "shift" in out:
-        u = out["shift"]["unweighted LTT"]
-        print(f"\n== H3: miss on target at AV2-certified lam = {u['miss']:.3f}  95% Wilson CI "
-              f"[{u['miss_ci'][0]:.3f}, {u['miss_ci'][1]:.3f}]  (refuted if CI includes alpha={a.alpha})")
+    for key in [k for k in out if k == "shift" or k.startswith("shift_")]:
+        tag = "nuScenes (H3)" if key == "shift" else key[6:] + " (H3-W)"
+        for meth in ("unweighted LTT", "weighted LTT (repair)"):
+            u = out[key][meth]
+            verdict = ("CI includes alpha" if u["miss_ci"][0] <= a.alpha <= u["miss_ci"][1]
+                       else ("CI below alpha" if u["miss_ci"][1] < a.alpha else "CI EXCLUDES alpha (above)"))
+            print(f"\n== {tag}: {meth}: target miss = {u['miss']:.3f}  95% Wilson CI "
+                  f"[{u['miss_ci'][0]:.3f}, {u['miss_ci'][1]:.3f}]  -> {verdict}  "
+                  f"unnec.stop={u['unnecessary_stop']:.3f}  n={u['n']}")
+    for k in [k for k in out if k.startswith("shift_")]:
+        print(f"\n== {k} table ==")
+        for m, v in out[k].items():
+            print(f"{m:<40} miss={v['miss']:.3f} unnec.stop={v['unnecessary_stop']:.3f} induced={v['induced']:.3f}")
+    if "reverse_shift" in out:
+        print("\n== reverse shift: certify on half of nuScenes, deploy on av2_test (Amendment 3.6) ==")
+        for k, v in out["reverse_shift"].items():
+            if not v["certified"]:
+                print(f"  {k}: n_cal={v['n_cal']}  LTT refused to certify (lam_hat = -inf)")
+            else:
+                inc = v["miss_ci"][0] <= a.alpha <= v["miss_ci"][1]
+                print(f"  {k}: n_cal={v['n_cal']}  test miss={v['miss']:.3f} CI [{v['miss_ci'][0]:.3f}, "
+                      f"{v['miss_ci'][1]:.3f}] {'includes' if inc else 'excludes'} alpha  unnec.stop={v['unnecessary_stop']:.3f}")
     print(f"\nwrote {a.out}")
 
 

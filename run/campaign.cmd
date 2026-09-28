@@ -24,10 +24,12 @@ start "" /belownormal /wait /b %PY% src\campaign.py --db av2_cal  --n 2000 --wor
 start "" /belownormal /wait /b %PY% src\campaign.py --db av2_test --n 2000 --workers %W% --rescore --mc 0 --out results\campaign\av2_test >> "%LOG%" 2>&1
 REM --- 3. shifted target (H3) ---
 start "" /belownormal /wait /b %PY% src\campaign.py --db ns_val   --n 1500 --workers %W% --out results\campaign\ns_val >> "%LOG%" 2>&1
+REM --- 3b. second shifted target: Waymo Open Motion (Amendment 3), BEFORE the sensitivity arms ---
+start "" /belownormal /wait /b %PY% src\campaign.py --db waymo_val --n 1000 --workers %W% --out results\campaign\waymo_val >> "%LOG%" 2>&1
 REM --- 4. sensitivity arms (reported, not used for H1-H3) ---
 start "" /belownormal /wait /b %PY% src\campaign.py --db av2_test --n 500 --workers %W% --replay        --out results\campaign\av2_test_replay >> "%LOG%" 2>&1
 start "" /belownormal /wait /b %PY% src\campaign.py --db av2_test --n 500 --workers %W% --mrm_decel 2.0 --out results\campaign\av2_test_mrm2   >> "%LOG%" 2>&1
-start "" /belownormal /wait /b %PY% src\campaign.py --db av2_test --n 300 --workers %W% --decide_every 1 --out results\campaign\av2_test_10hz  >> "%LOG%" 2>&1
+start "" /belownormal /wait /b %PY% src\campaign.py --db av2_test --n 100 --workers %W% --decide_every 1 --out results\campaign\av2_test_10hz  >> "%LOG%" 2>&1
 echo [%DATE% %TIME%] campaign pass complete >> "%LOG%"
 REM --- self-retire ONLY when every arm is genuinely complete ---
 %PY% src\campaign_status.py --quiet && schtasks /delete /tn P03_Campaign /f >> "%LOG%" 2>&1
