@@ -275,3 +275,63 @@ Reading: a few dozen labelled target scenes restore a *valid* guarantee (violati
 a large conservatism cost (53-64 % stops vs 27 % before); uncertified tuning with k = 40-60 fails the
 5 % target 2 times in 3. It does not "return to the original operating point". Exploratory; would need
 pre-registration and a second target dataset (Waymo) before being claimed.
+
+
+## Amendment 4 — 2026-09-28, BEFORE any Waymo closed-loop outcome has been read
+
+Two parts: (A) post-hoc findings on AV2/nuScenes from an audit of our own miss definition and a
+faithful implementation of Luo et al. (IJRR 2024) inside our framework (`src/costs_and_luo.py`);
+(B) a CONFIRMATORY pre-registration of the few-label recalibration study on Waymo. Waymo rows
+collected so far were counted (progress only), never read for miss/harm/stop.
+
+### A. Post-hoc findings (AV2 test n = 1 996; nuScenes n = 1 504; none alters an H1–H3 verdict)
+
+1. **Audit.** `missed()` is `harm in the run AND NOT (fallback fired strictly before it)`. Because a
+   forced-fire run equals the reference run before firing, the miss indicator is exactly
+   `1[reference harm step <= firing step]`; likewise `stop = fired AND reference harmless`. **Miss and
+   unnecessary stop are functions of the no-fallback reference run and the firing tick only.** The
+   forced-fire rollouts are needed for the fallback's own consequences: induced collisions, route
+   completion, and harm that persists or arises after firing. The manuscript wording "measured after
+   the fallback has changed the future" for the miss was therefore inaccurate and is corrected.
+   Our miss is Luo et al.'s alert-before-unsafe indicator taken over ALL scenarios (marginal) instead
+   of over unsafe ones (class-conditional).
+2. **Residual harm is not the certified quantity.** At the AV2-certified LTT threshold (test): miss 3.7 %,
+   alert-too-late 1.7 %, harm prevented 9.8 %, **new harm in scenarios harmless without the fallback
+   1.1 %**, so harm in the intervened run is 6.5 % (no fallback: 15.1 %). Always-firing creates
+   new harm in 3.1 % of scenarios. On nuScenes at the same threshold: miss 13.2 %, residual 15.6 %.
+3. **Marginal 5 % is a weak-sounding target.** Base harm rate 15.8 % (cal). LTT's class-conditional FNR is
+   24.2 % (AV2 test) and 58.1 % (nuScenes): about one harmful scenario in four is not alerted in time.
+4. **Luo-style class-conditional certificate** (Mondrian split conformal on the unsafe class, finite-sample
+   correction, no tie-randomisation; unsafe = harm in the reference run; alert = firing before it):
+   at ε = 0.05 it selects a threshold equivalent to always firing (miss 0.0 %, unnecessary stops 84.9 %)
+   on this predictor, i.e. it is vacuous; at the matched ε = α / base rate = 0.32 it selects the same
+   threshold as tuned geometric (miss 4.3 %, stops 26.0 %) and, deployed on nuScenes, has conditional
+   FNR 66.0 % against a 32 % target, so the class-conditional guarantee does not survive the shift either
+   (harm base rate 15.8 % -> 22.1 % does not explain it; P(score | unsafe) moved).
+5. **Manuscript consequences (made in the same commit):** the loss is monotone in λ by construction, so
+   CRC applies rigorously and LTT is used for its high-probability form; the exact-evaluation claim is
+   restated as "reference-only outcomes plus one forced rollout per tick for post-fire consequences".
+
+### B. Pre-registered (confirmatory) Waymo recalibration study
+
+Target data: `waymo_val` (Amendment 3). For k ∈ {40, 60}, draw k labelled Waymo scenarios uniformly at random
+(200 draws per k, seed 0), evaluate on the remaining Waymo scenarios (α = 0.05, δ = 0.10, score `geom`),
+using ALL non-static scenarios, and also the avoidable-only subset (harm not present at the first decision
+tick) as a labelled sensitivity. Methods: (M1) AV2-certified threshold, no target labels; (M2) target-only
+tuned; (M3) target-only LTT; (M4) AV2 + k weighted LTT (source weight 1, each target scenario weight
+N_src / k, Kish n_eff reported); (M5) Luo-style conditional certificate at matched ε on the k target scenes.
+Violation = test miss rate > α in a draw.
+
+- **R1.** M2 (uncertified tuning) violates in >= 50 % of draws for both k. (Nuance: a prediction from the
+  nuScenes exploratory result; refuted if < 50 %.)
+- **R2.** M4 at k = 60 violates in <= δ = 10 % of draws (validity restored). Refuted if > 10 %.
+- **R3.** M4 at k = 60 has unnecessary-stop rate >= 10 points above the AV2 in-domain LTT operating point
+  (the cost of recalibrating). Refuted if < 10 points.
+- **R4.** M1 (AV2-certified, no labels) has Waymo miss rate whose 95 % CI excludes α (this is H3-W of
+  Amendment 3, restated; not re-tested separately).
+- The nuScenes exploratory table (Amendment 3c) is NOT pooled with Waymo. Results are reported per dataset.
+  Any result not listed here is exploratory and labelled so.
+
+### C. Not yet pre-registered
+A second trajectory predictor (different architecture or independently trained) will get its own
+amendment, written before its data exist; its arm size will be stated there.

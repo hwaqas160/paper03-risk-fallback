@@ -79,21 +79,23 @@ class Scenario:
         ref_r = _rr(ref)
         ref_harm = harm.first_harm(ref_r)
         ref_nonfault = any(not c["at_fault"] for c in ref["collisions"])
-        miss, stop, ind, rc = [], [], [], []
+        miss, stop, ind, rc, hrun = [], [], [], [], []
         for i in range(self.n_ticks):
             f = row["fired"].get(str(i * de))
             if f is None:                          # tick past the episode end: never fires
                 miss.append(ref_harm is not None); stop.append(False); ind.append(False)
-                rc.append(ref["route_completion"])
+                rc.append(ref["route_completion"]); hrun.append(ref_harm is not None)
                 continue
             r = _rr(f)
             h = harm.first_harm(r)
             miss.append(h is not None and not (r.triggered and r.trigger_step < h))
+            hrun.append(h is not None)
             stop.append(bool(r.triggered) and ref_harm is None)
             ind.append(any(not c["at_fault"] for c in f["collisions"]) and not ref_nonfault)
             rc.append(f["route_completion"])
         miss.append(ref_harm is not None); stop.append(False); ind.append(False)
-        rc.append(ref["route_completion"])
+        rc.append(ref["route_completion"]); hrun.append(ref_harm is not None)
+        self.harm_run = np.array(hrun, bool)
         self.miss = np.array(miss, float)
         self.stop = np.array(stop, float)
         self.induced = np.array(ind, float)
