@@ -16,3 +16,5 @@ results/campaign/
 
 # converted Waymo scenarios (regenerable from the raw shards with src/convert_waymo.py)
 data/waymo_*/
+results/pipeline/
+results/final_test/
