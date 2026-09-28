@@ -389,6 +389,33 @@ def ablations(cal, test, alpha, delta, lats=(0, 1, 2)):
     return res
 
 
+def h2_paired(cal, test, head, alpha, delta, B=10_000, seed=0):
+    """
+    H2 (pre-registered): paired scenario-level bootstrap of unnecessary-stop(baseline) -
+    unnecessary-stop(T4 LTT) on test, for every static deployable baseline in `head`
+    whose realised test miss is <= alpha. Refuted if any CI of (baseline - T4) includes -0.03
+    or lies below it, i.e. no baseline is shown to be >= 3 pp worse than T4.
+    """
+    keys = {"T1 tuned confidence (most conflicting agent)": "conf_conflict",
+            "T1 variant: nearest agent ahead": "conf_ahead",
+            "T2 tuned ensemble (MC dropout)": "ens",
+            "tuned geometric (ours, no guarantee)": "geom",
+            "T3 open-loop conformal": "gap", "T4 CRC (ours)": "geom"}
+    rng = np.random.default_rng(seed)
+    idx = rng.integers(0, len(test), size=(B, len(test)))
+    s4 = matrices(test, "geom", np.array([head["T4 LTT (ours)"]["lam"]]))[1][:, 0]
+    out = {}
+    for name, key in keys.items():
+        if name not in head or head[name]["miss"] > alpha:
+            continue
+        sb = matrices(test, key, np.array([head[name]["lam"]]))[1][:, 0]
+        d = sb - s4
+        boots = d[idx].mean(1)
+        out[name] = dict(diff=float(d.mean()), ci=[float(np.quantile(boots, 0.025)),
+                                                   float(np.quantile(boots, 0.975))])
+    return out
+
+
 def h1_rankings(cal, test, alpha, delta,
                 keys=("conf_conflict", "ens", "gap", "geom", "geom_route", "geom_iso")):
     """
@@ -447,13 +474,23 @@ def main():
     ap.add_argument("--reps", type=int, default=200)
     ap.add_argument("--drop_diverged", action="store_true",
                     help="robustness: drop scenarios with any >=1cm pre-fire simulator drift")
+    ap.add_argument("--require_tables", action=argparse.BooleanOptionalAction, default=True,
+                    help="drop scenarios lacking per-agent tables (needed for T1)")
     ap.add_argument("--out", default="results/eval.json")
     a = ap.parse_args()
 
     cal = [Scenario(r) for r in load_rows(a.cal, a.drop_diverged)]
     test = [Scenario(r) for r in load_rows(a.test, a.drop_diverged)]
+    # Amendment 2: scenarios whose per-agent tables could not be matched are dropped from every
+    # analysis (not only T1) so all methods are compared on identical scenarios.
+    n_no_tables = {"cal": sum("conf_conflict" not in s.traces for s in cal),
+                   "test": sum("conf_conflict" not in s.traces for s in test)}
+    if a.require_tables:
+        cal = [s for s in cal if "conf_conflict" in s.traces]
+        test = [s for s in test if "conf_conflict" in s.traces]
+    print("dropped for missing per-agent tables:", n_no_tables if a.require_tables else "none (flag off)")
     pe = pred_error_scores(a.pred_err) if a.pred_err else None
-    out = dict(alpha=a.alpha, delta=a.delta, n_cal=len(cal), n_test=len(test),
+    out = dict(alpha=a.alpha, delta=a.delta, n_cal=len(cal), n_test=len(test), n_no_tables=n_no_tables,
                drop_diverged=a.drop_diverged, score_coverage_cal=coverage_report(cal),
                score_coverage_test=coverage_report(test))
     print("score availability (cal):", out["score_coverage_cal"])
@@ -461,8 +498,12 @@ def main():
     out["ablations"] = ablations(cal, test, a.alpha, a.delta)
     out["validity"] = validity(cal + test, a.alpha, a.delta, a.reps, pred_err=pe)
     out["h1"] = h1_rankings(cal, test, a.alpha, a.delta)
+    out["h2"] = h2_paired(cal, test, out["headline"], a.alpha, a.delta)
     if a.shift:
-        out["shift"] = shift(cal, [Scenario(r) for r in load_rows(a.shift, a.drop_diverged)], a.alpha, a.delta)
+        tgt = [Scenario(r) for r in load_rows(a.shift, a.drop_diverged)]
+        out["n_shift"] = len(tgt)
+        out["shift"] = shift(cal, tgt, a.alpha, a.delta)
+        out["h1_shift"] = h1_rankings(cal, tgt, a.alpha, a.delta)
     Path(a.out).write_text(json.dumps(out, indent=2, default=float))
     for sec in ("headline", "ablations", "shift"):
         if sec not in out:
@@ -474,13 +515,25 @@ def main():
     print(f"\n== validity over {a.reps} resplits: P(test miss > alpha) must be <= delta={a.delta} for a certificate ==")
     for k, v in out["validity"].items():
         print(f"{k:<52} violation={v['violation_freq']:.3f}  miss mean={v['miss_mean']:.3f} q95={v['miss_q95']:.3f}")
-    h = out["h1"]
-    print(f"\n== H1: open-loop (AUROC) vs closed-loop (unnecessary stops at certified lam) ==")
-    for k in h["auroc"]:
-        print(f"  {k:<12} AUROC={h['auroc'][k]:.3f}  closed-loop unnec.stop={h['closed_loop_unnecessary_stop'][k]:.3f}")
-    print(f"  open-loop rank {h['open_loop_rank']}\n  closed-loop rank {h['closed_loop_rank']}\n"
-          f"  Kendall tau={h['kendall_tau']:.2f}  same top={h['same_top']}  "
-          f"(pre-registered: H1 refuted if tau >= 0.8 AND same top)")
+    for hk in ("h1", "h1_shift"):
+        if hk not in out:
+            continue
+        h = out[hk]
+        print(f"\n== {hk}: open-loop (AUROC) vs closed-loop (unnecessary stops at certified lam) ==")
+        for k in h["auroc"]:
+            print(f"  {k:<14} AUROC={h['auroc'][k]:.3f}  closed-loop unnec.stop={h['closed_loop_unnecessary_stop'][k]:.3f}")
+        print(f"  open-loop rank {h['open_loop_rank']}\n  closed-loop rank {h['closed_loop_rank']}\n"
+              f"  Kendall tau={h['kendall_tau']:.2f}  same top={h['same_top']}  "
+              f"(pre-registered: H1 refuted if tau >= 0.8 AND same top, in BOTH settings)")
+    print("\n== H2: paired bootstrap, unnec.stop(baseline) - unnec.stop(T4 LTT), baselines with miss <= alpha ==")
+    for k, v in out["h2"].items():
+        print(f"  {k:<50} diff={v['diff']:+.3f}  95% CI [{v['ci'][0]:+.3f}, {v['ci'][1]:+.3f}]")
+    print(f"  T4 LTT test miss={out['headline']['T4 LTT (ours)']['miss']:.3f} "
+          f"CI {out['headline']['T4 LTT (ours)']['miss_ci']}")
+    if "shift" in out:
+        u = out["shift"]["unweighted LTT"]
+        print(f"\n== H3: miss on target at AV2-certified lam = {u['miss']:.3f}  95% Wilson CI "
+              f"[{u['miss_ci'][0]:.3f}, {u['miss_ci'][1]:.3f}]  (refuted if CI includes alpha={a.alpha})")
     print(f"\nwrote {a.out}")
 
 

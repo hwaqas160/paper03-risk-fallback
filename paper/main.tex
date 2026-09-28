@@ -223,6 +223,21 @@ suffers while already stopped or while being struck from behind is
 scored as a distinct \emph{induced-collision} cost of the fallback
 itself, never as a missed intervention.
 
+Closest to our certification step, Luo~\emph{et al.}~\cite{luo2022}
+calibrate the alert threshold of a warning system with conformal
+prediction so that the fraction of unsafe situations that raise no alert
+is bounded with finite samples, and demonstrate it on driving. We
+adopt the same principle — certify a threshold on a risk score against
+missed events — and do not claim it as new. What we add is what happens
+\emph{after} the alert: the fallback it triggers changes the outcome
+(it can prevent harm, cause an unnecessary stop, or induce a rear-end
+collision), so miss and over-intervention rates can only be measured by
+closing the loop. Our contributions are an exact way to do that for
+every trigger, threshold and online method on identical physics, the
+resulting test of whether open-loop failure-detection metrics select the
+right trigger, and the behaviour of the certificate under a real
+cross-dataset shift.
+
 \subsection{Risk-sensitive safety analysis}
 Chapman~\emph{et al.}~\cite{cvar2022} develop risk-sensitive safe sets
 using Conditional Value-at-Risk to assess the severity, not merely the
@@ -615,6 +630,12 @@ prediction for safe LLM-based autonomous navigation,''
 A.~Farid, S.~Veer, B.~Ivanovic, K.~Leung, and M.~Pavone, ``Task-relevant
 failure detection for trajectory predictors in autonomous vehicles,''
 in \emph{Proc. 6th Conf. Robot Learn. (CoRL)}, Auckland, New Zealand,
+2022.
+
+\bibitem{luo2022}
+R.~Luo, S.~Zhao, J.~Kuck, B.~Ivanovic, S.~Savarese, E.~Schmerling, and
+M.~Pavone, ``Sample-efficient safety assurances using conformal
+prediction,'' in \emph{Proc. Workshop Algorithmic Found. Robot. (WAFR)},
 2022.
 
 \bibitem{cvar2022}

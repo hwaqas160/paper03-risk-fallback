@@ -102,9 +102,14 @@ authority for a scientific claim this paper needs to stand on its own.
 
 | Hypothesis | Result | Supported? | Notes |
 |---|---|---|---|
-| H1 | | | |
-| H2 | | | |
-| H3 | | | |
+| H1 | AV2: τ = 0.60, same top (geom_iso). nuScenes: τ = 0.47, different top (geom vs geom_iso, 0.002 apart). Drop-diverged: τ = 0.73 / 0.60, same top in both. | Not refuted (τ < 0.8 everywhere) — **weakly** | Disagreement is among mid/low-ranked scores; open-loop AUROC picked the closed-loop best (or a statistical tie) in every setting. Must be reported as "rankings diverge below the top", not "open-loop picks the wrong trigger". |
+| H2 | Unnec. stop, T4 LTT 0.285 (miss 0.037, CI [0.029, 0.046]). Tuned geometric 0.260, diff −0.025 [−0.032, −0.018]; CRC same; CDT 0.241. T1/T2/T3 +0.40 to +0.45 worse. | **Refuted** | Same-score tuned threshold, CRC and CDT beat LTT on stops. Heuristic triggers (confidence, ensemble, open-loop conformal) are 40–45 pp worse. Validity: LTT violation freq 0.095 ≤ δ; tuned 0.435, CRC 0.41, T1 0.505. |
+| H3 | Miss on nuScenes at AV2-certified λ: 0.132, Wilson 95 % CI [0.116, 0.150] (drop-diverged 0.152). Weighted LTT repair: miss 0.070 at unnec. stop 0.524. | **Supported** | Guarantee breaks under shift (2.6× α); the weighting repair halves the excess but does not restore α and doubles stops. |
+
+Evaluated 2026-09-28 on 1 994 cal / 1 996 test / 1 504 nuScenes scenarios (10 AV2 scenarios dropped
+for unmatched per-agent tables, per Amendment 2). Outputs: `results/eval.txt`, `results/eval_dropdiv.txt`.
+Before evaluation, `evaluate.py` gained the pre-registered statistics it lacked (H2 paired bootstrap,
+H1 on the nuScenes setting, H3 Wilson CI printout); no threshold or rule changed.
 
 ---
 
