@@ -252,3 +252,26 @@ effective sample size is very small (68), so its "restoration" is bought almost 
 conservatism and must be reported with n_eff. Any "avoidable-harm" refinement of the miss metric is
 a *proposal* for the paper's discussion and is reported next to, never instead of, the
 pre-registered miss definition.
+
+
+## Amendment 3c — 2026-09-28, POST-HOC / EXPLORATORY: few-shot recalibration on the shifted domain
+
+Not pre-registered; run on the existing nuScenes rows (avoidable-at-start subset, n = 1 429) after the
+H1-H3 verdicts, at the author's question. k labelled nuScenes scenes drawn at random (60 draws each),
+evaluated on the remaining nuScenes scenes; α = 0.05, δ = 0.10. Baseline (AV2-certified, no target
+labels): miss 0.092, stops 0.271.
+
+| k | Method | miss (mean) | P(miss > α) | unnec. stops |
+|---|---|---|---|---|
+| 40 | target-only tuned (no certificate) | 0.066 | 0.67 | 0.356 |
+| 40 | target-only LTT | 0.000 | 0.00 | 0.813 |
+| 40 | AV2 + k, reweighted LTT | 0.018 | 0.10 | 0.636 |
+| 60 | target-only tuned | 0.060 | 0.70 | 0.367 |
+| 60 | target-only LTT | 0.008 | 0.00 | 0.725 |
+| 60 | AV2 + k, reweighted LTT | 0.028 | 0.00 | 0.533 |
+| 100 | AV2 + k, reweighted LTT | 0.033 | 0.12 | 0.481 |
+
+Reading: a few dozen labelled target scenes restore a *valid* guarantee (violation ≤ δ) but only at
+a large conservatism cost (53-64 % stops vs 27 % before); uncertified tuning with k = 40-60 fails the
+5 % target 2 times in 3. It does not "return to the original operating point". Exploratory; would need
+pre-registration and a second target dataset (Waymo) before being claimed.
