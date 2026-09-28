@@ -184,3 +184,44 @@ refutation thresholds are **unchanged**.
    only the reference run; a sidecar is used only when its tick count matches the stored row.
    Rows that cannot be matched are dropped from analyses needing per-agent tables and the count
    is reported.
+
+
+## Amendment 3 — 2026-09-28, BEFORE any Waymo closed-loop outcome exists (3 plumbing rows only)
+
+Added after the AV2/nuScenes evaluation (Outcome log above), on the author's Waymo Open licence
+acceptance. It adds a third dataset and one reverse-shift analysis. **H1–H3, α, δ and every
+refutation threshold above are unchanged and are not re-tested on new data to rescue a result.**
+Seen before writing this: the AV2/nuScenes outcomes (H2 refuted, H3 supported, H1 weak); three Waymo
+smoke rows inspected for plumbing only (tick counts, tables present, 0 drift), no harm/miss read.
+
+1. **Data.** Waymo Open Motion Dataset v1.2.1 `uncompressed/scenario/validation`, first 8 finished
+   shards in sorted order (~2 350 scenarios), converted by `src/convert_waymo.py` (ScenarioNet's
+   converter, pure-Python TFRecord reader). Non-static-ego filter as for nuScenes; the first
+   **1 000** qualifying scenarios in database order are simulated (n chosen for compute: 1 000 gives a
+   Wilson half-width ≈ 2 pp on a 13 % miss rate). Same predictor (AV2-trained AutoBot), same
+   pipeline, same 2 Hz decisions. Waymo scenarios carry 1 s of history vs 5 s in AV2; this is a
+   property of the dataset and is reported, not corrected.
+2. **H3-W (pre-registered, one-sided in the same sense as H3).** The threshold certified on
+   `av2_cal` (LTT, α = 0.05, δ = 0.10) has a Waymo miss rate whose 95 % Wilson CI **excludes α**.
+   Refuted if the CI includes α. Expectation written down in advance: miss > α (short history
+   degrades the predictor, a larger shift than nuScenes).
+3. **Generality claim.** "The AV2-certified guarantee fails under real cross-dataset shift" is
+   claimed **only if H3 and H3-W both hold**; if exactly one holds it is reported as
+   dataset-dependent, and the abstract is written to that effect.
+4. **Repair.** Weighted LTT (domain-classifier density ratio, Kish n_eff) is evaluated on Waymo
+   exactly as on nuScenes. It counts as "restoring" the guarantee on a target iff that target's
+   miss CI includes α or lies below it. Reported either way.
+5. **H1 on Waymo** is a third setting reported alongside AV2 and nuScenes (same τ / same-top rule;
+   the overall H1 claim is "refuted only if refuted in ALL settings", which is the stricter reading
+   of the original wording and the one that favours refutation).
+6. **Reverse shift (nuScenes → AV2).** Calibrate LTT (α = 0.05, δ = 0.10, `geom`) on a random 50 %
+   of `ns_val` rows (seed 0, scenario-level), test on all of `av2_test`; and the same with the other
+   50 % as a replicate. Claim: violation (test-miss CI excludes α). Reported whichever way it goes;
+   n_cal ≈ 750, so LTT may refuse to certify (λ̂ = -inf), which is itself reported.
+7. **Not used to select anything:** no threshold, score, hyper-parameter or grid is chosen from
+   Waymo rows. Scenarios failing simulation are counted and reported, not silently dropped.
+8. **Compute priority.** `waymo_val` runs before the three sensitivity arms. The 10 Hz arm is cut
+   from 300 to **100** scenarios (a cost decision made before any 10 Hz data exists; the arm only
+   supports the "decision rate is not load-bearing" statement, for which 100 paired scenarios with
+   identical seeds suffice, since Amendment 1 already found bit-identical misses at 2 Hz vs 10 Hz on
+   the dev split).

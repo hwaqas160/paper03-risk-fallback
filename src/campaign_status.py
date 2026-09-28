@@ -18,7 +18,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1] / "results" / "campaign"
 ARMS = {                      # name -> target scenario rows
     "av2_cal": 2000, "av2_test": 2000, "ns_val": 1500,
-    "av2_test_replay": 500, "av2_test_mrm2": 500, "av2_test_10hz": 300,
+    "av2_test_replay": 500, "av2_test_mrm2": 500, "av2_test_10hz": 100, "waymo_val": 1000,
 }
 
 

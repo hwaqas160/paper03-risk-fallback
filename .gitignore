@@ -13,3 +13,6 @@ code/scenarionet/
 # per-scenario campaign records: hundreds of MB, hours of compute, written live by a running job.
 # Released via a data archive at submission, not tracked in git.
 results/campaign/
+
+# converted Waymo scenarios (regenerable from the raw shards with src/convert_waymo.py)
+data/waymo_*/

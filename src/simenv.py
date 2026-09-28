@@ -22,6 +22,10 @@ DBS = {
     # short for closed loop" as previously written in notes/design.md -- comparable to AV2's
     # ~11s and workable for the MRM (a stop from 11 m/s at 4.0 m/s^2 takes 2.75s).
     "ns_val": r"F:\CLAUDE\AI3\paper03-risk-fallback\data\ns_val_merged",
+    # Waymo Open Motion v1.2.1 validation, converted by src/convert_waymo.py (no TensorFlow).
+    # Third dataset: a second, independent shift target. 9.1 s scenarios (1 s history + 8 s).
+    "waymo_val": r"F:\CLAUDE\AI3\paper03-risk-fallback\data\waymo_val",
+    "waymo_smoke": r"F:\CLAUDE\AI3\paper03-risk-fallback\data\waymo_smoke",
 }
 
 # ScenarioNet's own filter: drop scenarios where the ego moves < 10 m.
