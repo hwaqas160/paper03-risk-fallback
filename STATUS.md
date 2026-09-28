@@ -128,3 +128,19 @@ and Future Work, 15 references. **Corrected a wrong citation:** AutoBot is Girgi
 - **Remaining:** Waymo + sensitivity results; figures (risk-vs-stops scatter, validity histogram); Luo et al. / Farid et al. as
   baselines; second predictor; verify Luo et al. and Waymo (Ettinger et al., ICCV 2021) references; hyper-parameter appendix;
   code release.
+
+
+## Update 2026-09-28 (night) — audit of our own novelty claim
+
+- **Audit result:** miss and unnecessary-stop depend only on the no-fallback reference run and the firing tick (Proposition 1 in the
+  paper); forced-fire rollouts are needed for induced collisions, route completion and post-fire harm. Our miss = Luo et al.'s
+  alert-before-unsafe indicator, marginal instead of class-conditional. Manuscript wording corrected.
+- **New post-hoc results (Amendment 4):** residual harm 6.5 % (vs certified miss 3.7 %; 1.1 % of scenarios get NEW harm from the
+  intervention); a 5 % marginal target leaves 24 % of harmful scenarios unalerted; Luo-style class-conditional certificate is vacuous
+  at eps = 0.05 (= always fire) and fails under shift (66 % conditional miss vs 32 % target).
+- **Waymo recalibration study pre-registered (Amendment 4B)** before any Waymo outcome was read.
+- **References verified by web search:** Luo (IJRR 43(9), 2024), LTT (Ann. Appl. Stat. 19(2), 2025), Sinha (CDC 2023), Sohrabi
+  (Accid. Anal. Prev. 152, 2021), Xie (IMechE-D 2025), Ettinger (arXiv 2104.10133). NOT found and therefore NOT cited: "A Study on
+  Evaluation Methods for Autonomous Driving Safety in DDT Fallback (2025)".
+- **Still open:** second predictor (needs its own amendment first); Waymo + sensitivity arms collecting; figures; code/data release;
+  statistical-reporting additions (per-scenario sampling details, certification-failure rate over resplits).
