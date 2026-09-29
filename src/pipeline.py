@@ -282,6 +282,25 @@ STAGES = [
                          "--arm", "hz10=results/campaign/av2_test_10hz", "--out", "results/final/sensitivity.json"],
          "results/final/sensitivity.txt"),
     ]),
+    dict(name="amendment5_outcome_cert", needs=["av2_cal5", "av2_test5"], cmds=[
+        ("outcome_cert", [PY, "src/outcome_cert.py", "--cal", "results/campaign/av2_cal5",
+                          "--test", "results/campaign/av2_test5", "--out", "results/final/outcome_cert.json"],
+         "results/final/outcome_cert.txt"),
+    ]),
+    dict(name="amendment5_multi_risk", needs=["av2_cal5", "av2_cal5_d2", "av2_test5", "av2_test5_d2"], cmds=[
+        ("multi_risk", [PY, "src/multi_risk_cert.py", "--cal_d4", "results/campaign/av2_cal5",
+                        "--cal_d2", "results/campaign/av2_cal5_d2", "--test_d4", "results/campaign/av2_test5",
+                        "--test_d2", "results/campaign/av2_test5_d2", "--out", "results/final/multi_risk.json"],
+         "results/final/multi_risk.txt"),
+    ]),
+    dict(name="amendment5_n5_second_predictor", needs=["av2_cal5_gpu", "av2_test5_gpu", "av2_cal5", "av2_test5"], cmds=[
+        ("outcome_cert_gpu", [PY, "src/outcome_cert.py", "--cal", "results/campaign/av2_cal5_gpu",
+                              "--test", "results/campaign/av2_test5_gpu", "--out", "results/final/outcome_cert_gpu.json"],
+         "results/final/outcome_cert_gpu.txt"),
+        ("n5_replication", [PY, "src/n5_replication.py", "--primary", "results/final/outcome_cert.json",
+                            "--second", "results/final/outcome_cert_gpu.json", "--out", "results/final/n5.json"],
+         "results/final/n5.txt"),
+    ]),
 ]
 
 
@@ -405,6 +424,9 @@ def tick(force_stage: str | None = None) -> int:
         if all_ok and not ALLDONE.exists():
             ALLDONE.write_text(now_iso())
             journal("all_done", "", "campaign complete and every analysis stage ok; see results/final/FINAL_SUMMARY.md")
+        elif not all_ok and ALLDONE.exists():
+            ALLDONE.unlink()
+            journal("all_done_cleared", "", "scope extended (new arms/stages); no longer complete")
         save_state(st)
         write_state_md(st, arms, camp)
         return 0
