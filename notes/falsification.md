@@ -507,3 +507,35 @@ data's alarm-level miss reproduces the already-reported ~9.5%, matching Section 
    holding — it is a one-sided test of the ALARM-level certificate's residual harm, evaluated once on
    the fresh test set, unaffected by this near-floor validity-check sensitivity.
 4. No change to N2-N5, their refutation rules, or the fresh data pools already fixed above.
+
+## Amendment 5b — 2026-09-29, protocol correction found in code testing, BEFORE any fresh data
+
+`src/multi_risk_cert.py` (N4) was smoke-tested using av2_cal/av2_test as a d=4.0 stand-in and the
+already-collected av2_test_mrm2 sensitivity arm as a rough d=2.0 proxy for calibration -- a code
+check only, not a d=2.0 calibration campaign, and the result is not used for N4 itself.
+
+**Bug found and fixed:** the first implementation used an ascending fixed-sequence walk (same style
+as single-risk LTT) with a COMBINED p-value at each lambda. This is invalid here: residual harm falls
+as lambda decreases (more intervention) while induced collisions RISE as lambda decreases (more
+intervention causes more rear-end collisions) -- the two risks move in opposite directions, so there
+is no single walk direction both respect, and the walk failed at its very first (most-intervention)
+point every time, certifying nothing. Replaced with a Bonferroni-corrected test of every grid point
+independently (always valid regardless of ordering), keeping every point that passes both risks at
+level delta/J and returning the one with the lowest calibration stop rate.
+
+**Finding, confirmed structural not statistical:** with the corrected procedure, on the smoke-test
+data the two risks' valid regions (residual harm p <= delta/J only for lambda close to the
+most-intervention end; induced collision p <= delta/J only for lambda past roughly the 90th
+percentile of the score) are COMPLETELY DISJOINT across the whole grid, independent of Bonferroni
+strictness (residual harm's p-value is already ~1.0 well before induced collision's drops below 1.0).
+A single scalar threshold cannot satisfy a 5% residual-harm target and a 3% induced-collision target
+simultaneously with this predictor, at d=4.0 or (per the proxy) at d=2.0. This sharpens the
+already-written honest expectation for N4 ("may well be refuted"): it is expected to be refuted at
+BOTH d values for a specific, mechanistic reason (opposing risk directions), not merely because the
+2 m/s^2 sensitivity arm showed no stop-rate difference. N4 is retained and run on real d=2.0
+calibration data (not this proxy) because d changes post-fire kinematics and could plausibly shift
+induced collision's achievable floor enough to open an overlap -- that mechanism is exactly what N4
+tests. If no overlap is found at either d, that is reported as the result, with this mechanism
+explained, not treated as a failed experiment.
+
+No change to alpha_H, alpha_I, delta, or the N4 refutation rule already stated above.
