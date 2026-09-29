@@ -335,3 +335,142 @@ Violation = test miss rate > α in a draw.
 ### C. Not yet pre-registered
 A second trajectory predictor (different architecture or independently trained) will get its own
 amendment, written before its data exist; its arm size will be stated there.
+
+
+## Amendment 5 — 2026-09-29, BEFORE any new hypothesis is evaluated on new or existing data
+
+A new certification target is added, motivated by a finding already reported above (not by any new
+data): at the Amendment-2 alarm-level LTT certificate, **harm in the executed run is 6.5%, not the
+certified 3.7%**, because the certificate bounds whether the alert preceded harm, not whether harm
+occurred in the run the vehicle actually drove. This amendment fixes N1-N5 and the fresh, disjoint
+data each is evaluated on, before touching any of it. H1-H3 and their verdicts above are final and
+are not reopened.
+
+### Literature check (2026-09-29, before writing N1-N5)
+
+A targeted search found no paper certifying a one-shot, irreversible fallback trigger's realized
+closed-loop outcome on real driving logs with reactive traffic, pricing the intervention cost. The
+closest prior art, and why it does not cover this:
+
+- **Joshi, Wang, Hassani & Dobriban, "Risk-Controlled Post-Processing of Decision Policies" (2026,
+  arXiv:2605.06479)** certify the outcome of switching from a baseline to a fallback *policy* — the
+  same principle as N1 below. Their setting is per-instance, i.i.d., single-shot (radiograph
+  diagnosis, LLM routing, synthetic classification): no trajectory, no timing decision, no absorbing
+  switch, no over-conservatism metric. Our setting is sequential and absorbing — *when* the switch
+  happens determines every outcome after it — which is a different mathematical structure, evaluated
+  here for the first time on a real, closed-loop, safety-critical system. Cite and differentiate
+  explicitly; do not claim outcome-level certification itself as new.
+- **Chang & Ahmed (2026, arXiv:2608.26533)**, CVaR-certified driving-trajectory selection: continuous
+  re-planning among candidate trajectories each step, not a one-shot task-abandonment decision; no
+  evidence of closed-loop reactive-traffic evaluation or an intervention-cost metric found.
+- **Gonzales et al. (IROS 2025, arXiv:2603.10392)**, CRC+CBF for human-robot interaction: certifies
+  error in a *predicted* safety value, not the realized outcome; continuous control, not a one-shot
+  MRM; no over-conservatism reported.
+- **MultiRisk (Joshi, Sun, Hassani & Dobriban, 2025, arXiv:2512.24587)**: the natural tool for jointly
+  certifying multiple risks (N-component below), but its dynamic-programming guarantee is stated for
+  monotone risk; our own data (this amendment, item 2) shows residual harm is non-monotone in the
+  threshold in ~4% of scenarios. Used only where applicable; Pareto Testing (Laufer-Goldshtein et al.
+  2023, already the basis of our multi-baseline machinery) is the fallback tool where it is not.
+- **Angelopoulos, "Conformal Risk Control for Non-Monotone Losses" (2026)**: confirms non-monotone
+  risk is a recognised open problem, and is the citation for why LTT (fixed-sequence testing, no
+  monotonicity assumption) is used for N1 rather than plain CRC.
+- **Conformal Predictive Safety Filter (2023, arXiv:2306.02551)**: a per-step MPC braking filter with
+  online-calibrated bounds — a continuous safety filter, not an irreversible task-abandonment
+  decision studied end-to-end on logged scenarios.
+
+### Fixed definitions for this amendment
+
+- **Residual harm** $H(X,\lambda)$ = 1 if the nuPlan harm definition (Section IV-B / notes above) is
+  triggered *anywhere* in the executed run under threshold $\lambda$ (before OR after firing),
+  0 otherwise. This is `Scenario.harm_run` at the firing tick, already implemented and used
+  descriptively in Amendment 4; it has not been certified until now.
+- Measured on `av2_cal` (n=1994): residual harm is **non-monotone in $\lambda$ in 4.4% of scenarios**
+  (firing earlier sometimes creates harm that firing later avoids, or vice versa). CRC and MultiRisk's
+  DP both assume monotonicity; LTT (fixed-sequence testing) does not and is the primary calibrator for
+  every new hypothesis below. CRC/MultiRisk are reported as a comparison where they can be applied,
+  with the monotonicity violation disclosed, never silently assumed to hold.
+- $\alpha_H = 0.05$ for residual harm (same level as the existing miss certificate, for comparability),
+  $\delta = 0.10$, unchanged from H1-H3.
+
+### N1 — outcome-level certification is achievable and behaves differently from the alarm-level one
+**Claim:** an LTT certificate on residual harm $H(X,\lambda)$ at $\alpha_H=0.05$ is valid (violation
+frequency $\le\delta$ over 200 resplits of fresh calibration+test data, defined below), and its
+operating point differs materially (in $\lambda$, in unnecessary-stop rate, or both) from the
+Amendment-2 alarm-level certificate re-fit on the SAME fresh calibration data.
+**Refuted if:** the outcome-level certificate is invalid (violation $>\delta$), OR its operating point
+is not distinguishable from the alarm-level one (stop-rate difference's 95% CI includes 0).
+
+### N2 — the existing alarm-level certificate silently violates the outcome-level target
+**Claim:** the Amendment-2 alarm-level LTT threshold (re-fit on fresh calibration data, same
+procedure), evaluated for residual harm on fresh test data, exceeds $\alpha_H=0.05$, with a 95% CI
+that excludes it.
+**Refuted if:** that CI includes or is below $\alpha_H$.
+This is the paper's central new empirical claim; on the existing (already-analysed) data it reads
+6.5% vs a 5% target, which is why N2 is expected to hold, but it is tested on data not used to reach
+that expectation.
+
+### N3 — a non-monotone-aware calibrator is necessary, not merely available
+**Claim:** on fresh calibration data, CRC (assumes monotonicity) certifies a $\lambda$ for residual
+harm whose true (fresh test) violation frequency exceeds $\delta=0.10$, while LTT's does not.
+**Refuted if:** CRC's violation frequency is also $\le\delta$ (i.e. the non-monotonicity does not
+matter in practice at this alpha).
+
+### N4 — joint multi-risk certification (residual harm + induced collisions, minimise stops)
+Using Pareto Testing (primary; MultiRisk reported as a check that is only valid where risks are
+confirmed monotone) to jointly certify $H(X,\lambda,d)\le\alpha_H$ and induced-collision rate
+$I(X,\lambda,d)\le\alpha_I=0.03$ over the joint grid of threshold $\lambda$ and MRM deceleration
+$d\in\{2.0, 4.0\}\,\text{m/s}^2$ (the two levels we already have data pipelines for).
+**Claim:** the jointly-certified policy achieves a lower unnecessary-stop rate than certifying
+$\lambda$ alone at $d=4.0$ (the current design) while keeping both risks controlled.
+**Refuted if:** the joint search does not find a valid policy with stops below the single-risk
+baseline's, or joint certification fails to control both risks simultaneously (violation $>\delta$
+on either).
+Honest expectation on file: our own 2 m/s^2 sensitivity arm already showed no unnecessary-stop
+difference from 4 m/s^2 at the alarm level (paired diff +0.000 [+0.000,+0.000]); N4 may well be
+refuted, and is reported either way.
+
+### N5 — findings replicate with a second, independently-trained predictor
+**Claim:** N1 and N2's verdicts (direction and rough magnitude, not exact numbers) replicate using
+`av2_gpu_full/epoch53-minADE0.854.ckpt` (Paper 01 artifact; minADE6 0.854 vs the primary predictor's
+1.092 — used here only as a differently-trained model, never as authority for any claim this paper
+needs to stand on its own, consistent with the position in the "note on dependencies" above).
+**Refuted if:** N2's headline direction (alarm-level miss < outcome-level residual harm at the same
+certified operating point) does not hold with this predictor.
+Evaluated on the SAME fresh test split as the primary predictor (paired by seed), not a new split.
+
+### Fresh, disjoint data (verified 2026-09-29 against the actual campaign output, not assumed)
+
+Every hypothesis above is evaluated ONLY on scenarios never touched by any row (used or skipped) in
+`results/campaign/{av2_cal,av2_test,ns_val,waymo_val}`, so nothing here can be an artifact of a
+threshold chosen to fit already-seen scenarios.
+
+| Database | Total pool | Max index already touched | Fresh range (inclusive) | Fresh scenarios |
+|---|---|---|---|---|
+| `av2_cal` | 4971 | 3594 | 3595-4970 | 1376 |
+| `av2_test` | 5027 | 3583 | 3584-5026 | 1443 |
+| `ns_val` | 9041 | 2623 | 2624-9040 | 6417 |
+| `waymo_val` (8 shards) | 2321 | 1807 | 1808-2320 | 513 |
+
+Waymo: 22 further finished shards (indices 8-29 of 150, ~6,470 more raw scenarios) are already on
+disk (`F:\CLAUDE\AI1\paper01-coverage-transfer\data\waymo_raw\validation`, download completed
+2026-09-28) and will be converted into a NEW database `waymo_val2` (shards 8-29) so the fresh Waymo
+pool is not the scarce 513 left in the current one.
+
+**n for this amendment:** 1300 fresh `av2_cal`, 1300 fresh `av2_test` (leaves a safety margin over the
+1376/1443 available after excluding scenarios skipped as static-ego), 1500 fresh `ns_val` (matching
+the original H3 target size), 1000 fresh `waymo_val2` scenarios (from the newly-converted shards
+8-29). N1-N4 use these with the PRIMARY predictor (`av2_cpu_v2`), collected once via the same
+exact-evaluation harness as the main campaign (same MRM, same 2 Hz decisions; N4's $d=2.0$ sweep
+reuses the `av2_test_mrm2`-style collection already implemented). **N5 requires its own full rollout
+campaign** — the reference run and every forced-fire outcome depend on the predictor
+(Proposition 1), so nothing can be reused from the primary-predictor pass — run with
+`av2_gpu_full/epoch53-minADE0.854.ckpt` on the SAME fresh `av2_cal`/`av2_test` seed indices as N1/N2
+(paired by seed, not a separate pool), so it is a second full collection over the same 1300+1300
+scenarios, not additional fresh data.
+
+### Rules carried over unchanged
+n=200 resplits, Wilson 95% CIs, scenario-level paired bootstrap for differences (10000 resamples),
+$\delta=0.10$ for every validity check, pre-fire exactness measured and reported exactly as in
+Amendment 2. No threshold, grid, or hyperparameter for N1-N5 is chosen by looking at fresh-data
+outcomes; all are fixed by this amendment or by re-running the existing Amendment-1/2 procedure
+verbatim on fresh calibration data.
