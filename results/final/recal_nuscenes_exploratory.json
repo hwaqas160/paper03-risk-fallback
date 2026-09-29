@@ -1,0 +1,209 @@
+{
+  "name": "nuscenes_exploratory",
+  "alpha": 0.05,
+  "delta": 0.1,
+  "in_domain_stop": 0.2845691382765531,
+  "all_scenarios": {
+    "n_target": 1504,
+    "n_cal": 1994,
+    "base_rate_target": 0.22074468085106383,
+    "grid_lam1": 1.474,
+    "M1_full_target": {
+      "miss": 0.13364361702127658,
+      "unnecessary_stop": 0.2586436170212766,
+      "miss_ci": [
+        0.11737650412593913,
+        0.15177749719621567
+      ],
+      "certified": true
+    },
+    "k40": {
+      "M1": {
+        "miss_mean": 0.1335143442622951,
+        "stop_mean": 0.25870560109289614,
+        "violation": 1.0,
+        "certified": 1.0,
+        "n_eff_mean": null
+      },
+      "M2": {
+        "miss_mean": 0.07459357923497267,
+        "stop_mean": 0.5725239071038252,
+        "violation": 0.555,
+        "certified": 0.695,
+        "n_eff_mean": null
+      },
+      "M3": {
+        "miss_mean": 0.049812158469945356,
+        "stop_mean": 0.7793340163934427,
+        "violation": 0.37,
+        "certified": 0.0,
+        "n_eff_mean": null
+      },
+      "M4": {
+        "miss_mean": 0.05110655737704918,
+        "stop_mean": 0.7637056010928961,
+        "violation": 0.37,
+        "certified": 0.37,
+        "n_eff_mean": 156.0
+      },
+      "M5": {
+        "miss_mean": 0.05980532786885246,
+        "stop_mean": 0.6887124316939891,
+        "violation": 0.41,
+        "certified": 0.47,
+        "n_eff_mean": null
+      }
+    },
+    "k60": {
+      "M1": {
+        "miss_mean": 0.13360803324099724,
+        "stop_mean": 0.2588815789473684,
+        "violation": 1.0,
+        "certified": 1.0,
+        "n_eff_mean": null
+      },
+      "M2": {
+        "miss_mean": 0.06857340720221607,
+        "stop_mean": 0.6071468144044322,
+        "violation": 0.55,
+        "certified": 0.67,
+        "n_eff_mean": null
+      },
+      "M3": {
+        "miss_mean": 0.05014196675900278,
+        "stop_mean": 0.7762257617728531,
+        "violation": 0.43,
+        "certified": 0.03,
+        "n_eff_mean": null
+      },
+      "M4": {
+        "miss_mean": 0.053871191135734076,
+        "stop_mean": 0.7336980609418282,
+        "violation": 0.43,
+        "certified": 0.43,
+        "n_eff_mean": 232.0
+      },
+      "M5": {
+        "miss_mean": 0.061108033240997235,
+        "stop_mean": 0.6707271468144045,
+        "violation": 0.48,
+        "certified": 0.54,
+        "n_eff_mean": null
+      }
+    }
+  },
+  "avoidable_only": {
+    "n_target": 1429,
+    "n_cal": 1994,
+    "base_rate_target": 0.1868439468159552,
+    "grid_lam1": 1.4857,
+    "M1_full_target": {
+      "miss": 0.09657102869139259,
+      "unnecessary_stop": 0.2617214835549335,
+      "miss_ci": [
+        0.08232024161110213,
+        0.1129850873240712
+      ],
+      "certified": true
+    },
+    "k40": {
+      "M1": {
+        "miss_mean": 0.09651547876169907,
+        "stop_mean": 0.26160547156227504,
+        "violation": 1.0,
+        "certified": 1.0,
+        "n_eff_mean": null
+      },
+      "M2": {
+        "miss_mean": 0.07166306695464363,
+        "stop_mean": 0.33159827213822896,
+        "violation": 0.67,
+        "certified": 1.0,
+        "n_eff_mean": null
+      },
+      "M3": {
+        "miss_mean": 0.0,
+        "stop_mean": 0.8131857451403889,
+        "violation": 0.0,
+        "certified": 0.0,
+        "n_eff_mean": null
+      },
+      "M4": {
+        "miss_mean": 0.016529877609791216,
+        "stop_mean": 0.6513714902807775,
+        "violation": 0.13,
+        "certified": 1.0,
+        "n_eff_mean": 156.0
+      },
+      "M5": {
+        "miss_mean": 0.04606191504679625,
+        "stop_mean": 0.4487616990640749,
+        "violation": 0.4,
+        "certified": 1.0,
+        "n_eff_mean": null
+      }
+    },
+    "k60": {
+      "M1": {
+        "miss_mean": 0.09655953250547845,
+        "stop_mean": 0.2618224981738495,
+        "violation": 1.0,
+        "certified": 1.0,
+        "n_eff_mean": null
+      },
+      "M2": {
+        "miss_mean": 0.06529948867786706,
+        "stop_mean": 0.3446968590211833,
+        "violation": 0.68,
+        "certified": 1.0,
+        "n_eff_mean": null
+      },
+      "M3": {
+        "miss_mean": 0.00868882395909423,
+        "stop_mean": 0.7287253469685901,
+        "violation": 0.035,
+        "certified": 1.0,
+        "n_eff_mean": null
+      },
+      "M4": {
+        "miss_mean": 0.028360116873630384,
+        "stop_mean": 0.5326333089846603,
+        "violation": 0.05,
+        "certified": 1.0,
+        "n_eff_mean": 232.0
+      },
+      "M5": {
+        "miss_mean": 0.046760409057706356,
+        "stop_mean": 0.43513878743608475,
+        "violation": 0.425,
+        "certified": 1.0,
+        "n_eff_mean": null
+      }
+    }
+  },
+  "verdicts_primary_all_scenarios": {
+    "R1_M2_violates_ge_50pct_both_k": {
+      "values": [
+        0.555,
+        0.55
+      ],
+      "holds": true
+    },
+    "R2_M4_k60_violation_le_delta": {
+      "value": 0.43,
+      "holds": false
+    },
+    "R3_M4_k60_stops_ge_10pts_above_in_domain": {
+      "value": 0.4491289226652751,
+      "in_domain_stop": 0.2845691382765531,
+      "holds": true
+    },
+    "R4_M1_target_miss_CI_excludes_alpha": {
+      "ci": [
+        0.11737650412593913,
+        0.15177749719621567
+      ],
+      "holds": true
+    }
+  }
+}

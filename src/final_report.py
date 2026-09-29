@@ -61,12 +61,17 @@ def h2_verdict(ev):
 
 
 def h3_verdict(ev, key):
+    """Pre-registered rule (falsification.md H3): refuted if the CI includes alpha ('no detectable
+    loss of the guarantee'). A CI entirely BELOW alpha is also no detectable loss -- the guarantee
+    held, even conservatively -- so only a CI entirely ABOVE alpha supports 'the guarantee fails'."""
     sh = ev.get(key)
     if not sh:
         return "pending", None
     u = sh["unweighted LTT"]
     lo, hi = u["miss_ci"]
-    return ("SUPPORTED (CI excludes alpha)" if not (lo <= ALPHA <= hi) else "REFUTED (CI includes alpha)"), u
+    if lo > ALPHA:
+        return "SUPPORTED (CI entirely above alpha: guarantee fails)", u
+    return "REFUTED (CI includes or is below alpha: no detectable loss)", u
 
 
 def build() -> str:
@@ -106,7 +111,8 @@ def build() -> str:
     elif all(sup):
         gen = "CLAIMABLE: the guarantee fails under real cross-dataset shift (both targets)"
     elif any(sup):
-        gen = "DATASET-DEPENDENT: fails on exactly one target; abstract must say so"
+        gen = "DATASET-DEPENDENT: fails on exactly one target ({}); abstract must say so, not generalise".format(
+            "nuScenes" if sup[0] else "Waymo")
     else:
         gen = "NOT SUPPORTED on either target"
     L += [f"- **Generality rule (Amendment 3.3):** {gen}", "", "### H1 detail", "", "| Setting | Kendall tau | Same top | Note |", "|---|---|---|---|"] + r1

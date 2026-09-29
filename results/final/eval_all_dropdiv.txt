@@ -1,0 +1,104 @@
+dropped for missing per-agent tables: {'cal': 1, 'test': 0}
+score availability (cal): {'conf_ahead': 1928, 'conf_any': 1928, 'conf_conflict': 1928, 'ens': 1928, 'gap': 1928, 'geom': 1928, 'geom_iso': 1928, 'geom_route': 1928}
+
+== headline (alpha=0.05, n_cal=1928, n_test=1943) ==
+method                                                 miss unnec.stop  induced autonomy
+never                                                 0.132      0.000    0.000    1.000
+always                                                0.000      0.868    0.064    0.000
+T1 tuned confidence (most conflicting agent)          0.052      0.614    0.034    0.301
+T1 variant: nearest agent ahead                       0.046      0.708    0.042    0.202
+T2 tuned ensemble (MC dropout)                        0.041      0.698    0.048    0.207
+tuned geometric (ours, no guarantee)                  0.047      0.208    0.019    0.696
+T3 open-loop conformal                                0.000      0.755    0.054    0.114
+T4 LTT (ours)                                         0.037      0.250    0.022    0.644
+T4 CRC (ours)                                         0.046      0.209    0.019    0.694
+CDT (Lekeufack+ 2024)                                 0.050      0.200    0.018    0.707
+ACI (Gibbs+Candes 2021)                               0.009      0.459    0.034    0.413
+oracle (hindsight, not deployable)                    0.049      0.203    0.019    0.702
+
+== ablations (alpha=0.05, n_cal=1928, n_test=1943) ==
+method                                                 miss unnec.stop  induced autonomy
+score: full (kinematic corridor + length-aware box)   0.037      0.250    0.022    0.644
+score: - route-following corridor instead of kinematic  0.000      0.868    0.064    0.000
+score: - width-only isotropic radius instead of box   0.036      0.226    0.021    0.667
+score: - confidence (most conflicting agent) instead of geometry  0.039      0.694    0.040    0.209
+score: - ensemble spread instead of geometry          0.035      0.726    0.047    0.174
+calibrator: LTT                                       0.037      0.250    0.022    0.644
+calibrator: CRC                                       0.046      0.209    0.019    0.694
+calibrator: empirical tuning (no certificate)         0.047      0.208    0.019    0.696
+latency: +0 tick(s)                                   0.037      0.250    0.022    0.644
+latency: +1 tick(s)                                   0.052      0.227    0.020    0.676
+latency: +2 tick(s)                                   0.086      0.198    0.019    0.725
+
+== shift (alpha=0.05, n_cal=1928, n_test=1943) ==
+method                                                 miss unnec.stop  induced autonomy
+unweighted LTT                                        0.152      0.199    0.021    0.703
+weighted LTT (repair)                                 0.069      0.528    0.040    0.275
+oracle on target                                      0.049      0.780    0.065    0.000
+
+== validity over 200 resplits: P(test miss > alpha) must be <= delta=0.1 for a certificate ==
+tuned geometric                                      violation=0.500  miss mean=0.050 q95=0.062
+T4 LTT (ours)                                        violation=0.095  miss mean=0.041 q95=0.052
+T4 CRC (ours)                                        violation=0.470  miss mean=0.049 q95=0.061
+T1 tuned confidence                                  violation=0.480  miss mean=0.049 q95=0.062
+T3 open-loop conformal                               violation=0.000  miss mean=0.002 q95=0.003
+
+== h1: open-loop (AUROC) vs closed-loop (unnecessary stops at certified lam) ==
+  conf_conflict  AUROC=0.439  closed-loop unnec.stop=0.694
+  ens            AUROC=0.434  closed-loop unnec.stop=0.726
+  gap            AUROC=0.807  closed-loop unnec.stop=0.290
+  geom           AUROC=0.827  closed-loop unnec.stop=0.250
+  geom_route     AUROC=0.552  closed-loop unnec.stop=0.868
+  geom_iso       AUROC=0.840  closed-loop unnec.stop=0.226
+  open-loop rank ['geom_iso', 'geom', 'gap', 'geom_route', 'conf_conflict', 'ens']
+  closed-loop rank ['geom_iso', 'geom', 'gap', 'conf_conflict', 'ens', 'geom_route']
+  Kendall tau=0.73  same top=True  (pre-registered: H1 refuted if tau >= 0.8 AND same top, in BOTH settings)
+
+== h1_shift: open-loop (AUROC) vs closed-loop (unnecessary stops at certified lam) ==
+  conf_conflict  AUROC=0.368  closed-loop unnec.stop=0.464
+  ens            AUROC=0.495  closed-loop unnec.stop=0.623
+  gap            AUROC=0.666  closed-loop unnec.stop=0.254
+  geom           AUROC=0.693  closed-loop unnec.stop=0.199
+  geom_route     AUROC=0.634  closed-loop unnec.stop=0.780
+  geom_iso       AUROC=0.696  closed-loop unnec.stop=0.186
+  open-loop rank ['geom_iso', 'geom', 'gap', 'geom_route', 'ens', 'conf_conflict']
+  closed-loop rank ['geom_iso', 'geom', 'gap', 'conf_conflict', 'ens', 'geom_route']
+  Kendall tau=0.60  same top=True  (pre-registered: H1 refuted if tau >= 0.8 AND same top, in BOTH settings)
+
+== h1_waymo: open-loop (AUROC) vs closed-loop (unnecessary stops at certified lam) ==
+  conf_conflict  AUROC=0.418  closed-loop unnec.stop=0.693
+  ens            AUROC=0.379  closed-loop unnec.stop=0.770
+  gap            AUROC=0.754  closed-loop unnec.stop=0.444
+  geom           AUROC=0.785  closed-loop unnec.stop=0.412
+  geom_route     AUROC=0.460  closed-loop unnec.stop=0.863
+  geom_iso       AUROC=0.796  closed-loop unnec.stop=0.396
+  open-loop rank ['geom_iso', 'geom', 'gap', 'geom_route', 'conf_conflict', 'ens']
+  closed-loop rank ['geom_iso', 'geom', 'gap', 'conf_conflict', 'ens', 'geom_route']
+  Kendall tau=0.73  same top=True  (pre-registered: H1 refuted if tau >= 0.8 AND same top, in BOTH settings)
+
+== H2: paired bootstrap, unnec.stop(baseline) - unnec.stop(T4 LTT), baselines with miss <= alpha ==
+  T1 variant: nearest agent ahead                    diff=+0.458  95% CI [+0.432, +0.484]
+  T2 tuned ensemble (MC dropout)                     diff=+0.448  95% CI [+0.422, +0.473]
+  tuned geometric (ours, no guarantee)               diff=-0.042  95% CI [-0.051, -0.033]
+  T3 open-loop conformal                             diff=+0.504  95% CI [+0.482, +0.527]
+  T4 CRC (ours)                                      diff=-0.041  95% CI [-0.050, -0.032]
+  T4 LTT test miss=0.037 CI [0.02907103445557495, 0.045840863872465706]
+
+== nuScenes (H3): unweighted LTT: target miss = 0.152  95% Wilson CI [0.134, 0.171]  -> CI EXCLUDES alpha (above)  unnec.stop=0.199  n=1491
+
+== nuScenes (H3): weighted LTT (repair): target miss = 0.069  95% Wilson CI [0.057, 0.083]  -> CI EXCLUDES alpha (above)  unnec.stop=0.528  n=1491
+
+== waymo (H3-W): unweighted LTT: target miss = 0.029  95% Wilson CI [0.020, 0.041]  -> CI below alpha  unnec.stop=0.412  n=973
+
+== waymo (H3-W): weighted LTT (repair): target miss = 0.011  95% Wilson CI [0.006, 0.020]  -> CI below alpha  unnec.stop=0.497  n=973
+
+== shift_waymo table ==
+unweighted LTT                           miss=0.029 unnec.stop=0.412 induced=0.044
+weighted LTT (repair)                    miss=0.011 unnec.stop=0.497 induced=0.049
+oracle on target                         miss=0.048 unnec.stop=0.322 induced=0.039
+
+== reverse shift: certify on half of nuScenes, deploy on av2_test (Amendment 3.6) ==
+  half A: n_cal=745  LTT refused to certify (lam_hat = -inf)
+  half B: n_cal=746  LTT refused to certify (lam_hat = -inf)
+
+wrote results/final/eval_all_dropdiv.json

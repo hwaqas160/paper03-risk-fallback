@@ -1,0 +1,30 @@
+cal n=1994 base harm rate=0.158; unsafe cal n=316; eps_matched=alpha/base=0.316
+
+== Argoverse 2 test (certified on av2_cal) ==
+method                                   marg.miss cond.FNR  unnec induced residual too_late prevent new_harm
+never fire                                   0.151    1.000  0.000   0.000    0.151    0.000   0.000    0.000
+LTT (marginal, ours)                         0.037    0.242  0.285   0.026    0.065    0.017   0.098    0.011
+tuned geometric (no cert.)                   0.043    0.285  0.260   0.023    0.069    0.017   0.091    0.009
+Luo-style conditional eps=0.05               0.000    0.000  0.849   0.065    0.041    0.010   0.141    0.031
+Luo-style conditional eps=0.32 (matched)     0.043    0.285  0.260   0.023    0.069    0.017   0.091    0.009
+always fire                                  0.000    0.000  0.849   0.065    0.041    0.010   0.141    0.031
+
+== nuScenes: thresholds certified on av2_cal, deployed unchanged (base harm rate 0.221, unsafe n=332) ==
+method                                   marg.miss cond.FNR  unnec induced residual too_late prevent new_harm
+never fire                                   0.221    1.000  0.000   0.000    0.221    0.000   0.000    0.000
+LTT (marginal, ours)                         0.132    0.581  0.261   0.024    0.156    0.010   0.082    0.017
+tuned geometric (no cert.)                   0.149    0.660  0.213   0.023    0.170    0.009   0.066    0.015
+Luo-style conditional eps=0.05               0.050    0.196  0.779   0.064    0.097    0.016   0.162    0.038
+Luo-style conditional eps=0.32 (matched)     0.149    0.660  0.213   0.023    0.170    0.009   0.066    0.015
+always fire                                  0.050    0.196  0.779   0.064    0.097    0.016   0.162    0.038
+
+== waymo: thresholds certified on av2_cal, deployed unchanged (base harm rate 0.154, unsafe n=154) ==
+method                                   marg.miss cond.FNR  unnec induced residual too_late prevent new_harm
+never fire                                   0.154    1.000  0.000   0.000    0.154    0.000   0.000    0.000
+LTT (marginal, ours)                         0.027    0.175  0.451   0.051    0.043    0.009   0.118    0.007
+tuned geometric (no cert.)                   0.031    0.201  0.422   0.050    0.046    0.008   0.115    0.007
+Luo-style conditional eps=0.05               0.001    0.006  0.846   0.079    0.037    0.010   0.143    0.026
+Luo-style conditional eps=0.32 (matched)     0.031    0.201  0.422   0.050    0.046    0.008   0.115    0.007
+always fire                                  0.001    0.006  0.846   0.079    0.037    0.010   0.143    0.026
+
+wrote results/final/costs_luo_all.json

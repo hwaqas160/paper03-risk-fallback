@@ -1,0 +1,38 @@
+
+== nuscenes_exploratory / ALL scenarios (primary): n_target=1504  base harm rate=0.221 ==
+M1 (AV2-certified, no labels): miss=0.134 CI=[0.11737650412593913, 0.15177749719621567]  stops=0.259
+ k40:
+   M1  miss=0.134  P(miss>alpha)=1.00  stops=0.259  certified=1.00
+   M2  miss=0.075  P(miss>alpha)=0.56  stops=0.573  certified=0.69
+   M3  miss=0.050  P(miss>alpha)=0.37  stops=0.779  certified=0.00
+   M4  miss=0.051  P(miss>alpha)=0.37  stops=0.764  certified=0.37 n_eff=156
+   M5  miss=0.060  P(miss>alpha)=0.41  stops=0.689  certified=0.47
+ k60:
+   M1  miss=0.134  P(miss>alpha)=1.00  stops=0.259  certified=1.00
+   M2  miss=0.069  P(miss>alpha)=0.55  stops=0.607  certified=0.67
+   M3  miss=0.050  P(miss>alpha)=0.43  stops=0.776  certified=0.03
+   M4  miss=0.054  P(miss>alpha)=0.43  stops=0.734  certified=0.43 n_eff=232
+   M5  miss=0.061  P(miss>alpha)=0.48  stops=0.671  certified=0.54
+
+== nuscenes_exploratory / avoidable-only (sensitivity): n_target=1429  base harm rate=0.187 ==
+M1 (AV2-certified, no labels): miss=0.097 CI=[0.08232024161110213, 0.1129850873240712]  stops=0.262
+ k40:
+   M1  miss=0.097  P(miss>alpha)=1.00  stops=0.262  certified=1.00
+   M2  miss=0.072  P(miss>alpha)=0.67  stops=0.332  certified=1.00
+   M3  miss=0.000  P(miss>alpha)=0.00  stops=0.813  certified=0.00
+   M4  miss=0.017  P(miss>alpha)=0.13  stops=0.651  certified=1.00 n_eff=156
+   M5  miss=0.046  P(miss>alpha)=0.40  stops=0.449  certified=1.00
+ k60:
+   M1  miss=0.097  P(miss>alpha)=1.00  stops=0.262  certified=1.00
+   M2  miss=0.065  P(miss>alpha)=0.68  stops=0.345  certified=1.00
+   M3  miss=0.009  P(miss>alpha)=0.04  stops=0.729  certified=1.00
+   M4  miss=0.028  P(miss>alpha)=0.05  stops=0.533  certified=1.00 n_eff=232
+   M5  miss=0.047  P(miss>alpha)=0.42  stops=0.435  certified=1.00
+
+== pre-registered verdicts (primary = all scenarios) ==
+  R1_M2_violates_ge_50pct_both_k: HOLDS  {"values": [0.555, 0.55]}
+  R2_M4_k60_violation_le_delta: REFUTED  {"value": 0.43}
+  R3_M4_k60_stops_ge_10pts_above_in_domain: HOLDS  {"value": 0.4491289226652751, "in_domain_stop": 0.2845691382765531}
+  R4_M1_target_miss_CI_excludes_alpha: HOLDS  {"ci": [0.11737650412593913, 0.15177749719621567]}
+
+wrote results/final/recal_nuscenes_exploratory.json

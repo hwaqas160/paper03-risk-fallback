@@ -134,8 +134,10 @@ def verdicts(all_res, in_domain_stop):
     gap = r["k60"]["M4"]["stop_mean"] - in_domain_stop
     v["R3_M4_k60_stops_ge_10pts_above_in_domain"] = dict(value=gap, in_domain_stop=in_domain_stop, holds=bool(gap >= 0.10))
     ci = r["M1_full_target"]["miss_ci"]
+    # Amendment 3 pre-registers H3-W as one-sided ("expectation... miss > alpha"): only a CI entirely
+    # ABOVE alpha supports "the guarantee fails". A CI below alpha is no detectable loss, not support.
     v["R4_M1_target_miss_CI_excludes_alpha"] = dict(
-        ci=ci, holds=bool(ci is not None and not (ci[0] <= ALPHA <= ci[1])))
+        ci=ci, holds=bool(ci is not None and ci[0] > ALPHA))
     return v
 
 

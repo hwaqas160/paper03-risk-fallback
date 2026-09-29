@@ -1,0 +1,38 @@
+
+== waymo / ALL scenarios (primary): n_target=1000  base harm rate=0.154 ==
+M1 (AV2-certified, no labels): miss=0.027 CI=[0.018621256649289826, 0.03899898941343562]  stops=0.450
+ k40:
+   M1  miss=0.027  P(miss>alpha)=0.00  stops=0.450  certified=1.00
+   M2  miss=0.074  P(miss>alpha)=0.69  stops=0.254  certified=1.00
+   M3  miss=0.001  P(miss>alpha)=0.00  stops=0.846  certified=0.00
+   M4  miss=0.015  P(miss>alpha)=0.00  stops=0.562  certified=1.00 n_eff=156
+   M5  miss=0.049  P(miss>alpha)=0.39  stops=0.359  certified=1.00
+ k60:
+   M1  miss=0.027  P(miss>alpha)=0.00  stops=0.450  certified=1.00
+   M2  miss=0.062  P(miss>alpha)=0.59  stops=0.296  certified=1.00
+   M3  miss=0.015  P(miss>alpha)=0.03  stops=0.586  certified=0.95
+   M4  miss=0.017  P(miss>alpha)=0.00  stops=0.498  certified=1.00 n_eff=232
+   M5  miss=0.046  P(miss>alpha)=0.36  stops=0.363  certified=1.00
+
+== waymo / avoidable-only (sensitivity): n_target=999  base harm rate=0.153 ==
+M1 (AV2-certified, no labels): miss=0.026 CI=[0.017821697707190214, 0.03786167242823296]  stops=0.451
+ k40:
+   M1  miss=0.026  P(miss>alpha)=0.00  stops=0.451  certified=1.00
+   M2  miss=0.071  P(miss>alpha)=0.64  stops=0.261  certified=1.00
+   M3  miss=0.000  P(miss>alpha)=0.00  stops=0.847  certified=0.00
+   M4  miss=0.013  P(miss>alpha)=0.00  stops=0.560  certified=1.00 n_eff=156
+   M5  miss=0.044  P(miss>alpha)=0.37  stops=0.377  certified=0.99
+ k60:
+   M1  miss=0.026  P(miss>alpha)=0.00  stops=0.451  certified=1.00
+   M2  miss=0.061  P(miss>alpha)=0.57  stops=0.295  certified=1.00
+   M3  miss=0.016  P(miss>alpha)=0.04  stops=0.556  certified=1.00
+   M4  miss=0.017  P(miss>alpha)=0.00  stops=0.492  certified=1.00 n_eff=232
+   M5  miss=0.046  P(miss>alpha)=0.38  stops=0.356  certified=1.00
+
+== pre-registered verdicts (primary = all scenarios) ==
+  R1_M2_violates_ge_50pct_both_k: HOLDS  {"values": [0.695, 0.59]}
+  R2_M4_k60_violation_le_delta: HOLDS  {"value": 0.0}
+  R3_M4_k60_stops_ge_10pts_above_in_domain: HOLDS  {"value": 0.21293618087238303, "in_domain_stop": 0.2845691382765531}
+  R4_M1_target_miss_CI_excludes_alpha: REFUTED  {"ci": [0.018621256649289826, 0.03899898941343562]}
+
+wrote results/final/recal_waymo.json

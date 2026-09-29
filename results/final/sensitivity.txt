@@ -1,0 +1,7 @@
+AV2-certified LTT lambda (main setting) = 1.4701; main test rows = 2000
+arm         n base harm   miss               CI  unnec induced  resid |  d miss           95% CI  d stop           95% CI
+replay    378     0.177  0.037  [0.022,0.061]  0.354   0.185  0.180 |  -0.005  [-0.013,+0.000]  +0.079  [+0.053,+0.108]
+mrm2      378     0.167  0.042  [0.026,0.068]  0.275   0.016  0.082 |  +0.000  [+0.000,+0.000]  +0.000  [+0.000,+0.000]
+hz10      103     0.175  0.029  [0.010,0.082]  0.291   0.029  0.058 |  -0.019  [-0.049,+0.000]  +0.029  [+0.000,+0.068]
+
+wrote results/final/sensitivity.json
