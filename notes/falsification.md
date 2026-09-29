@@ -474,3 +474,36 @@ $\delta=0.10$ for every validity check, pre-fire exactness measured and reported
 Amendment 2. No threshold, grid, or hyperparameter for N1-N5 is chosen by looking at fresh-data
 outcomes; all are fixed by this amendment or by re-running the existing Amendment-1/2 procedure
 verbatim on fresh calibration data.
+
+## Amendment 5a — 2026-09-29, protocol correction found in code testing, BEFORE any fresh data
+
+`src/outcome_cert.py` was smoke-tested on the ALREADY-ANALYSED av2_cal/av2_test data (never fresh
+data) purely to check the code runs correctly. That check surfaced a real statistical property, not
+a bug, which changes how N1's validity check must be run.
+
+**Finding:** residual harm's own floor ("always fire") is ~3.7-4.1%, close to the alpha_H=0.05
+target. Any lambda with true population residual harm below alpha therefore has little margin above
+that floor. A finite-sample validity check (certify on a HALF-sized calibration split, measure
+whether the OTHER half's empirical rate exceeds alpha) adds its own sampling noise on top of
+whatever margin the certifier achieves; that noise is far more visible near a tight floor than it is
+for alarm-level miss, whose achievable floor (0.0-0.1%) sits much further from its own alpha=0.05
+target. On the old, already-analysed data this pushed the half/half validity check to ~29% apparent
+violation for outcome-level LTT, which is a property of checking a near-floor quantity with n_cal
+~1000, not evidence LTT itself is broken (the same code, same `learn_then_test` call, on the SAME
+data's alarm-level miss reproduces the already-reported ~9.5%, matching Section V of the manuscript).
+
+**Decision, made before any fresh data is touched:**
+1. alpha_H stays 0.05 (unchanged) — comparability with the existing alarm-level target is the point
+   of N2, and moving the goalpost after seeing it is close to a floor would be indefensible.
+2. N1's validity check uses the FULL pre-registered fresh n_cal (1300), not a further half-split of
+   it, to give the certifier the calibration size Amendment 5 actually allocates, matching how N1-N4
+   are deployed (not re-halved for the resplit diagnostic). The 200-resplit validity check itself
+   still resplits the pooled fresh cal+test data half/half, as for H1-H3, so it remains comparable to
+   the existing methodology; this decision only concerns not artificially shrinking it further.
+3. **If N1 is refuted specifically because outcome-level LTT's validity check exceeds delta near this
+   floor, that is reported as a positive finding, not a failure to hide**: outcome-level certification
+   near an intrinsic floor is a harder statistical problem than alarm-level certification with more
+   headroom, and the paper says so explicitly. N2 (the central new claim) does not depend on N1
+   holding — it is a one-sided test of the ALARM-level certificate's residual harm, evaluated once on
+   the fresh test set, unaffected by this near-floor validity-check sensitivity.
+4. No change to N2-N5, their refutation rules, or the fresh data pools already fixed above.
