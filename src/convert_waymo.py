@@ -57,11 +57,22 @@ def preprocess_no_tf(files, worker_index):
 
 
 def finished_shards(raw: Path) -> list[str]:
+    """
+    A shard is finished if it has no in-progress marker next to it. `<shard>.ok` is this repo's own
+    ad hoc downloader convention; gsutil-based downloads (Paper 01's watchdog) instead leave a
+    `.gstmp` / `_.gstmp` partial file while copying and rename to the final name only once the copy
+    completes, so the absence of any `.gstmp` sibling is itself sufficient evidence a shard finished.
+    A shard file is treated as finished if EITHER an `.ok` sidecar exists OR no `.gstmp` file with a
+    matching prefix exists anywhere in the directory (a conservative check: if downloads are only
+    ever appended, not interleaved with earlier now-finished ones, a lingering `.gstmp` for a LATER
+    shard cannot make an EARLIER, already-renamed shard incomplete).
+    """
     out = []
+    gstmp_present = any(raw.glob("*.gstmp")) or any(raw.glob("*_.gstmp"))
     for p in sorted(raw.glob("*tfrecord-*")):
         if p.suffix in (".ok", ".gstmp") or p.name.endswith("_.gstmp"):
             continue
-        if (p.parent / (p.name + ".ok")).exists():
+        if (p.parent / (p.name + ".ok")).exists() or not gstmp_present:
             out.append(str(p))
     return out
 
@@ -71,6 +82,7 @@ def main():
     ap.add_argument("--raw", required=True)
     ap.add_argument("--out", required=True)
     ap.add_argument("--first_shards", type=int, default=8)
+    ap.add_argument("--skip_shards", type=int, default=0, help="skip this many finished shards before taking --first_shards")
     ap.add_argument("--workers", type=int, default=3)
     ap.add_argument("--max_scenarios", type=int, default=None, help="debug: stop after N (single shard)")
     ap.add_argument("--overwrite", action="store_true")
@@ -79,7 +91,7 @@ def main():
     from scenarionet.converter.utils import write_to_directory
     from scenarionet.converter.waymo.utils import convert_waymo_scenario
 
-    shards = finished_shards(Path(a.raw))[: a.first_shards]
+    shards = finished_shards(Path(a.raw))[a.skip_shards: a.skip_shards + a.first_shards]
     if len(shards) < a.first_shards:
         print(f"WARNING: only {len(shards)} finished shards available (asked {a.first_shards})")
     if not shards:

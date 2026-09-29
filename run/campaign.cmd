@@ -30,6 +30,21 @@ REM --- 4. sensitivity arms (reported, not used for H1-H3) ---
 start "" /belownormal /wait /b %PY% src\campaign.py --db av2_test --n 500 --workers %W% --replay        --out results\campaign\av2_test_replay >> "%LOG%" 2>&1
 start "" /belownormal /wait /b %PY% src\campaign.py --db av2_test --n 500 --workers %W% --mrm_decel 2.0 --out results\campaign\av2_test_mrm2   >> "%LOG%" 2>&1
 start "" /belownormal /wait /b %PY% src\campaign.py --db av2_test --n 100 --workers %W% --decide_every 1 --out results\campaign\av2_test_10hz  >> "%LOG%" 2>&1
+REM --- 5. Amendment 5 (outcome-level certification, N1-N5): fresh, disjoint scenario ranges ---
+REM     verified against the arms above before being fixed in notes/falsification.md. --mc 0: T1/T2
+REM     per-agent tables are not needed by N1-N5. N1-N3, primary predictor, d=4.0 (default):
+start "" /belownormal /wait /b %PY% src\campaign.py --db av2_cal  --start 3595 --n 900 --workers %W% --mc 0 --out results\campaign\av2_cal5  >> "%LOG%" 2>&1
+start "" /belownormal /wait /b %PY% src\campaign.py --db av2_test --start 3584 --n 900 --workers %W% --mc 0 --out results\campaign\av2_test5 >> "%LOG%" 2>&1
+REM     N4: same seed ranges, d=2.0 (paired with the d=4.0 rows above):
+start "" /belownormal /wait /b %PY% src\campaign.py --db av2_cal  --start 3595 --n 900 --workers %W% --mc 0 --mrm_decel 2.0 --out results\campaign\av2_cal5_d2  >> "%LOG%" 2>&1
+start "" /belownormal /wait /b %PY% src\campaign.py --db av2_test --start 3584 --n 900 --workers %W% --mc 0 --mrm_decel 2.0 --out results\campaign\av2_test5_d2 >> "%LOG%" 2>&1
+REM     N5: same seed ranges again, second predictor (Paper 01 artifact, minADE6 0.854):
+set GPUCKPT=F:\CLAUDE\AI1\paper01-coverage-transfer\results\ckpts\av2_gpu_full\epoch53-minADE0.854.ckpt
+start "" /belownormal /wait /b %PY% src\campaign.py --db av2_cal  --start 3595 --n 900 --workers %W% --mc 0 --ckpt "%GPUCKPT%" --out results\campaign\av2_cal5_gpu  >> "%LOG%" 2>&1
+start "" /belownormal /wait /b %PY% src\campaign.py --db av2_test --start 3584 --n 900 --workers %W% --mc 0 --ckpt "%GPUCKPT%" --out results\campaign\av2_test5_gpu >> "%LOG%" 2>&1
+REM     extension pools, not required by N1-N4, lowest priority:
+start "" /belownormal /wait /b %PY% src\campaign.py --db ns_val     --start 2624 --n 1500 --workers %W% --mc 0 --out results\campaign\ns_val5    >> "%LOG%" 2>&1
+start "" /belownormal /wait /b %PY% src\campaign.py --db waymo_val2 --start 0    --n 1000 --workers %W% --mc 0 --out results\campaign\waymo_val5 >> "%LOG%" 2>&1
 echo [%DATE% %TIME%] campaign pass complete >> "%LOG%"
 REM --- self-retire ONLY when every arm is genuinely complete ---
 %PY% src\campaign_status.py --quiet && schtasks /delete /tn P03_Campaign /f >> "%LOG%" 2>&1

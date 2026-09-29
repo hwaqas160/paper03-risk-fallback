@@ -539,3 +539,24 @@ tests. If no overlap is found at either d, that is reported as the result, with 
 explained, not treated as a failed experiment.
 
 No change to alpha_H, alpha_I, delta, or the N4 refutation rule already stated above.
+
+## Amendment 5c — 2026-09-29, protocol correction found before launching collection, BEFORE any data
+
+The "fresh scenarios available" table in Amendment 5 (1376 for av2_cal, 1443 for av2_test) counted
+RAW index availability, not the non-static YIELD within that range. The already-collected av2_cal
+arm shows an empirical static-ego skip rate of ~25-30% (683 static skips recorded; matches the
+codebase's own `STATIC_FRAC = 0.30` sizing constant). Applying that rate to the 1376/1443 raw
+indices remaining gives an estimated non-static yield of roughly 960-1010 for av2_cal and 1000-1050
+for av2_test -- both BELOW the originally stated n=1300, which would have made av2_cal5/av2_test5
+(and their d=2.0 and second-predictor variants) permanently unreachable: `campaign.py`'s per-worker
+span is capped at `total - start`, so the arm would exhaust the entire fresh range without ever
+reaching 1300 rows, and the unattended pipeline would retry it forever without ever completing.
+
+**Correction, made before any Amendment-5 collection was launched:** av2_cal5, av2_test5,
+av2_cal5_d2, av2_test5_d2, av2_cal5_gpu and av2_test5_gpu targets are reduced from 1300 to **900**
+each, comfortably below the estimated ceiling. ns_val5 (6417 raw indices available) and waymo_val5
+(a new ~6470-scenario database) are unaffected; their margins are large enough that the same failure
+mode is not a concern. No change to alpha_H, alpha_I, delta, or any N1-N5 refutation rule; this is a
+sample-size correction only, and n=900 remains large enough for the CI widths anticipated when N1-N4
+were written (a residual-harm rate near 5% at n=900 has a Wilson half-width of roughly 1.5 points,
+similar to the n=1994-2000 splits used for H1-H3).

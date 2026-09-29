@@ -26,6 +26,9 @@ DBS = {
     # Third dataset: a second, independent shift target. 9.1 s scenarios (1 s history + 8 s).
     "waymo_val": r"F:\CLAUDE\AI3\paper03-risk-fallback\data\waymo_val",
     "waymo_smoke": r"F:\CLAUDE\AI3\paper03-risk-fallback\data\waymo_smoke",
+    # Amendment 5: shards 8-29 (the 22 NOT used to build waymo_val), independent scenario indices,
+    # so this pool cannot overlap with the already-analysed waymo_val scenarios.
+    "waymo_val2": r"F:\CLAUDE\AI3\paper03-risk-fallback\data\waymo_val2",
 }
 
 # ScenarioNet's own filter: drop scenarios where the ego moves < 10 m.
