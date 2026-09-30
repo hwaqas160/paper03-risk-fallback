@@ -43,16 +43,21 @@ numbers below against it before final submission, since anything fetched from th
 - https://ieee.atyponrex.com/journal/t-iv
 - Editorial contact: tiv-eic@ieee.org
 
-## Outstanding items for THIS manuscript, checked 2026-09-29
-- [ ] Trim abstract to 150-250 words
-- [ ] Trim keywords to 3-4
-- [ ] Write short biography for each of the 3 authors
-- [ ] Confirm institutional email for all 3 authors (Rahat: NBS student address; Hina: State Bank
-      of Pakistan address -- confirm both still active and institutional, not personal)
+## Outstanding items for THIS manuscript, updated 2026-09-30
+- [x] Trim abstract to 150-250 words (done 2026-09-29)
+- [x] Trim keywords to 3-4 (done 2026-09-29)
+- [x] Write short biography for each of the 3 authors (done 2026-09-30)
+- [x] Confirm institutional email for all 3 authors -- confirmed by the corresponding author
+      2026-09-30: rahat.mscm21nbs@student.nust.edu.pk, hina.maryam@sbp.org.pk (both match what
+      was already in the manuscript)
+- [x] Reserve a Zenodo DOI for the eventual code/data release: `10.5281/zenodo.23054071`
+      (draft, unpublished -- see `zenodo.md` in this folder)
 - [ ] Decide traditional vs. open-access route
 - [ ] Draft a conflict-of-interest statement (currently omitted from the manuscript body per an
       earlier decision -- confirm whether the SUBMISSION SYSTEM form suffices or the manuscript
       itself also needs one; T-IV's own checklist above lists it as a submission-system item, not
       necessarily an in-manuscript section, so this may not require re-adding it to main.tex)
-- [ ] High-resolution author photos, if the portal requires them at initial submission (some
-      journals only require these post-acceptance -- verify on the actual portal before assuming)
+- [x] Hassan's high-resolution author photo added to the biography section 2026-09-30
+      (`paper/hassan_photo.jpeg`). Rahat's and Hina's photos are still pending -- their
+      biographies currently use `\IEEEbiographynophoto`; swap to `\IEEEbiography` with a photo
+      once available.
