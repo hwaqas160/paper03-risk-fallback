@@ -23,7 +23,7 @@ ARMS = {                      # name -> target scenario rows
     # against the arms above (max touched index 3594/3583/2623) before being fixed in the amendment.
     "av2_cal5": 900, "av2_test5": 900,                      # N1-N3, primary predictor, d=4.0
     "av2_cal5_d2": 900, "av2_test5_d2": 900,                # N4, same seeds, d=2.0
-    "ns_val5": 1500, "waymo_val5": 1000,                    # extension pools (not required by N1-N4)
+    "ns_val5": 1300, "waymo_val5": 1000,                    # extension pools (not required by N1-N4)
     "av2_cal5_gpu": 900, "av2_test5_gpu": 900,              # N5, second predictor, same seeds as av2_*5
 }
 

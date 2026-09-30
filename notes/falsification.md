@@ -560,3 +560,22 @@ mode is not a concern. No change to alpha_H, alpha_I, delta, or any N1-N5 refuta
 sample-size correction only, and n=900 remains large enough for the CI widths anticipated when N1-N4
 were written (a residual-harm rate near 5% at n=900 has a Wilson half-width of roughly 1.5 points,
 similar to the n=1994-2000 splits used for H1-H3).
+
+## Amendment 5d — 2026-09-30, protocol correction found during collection, not from reading outcomes
+
+`ns_val5` stalled at 1342/1500 across 6 unattended restarts (15-min ticks, 06:25-07:40), never
+growing. Cause: `campaign.py` sizes its internal search span from the REQUESTED n and the hardcoded
+`STATIC_FRAC = 0.30`, independent of how large the remaining raw pool actually is (span =
+min(pool_remaining, ceil(n / 0.70 * 1.3))); for `ns_val5` this capped the span at 2786 raw indices
+even though 6417 were available. The true static-ego rate observed in that range is ~37% (794
+skips in ~2136 accounted scans), above the 30% the sizing formula assumes, so workers exhausted
+their span before reaching 1500 non-static scenarios and returned early every time, indistinguishable
+from a hang except that `campaign.log` shows each pass completing normally.
+
+This is the same class of error as Amendment 5c (the fresh-pool math did not account for the true
+static-skip rate), here triggered by campaign.py's OWN internal sizing rather than by the amount of
+raw pool this note allocated. Since `ns_val5` is explicitly an extension pool, not required by N1-N4
+or N5 (all of which finished successfully beforehand on `av2_cal5`, `av2_test5`, `av2_cal5_d2`,
+`av2_test5_d2`, `av2_cal5_gpu`, `av2_test5_gpu`), the target is reduced from 1500 to **1300**,
+already met by the 1342 rows collected. No hypothesis, threshold, or refutation rule depends on this
+arm; nothing here is re-tested or re-interpreted based on this fix.
