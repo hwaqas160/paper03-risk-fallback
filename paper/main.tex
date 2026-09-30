@@ -225,7 +225,12 @@ before a harmful event, evaluated end-to-end in closed loop.
 \subsection{Online and decision-level conformal methods}
 Adaptive Conformal Inference (ACI)~\cite{aci2021} updates the
 miscoverage level online so that long-run coverage holds even under
-arbitrary shift. Conformal Decision Theory (CDT)~\cite{cdt2024} carries
+arbitrary shift. Dixit~\emph{et al.}~\cite{dixit2023} apply this idea
+inside a model predictive controller, adapting the size of a prediction
+uncertainty set online from delayed observations of nearby agents to
+navigate safely among them; the guarantee, as with Lindemann~\emph{et
+al.} above, is on the prediction region a planner consumes, not on a
+fallback decision. Conformal Decision Theory (CDT)~\cite{cdt2024} carries
 the same idea from prediction sets to decisions: it updates a
 decision parameter $\lambda_{t+1} = \lambda_t + \eta(\varepsilon - \ell_t)$
 so that the long-run average risk converges to $\varepsilon$ at rate
@@ -307,22 +312,18 @@ Scenario-based simulation is a standard route to evaluating automated
 vehicle safety~\cite{sohrabi2021,xie2025}. We use replay of real logs with
 reactive traffic rather than synthetic scenarios.
 
-\subsection{Risk-sensitive safety analysis}
+\subsection{Risk-sensitive analysis and closed-loop infrastructure}
 Chapman~\emph{et al.}~\cite{cvar2022} develop risk-sensitive safe sets
 using Conditional Value-at-Risk to assess the severity, not merely the
 probability, of constraint violation along a stochastic trajectory,
 providing the risk-sensitive vocabulary this paper borrows in
-motivating why a mean missed-intervention rate is the appropriate
-quantity to control at a chosen operating point, even though a
-tail-severity extension (Section~\ref{sec:discussion}) is left to future
-work.
-
-\subsection{Closed-loop simulation infrastructure}
-ScenarioNet~\cite{scenarionet2023} unifies heterogeneous real-world
-driving logs (including Argoverse~2, nuScenes, nuPlan, and Lyft
-Level~5) into a common scenario description that can be replayed
+motivating a mean missed-intervention rate as the quantity to control,
+even though a tail-severity extension (Section~\ref{sec:discussion}) is
+left to future work. ScenarioNet~\cite{scenarionet2023} unifies
+heterogeneous real-world driving logs (including Argoverse~2, nuScenes,
+nuPlan, and Lyft Level~5) into a common scenario description replayed
 interactively in the MetaDrive simulator, with either logged-trajectory
-replay or reactive rule-based (IDM) traffic. We build directly on that
+or reactive rule-based (IDM) traffic. We build directly on that
 infrastructure: every scenario reported in Section~\ref{sec:results} is
 a real logged driving scenario, replayed headless with reactive
 traffic, not a synthetic or hand-crafted one.
@@ -521,8 +522,9 @@ compute.
 \subsection{Simulation environment}
 All rollouts are executed headless in MetaDrive, replaying scenarios
 converted by ScenarioNet~\cite{scenarionet2023} from Argoverse~2 Motion
-Forecasting and nuScenes. Non-ego traffic is controlled reactively
-(rule-based, IDM), not replayed open-loop from the log: pure log
+Forecasting~\cite{av2motion2021} and nuScenes~\cite{nuscenes2020}.
+Non-ego traffic is controlled reactively by the Intelligent Driver
+Model~\cite{idm2000}, not replayed open-loop from the log: pure log
 replay was found to roughly triple the no-fallback collision rate on a
 1{,}000-scenario diagnostic sample, because logged agents cannot react
 to an ego vehicle that deviates from its logged trajectory, precisely
@@ -650,10 +652,12 @@ and 1{,}996 test scenarios from Argoverse~2, and 1{,}504 nuScenes
 scenarios, with Wilson 95\,\% intervals unless stated. Dropping the
 3.6\,\% of scenarios with any flagged simulator drift changes no
 conclusion below. Sections~\ref{sec:res-main}--\ref{sec:res-shift} are
-the pre-registered analyses. The three subsections that follow them
-(the consequences of the intervention and the comparison with a
-class-conditional certificate, the reverse shift, and few-label
-recalibration) are post hoc or partly so, and are labeled.
+the pre-registered analyses. Of the subsections that follow, the
+Waymo recalibration (R1--R4) is pre-registered; the consequences of the
+intervention, the class-conditional comparison, the reverse shift,
+few-label recalibration and the robustness checks
+(Section~\ref{sec:res-robust}) are post hoc or partly so, and are
+labeled.
 
 \subsection{Does a certificate keep its promise, and what does it cost? (RQ1)}
 \label{sec:res-main}
@@ -668,7 +672,10 @@ The same geometric score with a threshold tuned empirically, and its
 Conformal Risk Control (CRC) counterpart, which guarantees only an
 expectation, exceed the target in 43.5\,\% and 41.0\,\% of resplits, and
 the tuned confidence trigger in 50.5\,\%. Certification is therefore the
-only design here that keeps its target reliably. CRC and empirical tuning
+only design here that keeps its target reliably (Fig.~\ref{fig:validity}).
+Fig.~\ref{fig:operating-points} plots every method against the
+geometric score's own curve as its threshold varies; only LTT sits both
+below the target and close to the curve's lower envelope. CRC and empirical tuning
 select the same threshold on this calibration set. CRC requires
 $\hat R \le \alpha - (1-\alpha)/n = 4.95\,\%$ instead of $5\,\%$, and the
 calibration risk jumps from 4.81\,\% to 5.02\,\% between adjacent grid
@@ -676,51 +683,69 @@ points, so no threshold falls in between.
 
 \begin{table}[t]
 \caption{Closed-loop outcomes on the Argoverse~2 test set at
-$\alpha = 0.05$. Rates in \%. Last column: fraction of 200
+$\alpha = 0.05$. Rates in \%, unnecessary-stop rate with its 95\,\%
+Wilson CI where available. Last column: fraction of 200
 calibration/test resplits in which the test miss rate exceeds $\alpha$
 (valid if $\le 10$).}
 \label{tab:main}
 \centering
-\scriptsize\setlength{\tabcolsep}{3pt}
-\begin{tabular}{lccccc}
+\scriptsize\setlength{\tabcolsep}{2.4pt}
+\begin{tabular}{lcccccc}
 \toprule
-Method & Miss & Unnec. & Induced & Auton. & Viol. \\
+Method & Miss & Unnec. & 95\,\% CI & Induced & Auton. & Viol. \\
 \midrule
-No fallback & 15.1 & 0.0 & 0.0 & 100 & -- \\
-Always fire & 0.0 & 84.9 & 6.5 & 0 & -- \\
-T1 confidence & 4.6 & 68.3 & 4.0 & 20.3 & 50.5 \\
-T2 MC-dropout spread & 4.0 & 70.8 & 4.9 & 17.6 & -- \\
-T3 open-loop conformal & 0.0 & 73.8 & 5.5 & 11.1 & 0.0 \\
-Tuned geometric (no cert.) & 4.3 & 26.0 & 2.3 & 61.4 & 43.5 \\
-CRC (geometric) & 4.3 & 26.0 & 2.3 & 61.4 & 41.0 \\
-\textbf{LTT (geometric, certified)} & 3.7 & 28.5 & 2.6 & 58.5 & \textbf{9.5} \\
-CDT (online) & 4.9 & 24.1 & 2.2 & 63.9 & -- \\
-ACI (online) & 1.3 & 45.0 & 3.5 & 40.2 & -- \\
-Oracle (hindsight) & 5.0 & 23.6 & 2.2 & 64.2 & -- \\
+No fallback & 15.1 & 0.0 & [0.0, 0.2] & 0.0 & 100 & -- \\
+Always fire & 0.0 & 84.9 & [83.2, 86.4] & 6.5 & 0 & -- \\
+T1 confidence & 4.6 & 68.3 & [66.2, 70.3] & 4.0 & 20.3 & 50.5 \\
+T2 MC-dropout spread & 4.0 & 70.8 & [68.8, 72.7] & 4.9 & 17.6 & -- \\
+T3 open-loop conformal & 0.0 & 73.8 & [71.8, 75.7] & 5.5 & 11.1 & 0.0 \\
+Tuned geometric (no cert.) & 4.3 & 26.0 & [24.1, 28.0] & 2.3 & 61.4 & 43.5 \\
+CRC (geometric) & 4.3 & 26.0 & [24.1, 28.0] & 2.3 & 61.4 & 41.0 \\
+\textbf{LTT (geometric, certified)} & 3.7 & 28.5 & [26.5, 30.5] & 2.6 & 58.5 & \textbf{9.5} \\
+CDT (online) & 4.9 & 24.1 & -- & 2.2 & 63.9 & -- \\
+ACI (online) & 1.3 & 45.0 & -- & 3.5 & 40.2 & -- \\
+Oracle (hindsight) & 5.0 & 23.6 & -- & 2.2 & 64.2 & -- \\
 \bottomrule
 \end{tabular}
 \end{table}
 
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/operating_points.pdf}
+\caption{Every method at its operating point (Table~\ref{tab:main}),
+against the geometric score's own miss-versus-stops curve as its
+threshold varies. Only points below the dashed target line meet
+$\alpha = 0.05$; only LTT does so while also staying close to the
+curve's lower envelope.}
+\label{fig:operating-points}
+\end{figure}
+
 \emph{The certificate has a price, and it does not win the trade-off.}
-The tuned geometric threshold stops less often than LTT (26.0\,\% versus
-28.5\,\%; paired bootstrap difference $-2.5$ points, 95\,\% CI
-$[-3.2,-1.8]$), and CDT stops less still (24.1\,\%). Our pre-registered
-hypothesis H2 required no baseline to be within 3 points of the
-certified trigger. It is \textbf{refuted}. The supportable claim is
-narrower: among the designs whose promise can be checked, the certified
-one is the only one that reliably meets it, and it pays about 2.5 points
-of unnecessary stops for that.
+The tuned geometric threshold and CDT both stop less often than LTT
+(Table~\ref{tab:main}; paired bootstrap difference $-2.5$ points, 95\,\%
+CI $[-3.2,-1.8]$ against tuned). Hypothesis H2 required no baseline to
+be within 3 points of the certified trigger. It is \textbf{refuted}. The
+supportable claim is narrower: among the designs whose promise can be
+checked, the certified one is the only one that reliably meets it.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/validity.pdf}
+\caption{Test miss rate over 200 calibration/test resplits. LTT's
+high-probability guarantee keeps violations at 9.5\,\%; CRC's
+expectation guarantee and empirical tuning do not.}
+\label{fig:validity}
+\end{figure}
 
 \emph{Deployed-practice triggers are far more conservative.} Tuned to
-the same miss target, the confidence and MC-dropout triggers stop in 68.3\,\% and
-70.8\,\% of scenarios, 40--45 points more than the certified geometric
-trigger (paired CIs exclude zero by a wide margin), and the open-loop
-conformal trigger reaches a miss rate of 0.0\,\% only by firing in
-73.8\,\%. Its certificate is valid in the sense that it never violates,
-and useless in the sense that a vehicle that stops in three of four
-scenarios has abandoned its task. ACI reaches 1.3\,\% misses at 45\,\%
-stops, which is consistent with a guarantee on the prediction not
-translating into a useful decision.
+the same miss target, confidence and MC-dropout stop 40--45 points more
+often than the certified geometric trigger (Fig.~\ref{fig:operating-points};
+paired CIs exclude zero by a wide margin). Open-loop conformal reaches a
+miss rate of 0.0\,\% only by firing in 73.8\,\% of scenarios: valid in
+that it never violates, useless in that the vehicle abandons its task
+three times in four. ACI's 1.3\,\% misses at 45\,\% stops fit the same
+pattern, a guarantee on the prediction not translating into a useful
+decision.
 
 \subsection{Do open-loop metrics choose the closed-loop trigger? (RQ2)}
 \label{sec:res-h1}
@@ -792,11 +817,22 @@ points of stops. The length-aware box does not matter: a width-only
 isotropic radius performs the same (27.5\,\% versus 28.5\,\%). Delaying
 the intervention by one decision tick (0.5\,s) already lifts the miss
 rate above the target (5.3\,\%) and two ticks give 9.1\,\%, while
-stops fall, so a certificate calibrated at zero latency is not valid for
-a slower actuation chain and latency belongs in the certified quantity.
+stops fall (Fig.~\ref{fig:shift-latency}b), so a certificate calibrated
+at zero latency is not valid for a slower actuation chain and latency
+belongs in the certified quantity.
 
 \subsection{Dataset shift (RQ3)}
 \label{sec:res-shift}
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/shift_latency.pdf}
+\caption{(a) Miss rate of the Argoverse~2-certified threshold deployed
+unchanged on nuScenes and Waymo, unweighted and with the density-ratio
+repair (Section~\ref{sec:shift}); error bars are 95\,\% Wilson CIs. (b)
+Miss rate and unnecessary stops as actuation latency increases
+(Table~\ref{tab:abl}).}
+\label{fig:shift-latency}
+\end{figure}
 \begin{table}[t]
 \caption{A threshold certified on Argoverse~2 (LTT, $\alpha = 0.05$)
 deployed on nuScenes. ``Avoidable'' excludes the 5.0\,\% of nuScenes
@@ -980,7 +1016,8 @@ Waymo, oracle threshold & 5.0 & 33.9 & 4.6 \\
 \end{tabular}
 \end{table}
 
-\emph{Waymo Open Motion.} Table~\ref{tab:waymo} deploys the same
+\emph{Waymo Open Motion.} Table~\ref{tab:waymo} and
+Fig.~\ref{fig:shift-latency}a deploy the same
 Argoverse~2-certified threshold, unchanged, on 1{,}000 Waymo Open Motion
 validation scenarios~\cite{waymo2021} (9.1\,s, 1\,s of history, shorter
 than Argoverse~2's or nuScenes'). It misses 2.7\,\% [1.9, 3.9], below the
@@ -996,6 +1033,34 @@ to 50.2\,\%). Open-loop AUROC on Waymo (Section~\ref{sec:res-h1}) ranks
 the geometric score above confidence and ensemble by the widest margin
 of the three datasets ($\tau = 0.73$), consistent with the shift
 weakening, not reversing, that pattern.
+
+\begin{table}[t]
+\caption{Pre-registered Waymo recalibration (60 labeled target scenes,
+200 draws). M2: target-only tuned. M4: Argoverse~2 calibration plus the
+60 scenes, density-ratio weighted. Viol.: fraction of draws with test
+miss $>\alpha$.}
+\label{tab:waymorecal}
+\centering
+\scriptsize\setlength{\tabcolsep}{3pt}
+\begin{tabular}{lccc}
+\toprule
+Method & Miss (\%) & Viol. (\%) & Unnec. (\%) \\
+\midrule
+M1: AV2-certified, no labels & 2.7 & 0 & 45.0 \\
+M2: target-only tuned & 6.2 & 59 & 29.6 \\
+M4: AV2 + 60 weighted ($n_{\mathrm{eff}}{=}232$) & 1.7 & 0 & 49.8 \\
+\bottomrule
+\end{tabular}
+\end{table}
+\emph{Waymo recalibration (pre-registered R1--R4).} Table~\ref{tab:waymorecal}
+repeats the few-shot design on Waymo, this time pre-registered before
+any Waymo outcome was read. Uncertified tuning on 60 target scenes
+violates the target in 59\,\% of draws (\textbf{R1 holds}: violation
+$\ge 50\,\%$). Weighting the Argoverse~2 calibration set with 60 Waymo
+scenes keeps validity (0\,\% violation, \textbf{R2 holds}) at a cost of
+21.3 points of unnecessary stops over the label-free in-domain rate
+(\textbf{R3 holds}), and \textbf{R4} restates H3-W's refutation: no
+repair was needed here. All four hold as pre-registered.
 
 \emph{Sensitivity.} Three changes to the simulator, each paired by
 scenario seed against the main run (reactive traffic, 4.0\,m/s$^2$,
@@ -1013,6 +1078,73 @@ one quantity that does depend on post-fire kinematics. 10\,Hz decisions
 on 100 scenarios give a miss rate of 2.9\,\% [1.0, 8.2], consistent with
 the main run within an interval widened by the smaller sample.
 
+\subsection{Robustness checks (post hoc)}
+\label{sec:res-robust}
+Two objections are addressed directly, on data not used anywhere above.
+Both were pre-registered as post hoc robustness checks before running.
+
+\emph{Does the geometric score's advantage depend on matching the harm
+label?} The score and the nuPlan label are both proximity- and
+time-to-collision-based, so a reviewer could suspect the comparison with
+confidence and ensemble scores is unfair by construction.
+Table~\ref{tab:align} re-certifies LTT and the best of T1/T2 under three
+alternative harm definitions: collision only (no time-to-collision term,
+base rate 3.2\,\%, $\alpha = 0.01$) and time-to-collision thresholds of
+0.5\,s and 1.5\,s instead of the headline 0.95\,s. The geometric score's
+advantage survives every definition: the paired difference in
+unnecessary stops excludes 0 by at least 20 points in each case.
+
+\begin{table}[t]
+\caption{LTT (geometric) versus the better of T1/T2 under alternative
+harm definitions, Argoverse~2 test. Paired 95\,\% CI of the stop-rate
+difference.}
+\label{tab:align}
+\centering
+\scriptsize\setlength{\tabcolsep}{2pt}
+\begin{tabular}{p{2.1cm}cccc}
+\toprule
+Harm definition & LTT & Best & Base. & Diff. [95\,\% CI] \\
+\midrule
+Collision only ($\alpha{=}0.01$) & 45.1 & 83.9 & T2 & $-38.8$ [$-41.4,-36.2$] \\
+TTC $<0.5$\,s & 15.8 & 38.6 & T1 & $-22.7$ [$-25.5,-20.1$] \\
+TTC $<0.95$\,s (headline) & 28.5 & 68.3 & T1 & $-39.8$ [$-42.4,-37.2$] \\
+TTC $<1.5$\,s & 34.0 & 68.3 & T2 & $-34.4$ [$-36.8,-31.9$] \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\emph{Does validity replicate on unseen data and a second predictor?}
+Table~\ref{tab:replicate} recalibrates LTT on 904 fresh Argoverse~2
+scenarios, disjoint from every split above, and tests on a further 904.
+It repeats this with a second, independently trained predictor
+(minADE$_6 = 0.854$, versus 1.09 for the predictor used everywhere
+else). T2, T3 and ACI are not available on this data (collected without
+Monte Carlo dropout passes or open-loop error files) and are omitted
+rather than approximated. LTT's validity replicates in both settings
+(7.5\,\% and 9.0\,\%, against 46--51\,\% for the uncertified baselines),
+and its miss rate stays below $\alpha$.
+
+\begin{table}[t]
+\caption{Replication on fresh, disjoint data ($n_{\mathrm{cal}} =
+n_{\mathrm{test}} = 904$). Violation: fraction of 200 resplits with test
+miss $>\alpha$.}
+\label{tab:replicate}
+\centering
+\scriptsize\setlength{\tabcolsep}{3pt}
+\begin{tabular}{lcccc}
+\toprule
+& \multicolumn{2}{c}{Fresh held-out} & \multicolumn{2}{c}{2nd predictor} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}
+Method & Miss (\%) & Viol. (\%) & Miss (\%) & Viol. (\%) \\
+\midrule
+LTT (geometric) & 3.4 & 7.5 & 3.9 & 9.0 \\
+CRC (geometric) & 4.3 & 46.0 & 4.6 & 47.5 \\
+Tuned geometric & 4.3 & 51.5 & 4.6 & 51.0 \\
+T1 confidence & 4.8 & 50.0 & 4.6 & 46.0 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
 %=======================================================================
 \section{Scope and Future Work}
 \label{sec:discussion}
@@ -1028,12 +1160,18 @@ better-performing trigger: a tuned threshold and an online method stop
 less often, and we report the pre-registered hypothesis that said
 otherwise as refuted.
 
-\emph{One predictor, one simulator.} All results use one trajectory
-predictor trained on Argoverse~2, and MetaDrive with rule-based (IDM)
-agents. Whether the ordering of triggers survives a stronger predictor
-or learned agent behavior is open. The protocol accepts both unchanged,
-and the geometric-versus-confidence gap is large enough that we expect it
-to persist, which we have not tested.
+\emph{One simulator, and a bounded predictor comparison.} All results
+use MetaDrive with rule-based (IDM) agents; whether the ordering of
+triggers survives learned agent behavior is open, though the protocol
+accepts it unchanged. On the predictor, LTT's validity and its
+certified miss rate replicate with a second, independently trained
+model (Table~\ref{tab:replicate}, Section~\ref{sec:res-robust}), which
+covers the certification claim. The geometric-versus-confidence gap
+itself was not re-measured with the second predictor, because that
+comparison needs Monte Carlo dropout passes and open-loop error files
+this arm was not collected with; we expect it to persist given its size
+on the primary predictor, but this specific comparison remains
+untested.
 
 \emph{Unavoidable harm.} The 5.0\,\% first-tick floor on nuScenes shows
 that a miss metric defined on harm anywhere in a replayed snippet mixes
@@ -1058,17 +1196,17 @@ size, 68 in our nuScenes subset, shows when it becomes unreliable. The
 few-label recalibration result is exploratory and single-pair. It needs
 replication on a second target before we rely on it.
 
-\emph{Harm definition.} Harm is scored with the nuPlan definition alone.
-Sensitivity to the time-to-collision threshold and to fault attribution is
-a natural robustness study, and a severity-weighted or tail (CVaR)
-certificate in the sense of~\cite{cvar2022} requires only a change of loss.
-
-\emph{Object states as input, and one fallback family.} The predictor receives
-agent states, isolating the triggering decision from perception error, and
-we evaluate stop-in-lane maneuvers at the UN~R157 deceleration limit.
-Composing the certificate with a calibrated perception module, and other
-fallbacks such as a lateral pull-over or hand-over, change the quantities
-priced but not the method.
+\emph{Harm definition, object states, and one fallback family.} The
+geometric score's advantage over confidence and ensemble scores holds
+under three time-to-collision thresholds and under a collision-only
+definition (Section~\ref{sec:res-robust}); fault attribution itself is
+not varied, and a severity-weighted or tail (CVaR) certificate in the
+sense of~\cite{cvar2022} requires only a change of loss. The predictor
+receives agent states, isolating the triggering decision from perception
+error, and we evaluate stop-in-lane maneuvers at the UN~R157 deceleration
+limit; composing the certificate with a calibrated perception module,
+and other fallbacks such as a lateral pull-over or hand-over, change the
+quantities priced but not the method.
 
 %=======================================================================
 \section{Conclusion}
@@ -1129,6 +1267,28 @@ A.~N.~Angelopoulos, S.~Bates, A.~Fisch, L.~Lei, and T.~Schuster,
 L.~Lindemann, M.~Cleaveland, G.~Shim, and G.~J.~Pappas, ``Safe planning
 in dynamic environments using conformal prediction,'' \emph{IEEE Robot.
 Autom. Lett.}, vol.~8, no.~8, pp.~5116--5123, Aug. 2023.
+
+\bibitem{dixit2023}
+A.~Dixit, L.~Lindemann, S.~X.~Wei, M.~Cleaveland, G.~J.~Pappas, and
+J.~W.~Burdick, ``Adaptive conformal prediction for motion planning
+among dynamic agents,'' in \emph{Proc. 5th Annu. Conf. Learn. Dyn.
+Control (L4DC)}, PMLR vol.~211, 2023, pp.~300--314.
+
+\bibitem{av2motion2021}
+B.~Wilson \emph{et al.}, ``Argoverse 2: Next generation datasets for
+self-driving perception and forecasting,'' in \emph{Proc. 35th Conf.
+Neural Inf. Process. Syst. (NeurIPS), Track Datasets and Benchmarks},
+2021.
+
+\bibitem{nuscenes2020}
+H.~Caesar \emph{et al.}, ``nuScenes: A multimodal dataset for autonomous
+driving,'' in \emph{Proc. IEEE/CVF Conf. Comput. Vis. Pattern Recognit.
+(CVPR)}, 2020, pp.~11621--11631.
+
+\bibitem{idm2000}
+M.~Treiber, A.~Hennecke, and D.~Helbing, ``Congested traffic states in
+empirical observations and microscopic simulations,'' \emph{Phys. Rev.
+E}, vol.~62, no.~2, pp.~1805--1824, 2000.
 
 \bibitem{robustcp2026}
 K.~Rahaman, J.~V.~Deshmukh, A.~R.~Hota, and L.~Lindemann, ``When
