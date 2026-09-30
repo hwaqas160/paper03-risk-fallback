@@ -18,3 +18,11 @@ results/campaign/
 data/waymo_*/
 results/pipeline/
 results/final_test/
+
+# other authors' copyrighted papers (reference reading, not ours to redistribute)
+papers/
+# dataset-derived files: nuScenes/Argoverse 2 licenses restrict redistributing derived data
+data/ns_val_merged/
+results/preds/
+# personal/administrative document, not a research artifact
+title_page.pdf
