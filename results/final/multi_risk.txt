@@ -1,0 +1,10 @@
+cal_d4 n=904  cal_d2 n=904  test_d4 n=904  test_d2 n=904
+d=4.0: lam=-inf  cal stop rate=1.000
+d=2.0: lam=-inf  cal stop rate=1.000
+
+chosen d=4.0  joint result: {'certified': False, 'd': '4.0'}
+single-risk baseline (d=4.0 alone): {'certified': True, 'd': '4.0 (single-risk baseline)', 'lam': 1.5024624060150353, 'n': 904, 'residual_harm': 0.049778761061946904, 'residual_harm_ci': [0.03740852090636157, 0.06595929127585172], 'induced': 0.025442477876106196, 'induced_ci': [0.017012445551875786, 0.037888761883430114], 'unnecessary_stop': 0.28982300884955753}
+
+N4 verdict: REFUTED
+
+wrote results/final/multi_risk.json

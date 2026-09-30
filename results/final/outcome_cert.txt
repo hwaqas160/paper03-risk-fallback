@@ -1,0 +1,16 @@
+cal n=904 test n=904
+validity check (this can take a while: 200 resplits x 2 calibrators)...
+
+non-monotone fraction (cal): 0.045
+lambda: alarm=1.5025 outcome-LTT=-0.0000 outcome-CRC=0.9383
+alarm-level cert on test:   miss=0.034  residual harm=0.050 CI=[0.03740852090636157, 0.06595929127585172]  stops=0.290
+outcome-level LTT on test:  residual harm=0.028 CI=[0.018800869610736484, 0.040506392801560986]  stops=0.848
+outcome-level CRC on test: residual harm=0.039 CI=[0.027968369408946554, 0.053369167888308824]  stops=0.375
+validity (200 resplits): LTT-outcome=0.150  CRC-outcome=0.455  (valid if <= 0.1)
+
+verdicts:
+  N1_outcome_cert_valid_and_distinct: REFUTED  {"violation": 0.15, "valid": false, "stop_diff": {"diff": -0.5586283185840708, "ci": [-0.5907079646017699, -0.5265486725663717]}, "distinguishable": true}
+  N2_alarm_cert_violates_outcome_target: REFUTED  {"residual_harm": 0.049778761061946904, "ci": [0.03740852090636157, 0.06595929127585172]}
+  N3_crc_unsafe_on_nonmonotone_loss: REFUTED  {"crc_violation": 0.455, "ltt_violation": 0.15}
+
+wrote results/final/outcome_cert.json

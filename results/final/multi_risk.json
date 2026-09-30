@@ -1,0 +1,50 @@
+{
+  "alpha_h": 0.05,
+  "alpha_i": 0.03,
+  "delta": 0.1,
+  "d4_config": {
+    "lam": -Infinity,
+    "cal_stop_rate": 1.0,
+    "n_cal": 904,
+    "grid_size": 170,
+    "n_valid": 0,
+    "bonferroni_delta": 0.0005882352941176471
+  },
+  "d2_config": {
+    "lam": -Infinity,
+    "cal_stop_rate": 1.0,
+    "n_cal": 904,
+    "grid_size": 170,
+    "n_valid": 0,
+    "bonferroni_delta": 0.0005882352941176471
+  },
+  "chosen_d": "4.0",
+  "joint_certified_result": {
+    "certified": false,
+    "d": "4.0"
+  },
+  "single_risk_baseline": {
+    "certified": true,
+    "d": "4.0 (single-risk baseline)",
+    "lam": 1.5024624060150353,
+    "n": 904,
+    "residual_harm": 0.049778761061946904,
+    "residual_harm_ci": [
+      0.03740852090636157,
+      0.06595929127585172
+    ],
+    "induced": 0.025442477876106196,
+    "induced_ci": [
+      0.017012445551875786,
+      0.037888761883430114
+    ],
+    "unnecessary_stop": 0.28982300884955753
+  },
+  "verdict_N4_joint_beats_single_risk": {
+    "both_risks_controlled": false,
+    "joint_stops": null,
+    "baseline_stops": 0.28982300884955753,
+    "stops_lower": false,
+    "holds": false
+  }
+}

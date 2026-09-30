@@ -1,4 +1,4 @@
-# FINAL SUMMARY (auto-generated 2026-09-29 14:25)
+# FINAL SUMMARY (auto-generated 2026-09-30 11:40)
 
 Verdicts are computed mechanically from the pre-registered rules in notes/falsification.md. Anything marked pending needs data that has not finished collecting.
 

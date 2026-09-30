@@ -1,0 +1,80 @@
+{
+  "n_cal": 904,
+  "n_test": 904,
+  "alpha_h": 0.05,
+  "delta": 0.1,
+  "nonmonotone_fraction_cal": 0.048672566371681415,
+  "lam_alarm": 1.2792,
+  "lam_outcome": -1e-06,
+  "lam_crc": 0.7780045112781947,
+  "alarm_level_on_test": {
+    "miss": 0.03871681415929203,
+    "miss_ci": [
+      0.027968369408946554,
+      0.053369167888308824
+    ],
+    "unnecessary_stop": 0.3064159292035398,
+    "residual_harm": 0.051991150442477874,
+    "residual_harm_ci": [
+      0.03932121453092646,
+      0.06845265262827838
+    ]
+  },
+  "outcome_level_ltt_on_test": {
+    "n": 904,
+    "residual_harm": 0.02765486725663717,
+    "residual_harm_ci": [
+      0.018800869610736484,
+      0.040506392801560986
+    ],
+    "unnecessary_stop": 0.8484513274336283,
+    "induced": 0.061946902654867256
+  },
+  "outcome_level_crc_on_test": {
+    "n": 904,
+    "residual_harm": 0.04535398230088496,
+    "residual_harm_ci": [
+      0.03360613663949236,
+      0.06094956558873775
+    ],
+    "unnecessary_stop": 0.4081858407079646,
+    "induced": 0.028761061946902654
+  },
+  "stop_rate_diff_alarm_minus_outcome": {
+    "diff": -0.5420353982300885,
+    "ci": [
+      -0.5741150442477876,
+      -0.5099557522123894
+    ]
+  },
+  "validity_ltt_outcome": 0.16,
+  "validity_crc_outcome": 0.46,
+  "verdicts": {
+    "N1_outcome_cert_valid_and_distinct": {
+      "violation": 0.16,
+      "valid": false,
+      "stop_diff": {
+        "diff": -0.5420353982300885,
+        "ci": [
+          -0.5741150442477876,
+          -0.5099557522123894
+        ]
+      },
+      "distinguishable": true,
+      "holds": false
+    },
+    "N2_alarm_cert_violates_outcome_target": {
+      "residual_harm": 0.051991150442477874,
+      "ci": [
+        0.03932121453092646,
+        0.06845265262827838
+      ],
+      "holds": false
+    },
+    "N3_crc_unsafe_on_nonmonotone_loss": {
+      "crc_violation": 0.46,
+      "ltt_violation": 0.16,
+      "holds": false
+    }
+  }
+}

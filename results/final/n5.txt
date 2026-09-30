@@ -1,0 +1,24 @@
+{
+  "primary_predictor": {
+    "holds": false,
+    "residual_harm": 0.049778761061946904,
+    "ci": [
+      0.03740852090636157,
+      0.06595929127585172
+    ]
+  },
+  "second_predictor": {
+    "holds": false,
+    "residual_harm": 0.051991150442477874,
+    "ci": [
+      0.03932121453092646,
+      0.06845265262827838
+    ]
+  },
+  "verdict_N5_replicates": {
+    "holds": false
+  }
+}
+
+N5 verdict: REFUTED
+wrote results/final/n5.json

@@ -1,0 +1,16 @@
+cal n=904 test n=904
+validity check (this can take a while: 200 resplits x 2 calibrators)...
+
+non-monotone fraction (cal): 0.049
+lambda: alarm=1.2792 outcome-LTT=-0.0000 outcome-CRC=0.7780
+alarm-level cert on test:   miss=0.039  residual harm=0.052 CI=[0.03932121453092646, 0.06845265262827838]  stops=0.306
+outcome-level LTT on test:  residual harm=0.028 CI=[0.018800869610736484, 0.040506392801560986]  stops=0.848
+outcome-level CRC on test: residual harm=0.045 CI=[0.03360613663949236, 0.06094956558873775]  stops=0.408
+validity (200 resplits): LTT-outcome=0.160  CRC-outcome=0.460  (valid if <= 0.1)
+
+verdicts:
+  N1_outcome_cert_valid_and_distinct: REFUTED  {"violation": 0.16, "valid": false, "stop_diff": {"diff": -0.5420353982300885, "ci": [-0.5741150442477876, -0.5099557522123894]}, "distinguishable": true}
+  N2_alarm_cert_violates_outcome_target: REFUTED  {"residual_harm": 0.051991150442477874, "ci": [0.03932121453092646, 0.06845265262827838]}
+  N3_crc_unsafe_on_nonmonotone_loss: REFUTED  {"crc_violation": 0.46, "ltt_violation": 0.16}
+
+wrote results/final/outcome_cert_gpu.json
