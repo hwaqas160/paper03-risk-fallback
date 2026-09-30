@@ -629,3 +629,14 @@ for nuScenes and Waymo from existing outputs.
 Compare missed vs correctly alerted harmful scenarios at the certified threshold on `av2_test` using
 the stored pre-deployment covariates (`rollout.FEATURE_NAMES`) and time from first decision tick to
 harm. Reported as descriptive statistics only, no test.
+
+### Amendment 6 outcomes (2026-09-30), read against the rules fixed above
+
+| Analysis | Result | Verdict |
+|---|---|---|
+| R6.1a collision-only harm, alpha=0.01 (LTT certified at 0.01, no fallback to 0.02 needed) | LTT-geom stops 45.1 %, best baseline T2 83.9 %; paired diff -38.8 pts [-41.4, -36.2] | geometric advantage SURVIVES |
+| R6.1b TTC 0.5 s, alpha=0.05 | LTT 15.8 % vs T1 38.6 %; diff -22.7 [-25.5, -20.1] | SURVIVES |
+| R6.1b TTC 0.95 s (headline, reference) | LTT 28.5 % vs T1 68.3 %; diff -39.8 [-42.4, -37.2] | SURVIVES |
+| R6.1b TTC 1.5 s, alpha=0.05 | LTT 34.0 % vs T2 68.3 %; diff -34.4 [-36.8, -31.9] | SURVIVES |
+| R6.2 held-out (av2_cal5 -> av2_test5, n=904) | LTT miss 3.4 %, validity 7.5 %; tuned 51.5 %, CRC 46.0 %, T1 50.0 % | REPLICATES |
+| R6.3 second predictor (minADE6 0.854) | LTT miss 3.9 %, validity 9.0 %; tuned 51.0 %, CRC 47.5 %, T1 46.0 % | REPLICATES |
