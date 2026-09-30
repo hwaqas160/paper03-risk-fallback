@@ -579,3 +579,53 @@ or N5 (all of which finished successfully beforehand on `av2_cal5`, `av2_test5`,
 `av2_test5_d2`, `av2_cal5_gpu`, `av2_test5_gpu`), the target is reduced from 1500 to **1300**,
 already met by the 1342 rows collected. No hypothesis, threshold, or refutation rule depends on this
 arm; nothing here is re-tested or re-interpreted based on this fix.
+
+
+## Amendment 6 — 2026-09-30, BEFORE running any of the analyses below (post-hoc robustness)
+
+Prompted by an internal peer review of the manuscript. H1-H3, H3-W and every verdict above are final
+and are not reopened. Everything below is labelled post-hoc robustness in the paper. Each analysis has
+a reading rule fixed here, before it runs.
+
+**Already seen before writing this amendment (disclosed):** on `av2_cal5`/`av2_test5` the alarm-level
+LTT threshold re-fit on `av2_cal5` gives test miss 3.4 % and unnecessary stops 29.0 % (printed by
+`outcome_cert.py`, Amendment 5). On the second-predictor arms only the residual-harm rate (5.2 %) was
+read. No validity (resplit) numbers, no T1/CDT/oracle numbers and no harm-definition variants have
+been computed on any data.
+
+### R6.1 Score-label alignment (reviewer risk: the geometric score and the nuPlan TTC harm label
+are both proximity-based)
+Data: `av2_cal` / `av2_test` (the headline splits, both with T1 and T2 scores).
+(a) Harm = at-fault collision only (`HarmDef(use_ttc=False)`, base rate 3.2 % on av2_test, measured as
+a base rate only). alpha = 0.01, delta = 0.10. If LTT refuses to certify at 0.01 (lambda = -inf), rerun
+at alpha = 0.02 and report both.
+(b) nuPlan definition with TTC threshold 0.5 s and 1.5 s instead of 0.95 s, alpha = 0.05.
+Methods under each definition: LTT on `geom`, empirically tuned `geom`, tuned T1 (`conf_conflict`),
+tuned T2 (`ens`). Reading rule: the geometric advantage "survives" a definition if LTT-geom's
+unnecessary-stop rate is lower than the better of T1/T2 (among those with test miss <= alpha), with
+a paired-bootstrap 95 % CI of the difference excluding 0. Otherwise it is reported as not surviving,
+and the paper says the advantage is tied to the harm definition.
+
+### R6.2 Held-out replication (reviewer risk: single split)
+Calibrate on `av2_cal5`, test on `av2_test5` (fresh, disjoint from the headline splits, n = 904 each).
+Methods: LTT, CRC, tuned geometric, tuned T1, CDT, oracle. T2, T3 and ACI are not available (collected
+without MC dropout and without open-loop error files) and are reported as missing. Validity: 200
+half/half resplits of the pooled av2_cal5 + av2_test5. Reading rule: "replicates" if LTT validity
+<= delta = 0.10 AND LTT test miss <= alpha; the stop-rate ordering (LTT vs tuned vs T1) is reported
+descriptively.
+
+### R6.3 Second predictor (reviewer risk: one weak predictor)
+Identical to R6.2 on `av2_cal5_gpu` / `av2_test5_gpu` (AutoBot, minADE6 0.854). Same reading rule.
+
+### R6.4 Waymo recalibration (already pre-registered, Amendment 4B, results computed)
+Report R1-R4 from `results/final/recal_waymo.json` in the paper in place of the exploratory nuScenes
+few-shot table. No new computation.
+
+### R6.5 Descriptive additions (no hypothesis)
+Wilson 95 % CIs for every unnecessary-stop rate in the main table, and per-dataset AUROC/stop tables
+for nuScenes and Waymo from existing outputs.
+
+### R6.6 Failure characterization (exploratory, descriptive)
+Compare missed vs correctly alerted harmful scenarios at the certified threshold on `av2_test` using
+the stored pre-deployment covariates (`rollout.FEATURE_NAMES`) and time from first decision tick to
+harm. Reported as descriptive statistics only, no test.
