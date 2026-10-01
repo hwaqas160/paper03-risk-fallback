@@ -9,6 +9,8 @@
 \usepackage{graphicx}
 \usepackage{cite}
 \usepackage{booktabs}
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows.meta}
 \newtheorem{observation}{Observation}
 \hyphenation{op-tical net-works semi-conduc-tor IEEE-Xplore}
 
@@ -144,7 +146,7 @@ We make four contributions.
 \item \textbf{An exact evaluation protocol for executed fallbacks.}
 Under a determinism assumption whose violation we measure, a rollout's
 outcome depends only on \emph{when} the fallback fires
-(Observation~\ref{prop:exact}). One reference run that records every
+(Observation~\ref{prop:exact}, Fig.~\ref{fig:protocol}). One reference run that records every
 trigger score, plus one rollout forced to fire at each decision tick
 (about 17 per scenario), evaluates every trigger, threshold, online
 method and latency on identical physics. Direct execution would need one
@@ -472,7 +474,39 @@ $R(X)$ disables the fallback. For a decision tick $j$, the \emph{forced
 run} $F(X,j)$ is identical to $R(X)$ until tick $j$ and then executes the
 MRM for the rest of the episode. Let $\Phi(X,j)$ denote any outcome of
 $F(X,j)$ (miss, stop, induced collision, residual harm, route completion)
-and $\Phi(X,\infty)$ the outcome of $R(X)$.
+and $\Phi(X,\infty)$ the outcome of $R(X)$. Fig.~\ref{fig:protocol}
+summarizes the procedure.
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[font=\scriptsize,
+  box/.style={draw=black!70, rounded corners=2pt, align=center, inner sep=2.5pt,
+              minimum height=0.95cm, fill=black!3},
+  key/.style={box, fill=blue!8, draw=blue!60!black},
+  arr/.style={-{Stealth[length=4pt]}, thick, black!70}]
+\node[box, text width=1.05cm] (sc) {Scenario $X$\\ and seed};
+\node[key, text width=2.35cm, right=0.32cm of sc] (ref)
+  {\textbf{Reference run} $R(X)$\\ fallback disabled;\\ record every score $u_t$};
+\node[box, text width=2.6cm, right=0.32cm of ref] (forced)
+  {\textbf{Forced runs} $F(X,j)$\\ fire at tick $j = 0,\Delta,\dots$\\ (16.8 per scenario)};
+\node[box, text width=2.6cm, below=0.42cm of forced] (table)
+  {\textbf{Outcome table} $\Phi(X,j)$\\ miss, stop, induced,\\ residual harm};
+\node[key, text width=3.95cm, left=0.32cm of table] (lookup)
+  {\textbf{Any trigger}: score, threshold $\lambda$, online rule, latency $\ell$\\
+   $\tau(X)$ from $R(X)$'s scores $\Rightarrow$ outcome $\Phi(X,\tau(X){+}\ell)$};
+\draw[arr] (sc) -- (ref);
+\draw[arr] (ref) -- (forced);
+\draw[arr] (forced) -- (table);
+\draw[arr] (table) -- (lookup);
+\draw[arr, dashed] (ref.south) -- node[right, pos=0.45, inner sep=1pt] {scores} (ref.south |- lookup.north);
+\end{tikzpicture}
+\caption{Exact evaluation (Observation~\ref{prop:exact}). One reference run
+and one forced rollout per decision tick are simulated once per scenario.
+Every trigger, threshold, online update rule and latency is then evaluated
+by lookup on identical physics, instead of one rollout per combination
+(over 7{,}000 per scenario here).}
+\label{fig:protocol}
+\end{figure}
 
 \begin{observation}[Firing-tick sufficiency]
 \label{prop:exact}
@@ -672,10 +706,11 @@ The same geometric score with a threshold tuned empirically, and its
 Conformal Risk Control (CRC) counterpart, which guarantees only an
 expectation, exceed the target in 43.5\,\% and 41.0\,\% of resplits, and
 the tuned confidence trigger in 50.5\,\%. Certification is therefore the
-only design here that keeps its target reliably (Fig.~\ref{fig:validity}).
+only design here that keeps its target reliably.
 Fig.~\ref{fig:operating-points} plots every method against the
-geometric score's own curve as its threshold varies; only LTT sits both
-below the target and close to the curve's lower envelope. CRC and empirical tuning
+geometric score's own curve as its threshold varies, and
+Fig.~\ref{fig:validity} shows the resplit distributions behind the
+violation column. CRC and empirical tuning
 select the same threshold on this calibration set. CRC requires
 $\hat R \le \alpha - (1-\alpha)/n = 4.95\,\%$ instead of $5\,\%$, and the
 calibration risk jumps from 4.81\,\% to 5.02\,\% between adjacent grid
@@ -714,9 +749,10 @@ Oracle (hindsight) & 5.0 & 23.6 & -- & 2.2 & 64.2 & -- \\
 \includegraphics[width=\columnwidth]{figures/operating_points.pdf}
 \caption{Every method at its operating point (Table~\ref{tab:main}),
 against the geometric score's own miss-versus-stops curve as its
-threshold varies. Only points below the dashed target line meet
-$\alpha = 0.05$; only LTT does so while also staying close to the
-curve's lower envelope.}
+threshold varies. On this split most methods sit below the dashed
+$\alpha = 0.05$ line; the geometric methods do so at well under half the
+stops of the confidence, ensemble and open-loop triggers. Which of them
+keeps the target across resplits is shown in Fig.~\ref{fig:validity}.}
 \label{fig:operating-points}
 \end{figure}
 
@@ -731,9 +767,11 @@ checked, the certified one is the only one that reliably meets it.
 \begin{figure}[t]
 \centering
 \includegraphics[width=\columnwidth]{figures/validity.pdf}
-\caption{Test miss rate over 200 calibration/test resplits. LTT's
-high-probability guarantee keeps violations at 9.5\,\%; CRC's
-expectation guarantee and empirical tuning do not.}
+\caption{Test miss rate over 200 calibration/test resplits. Dashed line:
+the 5\,\% target; hatched bars: resplits that violate it. A valid
+certificate keeps violations at or below $\delta = 10\,\%$. LTT's
+high-probability guarantee does (9.5\,\%); CRC's expectation guarantee
+and empirical tuning do not.}
 \label{fig:validity}
 \end{figure}
 
@@ -835,8 +873,9 @@ Miss rate and unnecessary stops as actuation latency increases
 \end{figure}
 \begin{table}[t]
 \caption{A threshold certified on Argoverse~2 (LTT, $\alpha = 0.05$)
-deployed on nuScenes. ``Avoidable'' excludes the 5.0\,\% of nuScenes
-scenarios with harm at the first decision tick (post hoc).}
+deployed unchanged on nuScenes and Waymo. ``Avoidable'' excludes the
+5.0\,\% of nuScenes scenarios with harm at the first decision tick
+(post hoc). Weighted: density-ratio repair, no target labels.}
 \label{tab:shift}
 \centering
 \scriptsize\setlength{\tabcolsep}{3pt}
@@ -845,12 +884,16 @@ scenarios with harm at the first decision tick (post hoc).}
 Setting & Miss (\%) [95\,\% CI] & Unnec. (\%) & $n$ \\
 \midrule
 Argoverse~2 test (in domain) & 3.7 [2.9, 4.6] & 28.5 & 1{,}996 \\
-nuScenes, unweighted & 13.2 [11.6, 15.0] & 26.1 & 1{,}504 \\
-nuScenes, weighted (no labels) & 7.0 [5.8, 8.4] & 52.4 & 1{,}504 \\
-nuScenes, oracle threshold & 5.0 & 77.9 & 1{,}504 \\
 \midrule
+nuScenes, unweighted & 13.2 [11.6, 15.0] & 26.1 & 1{,}504 \\
+nuScenes, weighted & 7.0 [5.8, 8.4] & 52.4 & 1{,}504 \\
+nuScenes, oracle threshold & 5.0 & 77.9 & 1{,}504 \\
 Avoidable, unweighted & 9.2 [7.8, 10.8] & 27.1 & 1{,}429 \\
 Avoidable, weighted ($n_{\mathrm{eff}}=68$) & 2.2 [1.6, 3.1] & 54.5 & 1{,}429 \\
+\midrule
+Waymo, unweighted & 2.7 [1.9, 3.9] & 45.1 & 1{,}000 \\
+Waymo, weighted & 1.2 [0.7, 2.1] & 50.2 & 1{,}000 \\
+Waymo, oracle threshold & 5.0 & 33.9 & 1{,}000 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -966,9 +1009,10 @@ pending replication.
 
 \subsection{Recalibration with a few labeled target scenes (exploratory)}
 \label{sec:res-fewshot}
-Table~\ref{tab:fewshot} draws $k$ labeled nuScenes scenes at random (60
+Table~\ref{tab:recal} draws $k$ labeled nuScenes scenes at random (60
 draws each) and evaluates on the rest, on the avoidable subset. This
-analysis was not pre-registered. Uncertified tuning on 40--60 target
+analysis was not pre-registered; its Waymo counterpart was
+(Section~\ref{sec:res-waymo}). Uncertified tuning on 40--60 target
 scenes exceeds the target in about two draws in three. A certified
 threshold on the same scenes keeps the target (violations 0--10\,\%) but
 stops in 53--81\,\% of scenarios, against 27\,\% without target labels.
@@ -976,47 +1020,30 @@ A handful of labeled scenes therefore restores a \emph{valid}
 certificate, not the original operating point.
 
 \begin{table}[t]
-\caption{Exploratory: recalibration with $k$ labeled nuScenes scenes
-(avoidable subset, 60 random draws). Viol.: fraction of draws with test
-miss rate above 5\,\%.}
-\label{tab:fewshot}
+\caption{Recalibration with $k = 60$ labeled target scenes. nuScenes:
+exploratory, avoidable subset, 60 draws. Waymo: pre-registered
+(R1--R4), all scenarios, 200 draws. Viol.: fraction of draws with test
+miss $>\alpha$. Rates in \%.}
+\label{tab:recal}
 \centering
-\footnotesize
-\begin{tabular}{llccc}
+\scriptsize\setlength{\tabcolsep}{2.5pt}
+\begin{tabular}{lcccccc}
 \toprule
-$k$ & Method & Miss (\%) & Viol. (\%) & Unnec. (\%) \\
+& \multicolumn{3}{c}{nuScenes} & \multicolumn{3}{c}{Waymo} \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}
+Method & Miss & Viol. & Unnec. & Miss & Viol. & Unnec. \\
 \midrule
-0 & AV2-certified & 9.2 & -- & 27.1 \\
-40 & Target-only tuned & 6.6 & 67 & 35.6 \\
-40 & Target-only LTT & 0.0 & 0 & 81.3 \\
-40 & AV2 + $k$ weighted LTT & 1.8 & 10 & 63.6 \\
-60 & Target-only tuned & 6.0 & 70 & 36.7 \\
-60 & Target-only LTT & 0.8 & 0 & 72.5 \\
-60 & AV2 + $k$ weighted LTT & 2.8 & 0 & 53.3 \\
+AV2-certified, no labels & 9.2 & -- & 27.1 & 2.7 & 0 & 45.0 \\
+Target-only tuned & 6.0 & 70 & 36.7 & 6.2 & 59 & 29.6 \\
+Target-only LTT & 0.8 & 0 & 72.5 & 1.5 & 2.5 & 58.6 \\
+AV2 + 60, weighted LTT & 2.8 & 0 & 53.3 & 1.7 & 0 & 49.8 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \subsection{Second shifted dataset and sensitivity}
 \label{sec:res-waymo}
-\begin{table}[t]
-\caption{Argoverse~2-certified threshold (LTT, $\alpha = 0.05$) deployed
-unchanged on 1{,}000 Waymo Open Motion validation scenarios.}
-\label{tab:waymo}
-\centering
-\scriptsize\setlength{\tabcolsep}{3pt}
-\begin{tabular}{lccc}
-\toprule
-Setting & Miss (\%) [95\,\% CI] & Unnec. (\%) & Induced (\%) \\
-\midrule
-Waymo, unweighted & 2.7 [1.9, 3.9] & 45.1 & 5.1 \\
-Waymo, weighted (no labels) & 1.2 [0.7, 2.1] & 50.2 & 5.5 \\
-Waymo, oracle threshold & 5.0 & 33.9 & 4.6 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\emph{Waymo Open Motion.} Table~\ref{tab:waymo} and
+\emph{Waymo Open Motion.} Table~\ref{tab:shift} and
 Fig.~\ref{fig:shift-latency}a deploy the same
 Argoverse~2-certified threshold, unchanged, on 1{,}000 Waymo Open Motion
 validation scenarios~\cite{waymo2021} (9.1\,s, 1\,s of history, shorter
@@ -1029,38 +1056,24 @@ universal: the same certified threshold fails on nuScenes and holds,
 conservatively, on Waymo. A density-ratio-weighted repair, applied for
 consistency even though nothing here needed repairing, lowers the miss
 rate further to 1.2\,\% [0.7, 2.1] at a small increase in stops (45.1\,\%
-to 50.2\,\%). Open-loop AUROC on Waymo (Section~\ref{sec:res-h1}) ranks
-the geometric score above confidence and ensemble by the widest margin
-of the three datasets ($\tau = 0.73$), consistent with the shift
-weakening, not reversing, that pattern.
+to 50.2\,\%); induced collisions stay between 4.6\,\% and 5.5\,\% across
+the unweighted, weighted and oracle thresholds. Open-loop and closed-loop
+rankings agree most closely on Waymo ($\tau = 0.73$,
+Section~\ref{sec:res-h1}), with a geometric score (the isotropic
+variant) first under both.
 
-\begin{table}[t]
-\caption{Pre-registered Waymo recalibration (60 labeled target scenes,
-200 draws). M2: target-only tuned. M4: Argoverse~2 calibration plus the
-60 scenes, density-ratio weighted. Viol.: fraction of draws with test
-miss $>\alpha$.}
-\label{tab:waymorecal}
-\centering
-\scriptsize\setlength{\tabcolsep}{3pt}
-\begin{tabular}{lccc}
-\toprule
-Method & Miss (\%) & Viol. (\%) & Unnec. (\%) \\
-\midrule
-M1: AV2-certified, no labels & 2.7 & 0 & 45.0 \\
-M2: target-only tuned & 6.2 & 59 & 29.6 \\
-M4: AV2 + 60 weighted ($n_{\mathrm{eff}}{=}232$) & 1.7 & 0 & 49.8 \\
-\bottomrule
-\end{tabular}
-\end{table}
-\emph{Waymo recalibration (pre-registered R1--R4).} Table~\ref{tab:waymorecal}
+\emph{Waymo recalibration (pre-registered R1--R4).} Table~\ref{tab:recal}
 repeats the few-shot design on Waymo, this time pre-registered before
-any Waymo outcome was read. Uncertified tuning on 60 target scenes
-violates the target in 59\,\% of draws (\textbf{R1 holds}: violation
-$\ge 50\,\%$). Weighting the Argoverse~2 calibration set with 60 Waymo
-scenes keeps validity (0\,\% violation, \textbf{R2 holds}) at a cost of
-21.3 points of unnecessary stops over the label-free in-domain rate
-(\textbf{R3 holds}), and \textbf{R4} restates H3-W's refutation: no
-repair was needed here. All four hold as pre-registered.
+any Waymo outcome was read. Uncertified tuning violates the target in
+69.5\,\% and 59\,\% of draws with 40 and 60 target scenes (\textbf{R1
+holds}: violation $\ge 50\,\%$ at both). Weighting the Argoverse~2
+calibration set with 60 Waymo scenes ($n_{\mathrm{eff}} = 232$) keeps
+validity (0\,\% violation, \textbf{R2 holds}) at a cost of 21.3 points
+of unnecessary stops over the in-domain rate (\textbf{R3 holds}).
+\textbf{R4}, which restates H3-W, is refuted for the same reason: the
+source certificate already holds on Waymo, so there was nothing to
+repair. Few labeled target scenes are therefore dangerous without a
+certificate even when the source certificate transfers.
 
 \emph{Sensitivity.} Three changes to the simulator, each paired by
 scenario seed against the main run (reactive traffic, 4.0\,m/s$^2$,
@@ -1096,19 +1109,20 @@ unnecessary stops excludes 0 by at least 20 points in each case.
 
 \begin{table}[t]
 \caption{LTT (geometric) versus the better of T1/T2 under alternative
-harm definitions, Argoverse~2 test. Paired 95\,\% CI of the stop-rate
-difference.}
+harm definitions, Argoverse~2 test. Unnecessary-stop rates in \%;
+``Best'' is the better of T1/T2 among those meeting the miss target, and
+the paired 95\,\% CI is of the stop-rate difference.}
 \label{tab:align}
 \centering
 \scriptsize\setlength{\tabcolsep}{2pt}
-\begin{tabular}{p{2.1cm}cccc}
+\begin{tabular}{lcccc}
 \toprule
-Harm definition & LTT & Best & Base. & Diff. [95\,\% CI] \\
+Harm definition & LTT & Best & Which & Diff. [95\,\% CI] \\
 \midrule
-Collision only ($\alpha{=}0.01$) & 45.1 & 83.9 & T2 & $-38.8$ [$-41.4,-36.2$] \\
-TTC $<0.5$\,s & 15.8 & 38.6 & T1 & $-22.7$ [$-25.5,-20.1$] \\
-TTC $<0.95$\,s (headline) & 28.5 & 68.3 & T1 & $-39.8$ [$-42.4,-37.2$] \\
-TTC $<1.5$\,s & 34.0 & 68.3 & T2 & $-34.4$ [$-36.8,-31.9$] \\
+Collision only, $\alpha{=}0.01$ & 45.1 & 83.9 & T2 & $-38.8$ [$-41.4,-36.2$] \\
+TTC $<$ 0.5\,s & 15.8 & 38.6 & T1 & $-22.7$ [$-25.5,-20.1$] \\
+TTC $<$ 0.95\,s (headline) & 28.5 & 68.3 & T1 & $-39.8$ [$-42.4,-37.2$] \\
+TTC $<$ 1.5\,s & 34.0 & 68.3 & T2 & $-34.4$ [$-36.8,-31.9$] \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -1425,5 +1439,6 @@ research topics mainly include: statistical modeling, data
 optimization, applied data analysis, and quantitative methods for
 economic and financial data.
 \end{IEEEbiographynophoto}
+\vfill
 
 \end{document}

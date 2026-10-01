@@ -67,7 +67,7 @@ def fig_operating_points():
             if "conf_conflict" in s.traces]
     g = lam_grid(test, "geom")
     M, S = matrices(test, "geom", g)[:2]
-    fig, ax = plt.subplots(figsize=(COL_W, 2.75))
+    fig, ax = plt.subplots(figsize=(COL_W, 2.5))
     ax.plot(100 * S.mean(0), 100 * M.mean(0), color=GRAY, lw=1.0, zorder=2,
             label="Geometric score, every threshold")
     target_line(ax)
@@ -133,7 +133,7 @@ def fig_validity():
             draws["CRC"].append(summarize(test, "geom", crc(cal, "geom", ALPHA))["miss"])
         cache.write_text(json.dumps(draws))
     order = [("LTT (certified)", BLUE), ("CRC", AQUA), ("Tuned (no certificate)", ORANGE)]
-    fig, axes = plt.subplots(3, 1, figsize=(COL_W, 2.6), sharex=True)
+    fig, axes = plt.subplots(3, 1, figsize=(COL_W, 2.15), sharex=True)
     bins = np.arange(1.5, 8.01, 0.25)
     for ax, (lab, col) in zip(axes, order):
         x = 100 * np.asarray(draws[lab])
@@ -143,13 +143,12 @@ def fig_validity():
         ax.hist(x[x > 100 * ALPHA], bins=bins, color=col, alpha=0.9, rwidth=0.85, hatch="////", edgecolor="white")
         ax.axvline(100 * ALPHA, color=INK2, lw=0.8, ls=(0, (4, 2)))
         ax.set_ylim(0, counts.max() * 1.7)  # headroom so the title text clears the tallest bar
-        ax.text(0.99, 0.94, f"{lab}: {100 * viol:.1f} % of resplits above target",
-                transform=ax.transAxes, ha="right", va="top", fontsize=6.5, color=INK)
+        # Left-aligned so the label never crosses the dashed target line at 5 %.
+        ax.text(0.01, 0.94, f"{lab}: {100 * viol:.1f} % violate",
+                transform=ax.transAxes, ha="left", va="top", fontsize=6.5, color=INK)
         ax.set_yticks([])
         ax.spines["left"].set_visible(False)
     axes[-1].set_xlabel("Test miss rate over 200 calibration/test resplits (%)")
-    fig.text(0.5, 1.0, "Dashed: 5 % target. Hatched: resplits that violate it; a valid certificate keeps this at or below 10 %.",
-             ha="center", fontsize=6.5, color=INK2)
     fig.savefig(FIG / "validity.pdf")
     plt.close(fig)
     return {k: float(np.mean(np.asarray(v) > ALPHA)) for k, v in draws.items()}
@@ -178,10 +177,14 @@ def fig_shift_latency():
     a.set_xticks(x)
     a.set_xticklabels([r[0] for r in rows])
     a.set_ylabel("Missed interventions (%)")
+    a.set_ylim(0, 19.5)  # headroom so the legend clears the nuScenes error-bar cap (~15 %)
+    a.set_yticks([0, 5, 10, 15])
     a.set_title("(a) Threshold certified on AV2", loc="left")
-    a.bar([], [], color=BLUE, label="Unweighted")
-    a.bar([], [], color=ORANGE, hatch="////", edgecolor="white", label="Weighted")
-    a.legend(frameon=False, loc="upper left", handlelength=1.1, fontsize=6.5,
+    # Explicit patch handles: empty a.bar() proxies rendered both swatches blue.
+    from matplotlib.patches import Patch
+    handles = [Patch(facecolor=BLUE, label="Unweighted"),
+               Patch(facecolor=ORANGE, hatch="////", edgecolor="white", label="Weighted")]
+    a.legend(handles=handles, frameon=False, loc="upper left", handlelength=1.1, fontsize=6.5,
             bbox_to_anchor=(-0.03, 1.02), labelspacing=0.3, borderaxespad=0.1)
     a.grid(True, axis="y", zorder=0)
     ab = main["ablations"]
