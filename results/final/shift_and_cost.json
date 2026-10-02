@@ -1,0 +1,170 @@
+{
+  "lam_ltt": 1.4701,
+  "features": [
+    "n_vehicles_50m",
+    "n_pedestrians_50m",
+    "n_cyclists_50m",
+    "ego_speed0",
+    "mean_agent_speed_50m",
+    "min_gap0",
+    "route_length"
+  ],
+  "shift": {
+    "av2_test": {
+      "n": 1996,
+      "domain_auroc": 0.4958711304253442,
+      "kish_n_eff_all_weights": 1978.8356433788667,
+      "n_eff_ltt": 1978,
+      "harm_rate": 0.15130260521042085,
+      "first_tick_floor": 0.0,
+      "miss": 0.03657314629258517,
+      "miss_ci": [
+        0.029188205428638425,
+        0.04573852876871001
+      ],
+      "unnecessary_stop": 0.2845691382765531
+    },
+    "nuscenes": {
+      "n": 1504,
+      "domain_auroc": 0.9717553591625941,
+      "kish_n_eff_all_weights": 66.53343079561971,
+      "n_eff_ltt": 66,
+      "harm_rate": 0.22074468085106383,
+      "first_tick_floor": 0.049867021276595744,
+      "miss": 0.13231382978723405,
+      "miss_ci": [
+        0.11612236422081108,
+        0.1503788385580485
+      ],
+      "unnecessary_stop": 0.26063829787234044
+    },
+    "waymo": {
+      "n": 1000,
+      "domain_auroc": 0.9081980942828486,
+      "kish_n_eff_all_weights": 288.81011535558514,
+      "n_eff_ltt": 288,
+      "harm_rate": 0.154,
+      "first_tick_floor": 0.001,
+      "miss": 0.027,
+      "miss_ci": [
+        0.018621256649289826,
+        0.03899898941343562
+      ],
+      "unnecessary_stop": 0.451
+    }
+  },
+  "cost": {
+    "n": 1996,
+    "fired": 0.4153306613226453,
+    "induced": 0.02555110220440882,
+    "induced_ci": [
+      0.019486897487622765,
+      0.03343809417171666
+    ],
+    "by_speed": [
+      {
+        "tercile": "low",
+        "speed_range": [
+          0.0,
+          0.00986320663535294
+        ],
+        "n": 665,
+        "fired": 0.46766917293233085,
+        "induced": 0.03609022556390978,
+        "induced_ci": [
+          0.02437044560761047,
+          0.053139087292257026
+        ]
+      },
+      {
+        "tercile": "mid",
+        "speed_range": [
+          0.010024865728772012,
+          4.632730745610819
+        ],
+        "n": 665,
+        "fired": 0.44511278195488724,
+        "induced": 0.03458646616541353,
+        "induced_ci": [
+          0.023155455272286598,
+          0.051363833001648526
+        ]
+      },
+      {
+        "tercile": "high",
+        "speed_range": [
+          4.636095340787039,
+          15.494306318958042
+        ],
+        "n": 666,
+        "fired": 0.3333333333333333,
+        "induced": 0.006006006006006006,
+        "induced_ci": [
+          0.0023379863195378174,
+          0.015340222976510678
+        ]
+      }
+    ],
+    "by_firing_time": [
+      {
+        "group": "early (tick <= median)",
+        "n": 423,
+        "induced": 0.09219858156028368,
+        "induced_ci": [
+          0.06817842895010501,
+          0.12355920861849184
+        ]
+      },
+      {
+        "group": "late (tick > median)",
+        "n": 406,
+        "induced": 0.029556650246305417,
+        "induced_ci": [
+          0.016986833696178146,
+          0.05094575294217189
+        ]
+      }
+    ],
+    "median_firing_tick": 5.0,
+    "induced_collision_types": {
+      "active_rear": 99,
+      "active_lateral": 30
+    },
+    "mean_stopped_s_when_fired": 7.3644149577804585,
+    "mean_route_completion_when_fired": 0.4877265462265058,
+    "mean_route_completion_never_fired": 0.9351976192022631
+  },
+  "nuscenes_scene_cluster": {
+    "ns_val": {
+      "n_scenarios": 1504,
+      "n_scenes": 37,
+      "miss": 0.13231382978723405,
+      "first_tick_floor": 0.049867021276595744,
+      "wilson_ci": [
+        0.11612236422081108,
+        0.1503788385580485
+      ],
+      "cluster_bootstrap_ci": [
+        0.06104992845985758,
+        0.20961088951334855
+      ],
+      "cluster_ci_excludes_alpha": true
+    },
+    "ns_val5": {
+      "n_scenarios": 1342,
+      "n_scenes": 23,
+      "miss": 0.09538002980625931,
+      "first_tick_floor": 0.0,
+      "wilson_ci": [
+        0.08079900457000616,
+        0.11227096740886566
+      ],
+      "cluster_bootstrap_ci": [
+        0.039041530457957246,
+        0.16476933741962113
+      ],
+      "cluster_ci_excludes_alpha": false
+    },
+    "scenes_shared": 1
+  }
+}

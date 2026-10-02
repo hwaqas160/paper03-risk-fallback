@@ -25,6 +25,31 @@ re-simulation.
 
 \section{Class-Conditional Certification (Post Hoc)}
 \label{sec:s-luo}
+Table~\ref{tab:luo} lists the differences between the closest prior
+work and this study.
+
+\begin{table}[h]
+\caption{Luo~\emph{et al.} versus this study.}
+\label{tab:luo}
+\centering
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{p{1.9cm}p{2.85cm}p{2.85cm}}
+\toprule
+ & Luo~\emph{et al.} & This paper \\
+\midrule
+Guarantee & $\Pr[\text{no alert}\mid\text{unsafe}]\le\epsilon$, class-conditional & $\Pr[\text{harm not pre-empted}]\le\alpha$ over scenarios, high probability \\
+Unsafe label & safety score of logged future $<f_0$ & nuPlan harm in the no-fallback run \\
+Predictor & Trajectron++ & AutoBot \\
+Alert consequence & none (scored on logs) & MRM executed in closed loop \\
+Cost of alerting & false-positive rate & unnecessary stops, induced collisions, residual harm \\
+Data & nuScenes, Lyft & Argoverse~2, nuScenes, Waymo \\
+Shift & label shift only & dataset shift, weighted repair \\
+Latency & not studied & studied \\
+\bottomrule
+\end{tabular}
+\end{table}
+
 Table~\ref{tab:luoresult} implements the certificate of Luo~\emph{et al.}
 (cited in the main paper) in our framework: Mondrian split conformal
 prediction on the unsafe class, where unsafe means harm in the reference
@@ -133,5 +158,222 @@ collisions (2.6\,\% to 1.6\,\%), the one quantity that does depend on
 post-fire kinematics. Decisions at 10\,Hz on 100 scenarios give a miss
 rate of 2.9\,\% [1.0, 8.2], consistent with the main run within an
 interval widened by the smaller sample.
+
+\section{Certifying Residual Harm Directly (Post Hoc)}
+\label{sec:s-outcome}
+The certificate in the main paper bounds the alert indicator
+$L(X,\lambda)$, not harm in the run the vehicle then drives. We therefore
+tried to certify \emph{residual harm} $H(X,\lambda)$, the indicator that
+the nuPlan harm definition fires anywhere in the executed run, before or
+after the fallback engages. $H$ is not monotone in $\lambda$, because
+firing earlier can itself create harm (4.5\,\% of fresh calibration
+scenarios have a non-monotone $H$), so Conformal Risk Control does not
+apply by construction. Learn-then-Test needs no monotonicity but is
+tested on the same fresh Argoverse~2 split as the replication analysis of
+the main paper ($n_{\mathrm{cal}} = n_{\mathrm{test}} = 904$, target
+$\alpha_H = 0.05$, $\delta = 0.10$). The comparisons were pre-registered
+as N1--N5 before running.
+
+\begin{table}[h]
+\caption{Certifying residual harm on the fresh split. Rates in \%, Wilson
+95\,\% intervals. Viol.: fraction of 200 resplits whose test residual
+harm exceeds 5\,\%. The second predictor gives the same picture
+(outcome-level LTT: 2.8\,\% harm, 84.8\,\% stops, 16.0\,\% violations).}
+\label{tab:outcome}
+\centering
+\scriptsize\setlength{\tabcolsep}{2.5pt}
+\begin{tabular}{lcccc}
+\toprule
+Certificate on & Resid. harm [CI] & Miss & Stops & Viol. \\
+\midrule
+Alert $L$, LTT (main paper) & 5.0 [3.7, 6.6] & 3.4 & 29.0 & -- \\
+Residual harm $H$, LTT & 2.8 [1.9, 4.1] & -- & 84.8 & 15.0 \\
+Residual harm $H$, CRC & 3.9 [2.8, 5.3] & -- & 37.5 & 45.5 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Three results, each contrary to what we pre-registered, follow from
+Table~\ref{tab:outcome}. First, certifying $H$ at 5\,\% with LTT selects a
+threshold at which the vehicle fires in essentially every scenario (84.8\,\%
+unnecessary stops), and even then it exceeds the target in 15\,\% of
+resplits, above $\delta$, so it is not a valid certificate (N1 refuted).
+Second, the alert-level threshold's residual harm on this fresh split is
+5.0\,\% [3.7, 6.6], so its interval includes the 5\,\% target, unlike the
+6.5\,\% on the main split (N2 refuted on fresh data; the interval is
+wide enough that a modest excess is not excluded). Third, CRC violates in
+45.5\,\% of resplits, but LTT also exceeds $\delta$, so a
+non-monotone-aware calibrator is not by itself sufficient (N3 refuted). A
+joint certificate on residual harm and induced collisions over threshold
+and two MRM decelerations (2 and 4\,m/s$^2$) found no configuration other
+than always firing (N4 refuted). The practical reading is that, with this
+score and this maneuver, residual harm of 5\,\% or less is not reachable
+by tuning the trigger threshold alone at a useful operating point. A
+different maneuver or score is needed, not a different calibrator.
+
+\section{Shift Severity and the Cost of the Intervention (Descriptive)}
+\label{sec:s-cost}
+These two tables are computed from the stored records and test no
+hypothesis.
+
+\emph{Shift severity.} Table~\ref{tab:severity} measures how far each
+target is from the Argoverse~2 calibration set in the seven
+pre-deployment covariates used for the density ratio. The domain
+classifier is evaluated by 5-fold cross-validated AUROC (0.5 means
+indistinguishable), and the Argoverse~2 test split is a null control.
+nuScenes is much easier to tell apart than Waymo, has a Kish effective
+sample size of 66 against 288, and a 5.0\,\% floor of harm that no trigger
+can pre-empt. The certificate failed on the more distant target and held
+on the nearer one, which is consistent with shift severity mattering,
+but two targets cannot establish that, and the floor alone accounts for
+5.0 of the 13.2 points missed on nuScenes.
+
+\begin{table}[h]
+\caption{Shift severity and the Argoverse~2-certified threshold
+($\lambda = 1.47$). AUROC: cross-validated domain classifier against
+the Argoverse~2 calibration set. Floor: harm present even when the
+fallback fires at the first decision tick. Rates in \%.}
+\label{tab:severity}
+\centering
+\scriptsize\setlength{\tabcolsep}{2.5pt}
+\begin{tabular}{lcccccc}
+\toprule
+Target & $n$ & AUROC & $n_{\mathrm{eff}}$ & Harm & Floor & Miss [CI] \\
+\midrule
+AV2 test (control) & 1{,}996 & 0.50 & 1{,}978 & 15.1 & 0.0 & 3.7 [2.9, 4.6] \\
+Waymo & 1{,}000 & 0.91 & 288 & 15.4 & 0.1 & 2.7 [1.9, 3.9] \\
+nuScenes & 1{,}504 & 0.97 & 66 & 22.1 & 5.0 & 13.2 [11.6, 15.0] \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\emph{Scenarios from the same scene are not independent.} The Wilson
+intervals in the main paper treat scenarios as independent. The nuScenes
+scenario identifiers contain the scene name, which allows a check:
+the 1{,}504 nuScenes scenarios in the main analysis come from only 37
+scenes (41 per scene on average). Resampling whole scenes
+(cluster bootstrap, 10{,}000 draws) widens the interval for the miss rate
+of the Argoverse~2-certified threshold from [11.6, 15.0] to [6.1, 21.0],
+which still excludes the 5\,\% target, but only just. A second, largely
+disjoint set of nuScenes scenarios (1{,}342 scenarios from 23 scenes, one
+scene in common, collected for the replication analyses) gives a miss rate
+of 9.5\,\% with Wilson interval [8.1, 11.2] and cluster-bootstrap interval
+[3.9, 16.5], which includes the target. The first-tick floor also differs
+between the two samples (5.0\,\% against 0.0\,\%), so it varies strongly
+with which scenes are drawn. The direction of the failure therefore
+replicates, but with a few dozen scenes per sample the size of the
+nuScenes failure is far less certain than the main-paper intervals
+suggest. Argoverse~2 and Waymo identifiers are opaque, so the same
+check, and group-level resplits for the validity analysis, were not
+possible there.
+
+\emph{Where the induced collisions come from.} At the certified threshold
+on Argoverse~2 test, 2.6\,\% of scenarios [1.9, 3.3] suffer an induced
+collision. All 129 induced contact events are other vehicles striking the
+stopped ego, 99 from behind and 30 from the side. They concentrate where
+the ego is slow or fires early. Scenarios in the two lower terciles of
+initial ego speed (the lowest starts at standstill, the middle one below
+4.6\,m/s) have induced rates of 3.6\,\% [2.4, 5.3]
+and 3.5\,\% [2.3, 5.1], against 0.6\,\% [0.2, 1.5] in the upper tercile, and
+scenarios in which the fallback fires at or before the median firing tick
+(tick 5, 2.5\,s) have 9.2\,\% [6.8, 12.4] against 3.0\,\% [1.7, 5.1]
+for later firing. A vehicle that stops in a live lane very early, while
+traffic is still close behind it, is the dangerous case. The fallback
+also costs progress: where it fires, the vehicle stops for 7.4\,s on
+average and completes 49\,\% of the route, against 94\,\% where it does not.
+Collision severity (closing speed) was not recorded in the stored rollouts, so
+we cannot grade these collisions, and the rates count scenarios, not
+contacts.
+
+\section{Direct Execution Against the Lookup}
+\label{sec:s-direct}
+The main paper evaluates every trigger by lookup in a table of forced-fire
+rollouts, which is exact when a run under the trigger coincides with the
+reference run until it fires (Observation~1). The assumption is
+measured in the forced runs but was not tested by executing a trigger.
+This check, pre-registered as Amendment~7 before any run, does so. It draws
+61 test scenarios at random from the 2{,}000 stored Argoverse~2 test
+rows (the job was stopped at 60 complete scenarios for compute reasons,
+independently of any outcome), and runs four geometric triggers live
+with the predictor scoring at every decision tick and no score replay or
+forced-fire table: the certified LTT threshold with zero and with one
+decision tick of latency, and the thresholds at the 25th and 75th
+percentile of the calibration peak scores (about 75\,\% and 25\,\% of
+scenarios fire). Each run is scored with the same nuPlan harm definition
+and compared, scenario by scenario, with the lookup at the same threshold
+and latency. No direct run failed.
+
+\begin{table}[h]
+\caption{Direct execution versus lookup, 61 scenarios $\times$ 4
+triggers = 244 pairs. Disagreement: pairs in which the two differ.}
+\label{tab:direct}
+\centering
+\scriptsize\setlength{\tabcolsep}{3pt}
+\begin{tabular}{lcc}
+\toprule
+Quantity & Disagree & Wilson 95\,\% upper bound \\
+\midrule
+Firing step (or no firing) & 0 / 244 & 1.5\,\% \\
+Missed intervention & 0 / 244 & 1.5\,\% \\
+Unnecessary stop & 0 / 244 & 1.5\,\% \\
+Induced collision & 0 / 244 & 1.5\,\% \\
+Harm anywhere in the run & 1 / 244 & 2.3\,\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:direct} shows no disagreement in any alert-level quantity
+or in the induced collisions. The aggregate rates are identical for every
+trigger (for example 6.6\,\% missed and 18.0\,\% unnecessary stops for the
+certified threshold, 8.2\,\% missed with one tick of latency). One pair
+differs in harm anywhere in the run (seed 1934, certified threshold):
+the lookup records harm after the fallback and the direct run does not. We
+did not trace its cause, but a rare pre-fire difference of this kind is
+what the drift measurement in Section~III-E of the main paper reports (the
+pre-fire time-to-collision trace differed in 1.2\,\% of forced runs). Route
+completion is identical in 120 of the 244 pairs and differs by 0.0001 on
+average and 0.018 at most. The pre-registered rule, that the lookup is
+refuted as a substitute if any quantity disagrees in more than 5\,\% of
+pairs, is therefore not triggered. The sample is small, with a 95\,\%
+upper bound on the disagreement rate of about 1.5\,\% for the alert-level
+quantities, covers one dataset, one predictor and one maneuver, and does
+not test stochastic traffic, for which assumption (A1) would not hold and
+the lookup would estimate the outcome under a different random draw
+than the one the trigger would have met. The magnitudes of the pre-fire
+deviations in the forced runs were not stored, only whether they exceeded 1\,cm.
+
+\section{Replication on Fresh Data and a Second Predictor}
+\label{sec:s-replicate}
+Table~\ref{tab:replicate} gives the numbers behind the replication analysis in the main paper.
+Violation frequencies over 200 resplits have Wilson 95\,\% intervals of [4.6, 12.0] for LTT with
+the primary predictor and [5.8, 13.8] with the second, so, as in the main split, the point
+estimates meet $\delta = 0.10$ but their Monte Carlo intervals do not exclude a violation
+frequency above it. The uncertified baselines (46--51.5\,\%) are far outside it.
+The gap between the geometric and the confidence trigger also replicates:
+with the same target, LTT stops 29.0\,\% [26.1, 32.0] of scenarios against
+67.0\,\% [63.9, 70.0] for the tuned confidence trigger on the fresh split,
+and 30.6\,\% [27.7, 33.7] against 68.3\,\% [65.1, 71.2] with the second
+predictor.
+
+\begin{table}[h]
+\caption{Replication on fresh, disjoint data ($n_{\mathrm{cal}} =
+n_{\mathrm{test}} = 904$). Violation: fraction of 200 resplits with test
+miss $>\alpha$.}
+\label{tab:replicate}
+\centering
+\scriptsize\setlength{\tabcolsep}{3pt}
+\begin{tabular}{lcccc}
+\toprule
+& \multicolumn{2}{c}{Fresh held-out} & \multicolumn{2}{c}{2nd predictor} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}
+Method & Miss (\%) & Viol. (\%) & Miss (\%) & Viol. (\%) \\
+\midrule
+LTT (geometric) & 3.4 & 7.5 & 3.9 & 9.0 \\
+CRC (geometric) & 4.3 & 46.0 & 4.6 & 47.5 \\
+Tuned geometric & 4.3 & 51.5 & 4.6 & 51.0 \\
+T1 confidence & 4.8 & 50.0 & 4.6 & 46.0 \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \end{document}

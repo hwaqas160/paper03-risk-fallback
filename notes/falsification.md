@@ -640,3 +640,52 @@ harm. Reported as descriptive statistics only, no test.
 | R6.1b TTC 1.5 s, alpha=0.05 | LTT 34.0 % vs T2 68.3 %; diff -34.4 [-36.8, -31.9] | SURVIVES |
 | R6.2 held-out (av2_cal5 -> av2_test5, n=904) | LTT miss 3.4 %, validity 7.5 %; tuned 51.5 %, CRC 46.0 %, T1 50.0 % | REPLICATES |
 | R6.3 second predictor (minADE6 0.854) | LTT miss 3.9 %, validity 9.0 %; tuned 51.0 %, CRC 47.5 %, T1 46.0 % | REPLICATES |
+
+
+## Amendment 7 — 2026-10-02, BEFORE any direct-execution run exists (reviewer risk: "exact" is asserted, not tested)
+
+Prompted by an external review of the manuscript. The paper reports pre-fire drift of forced runs but has
+never compared a trigger executed *directly* (live predictor, no score replay, no forced-fire table) with
+the lookup. This amendment adds that test. It changes no earlier hypothesis, threshold or verdict.
+
+### V1 Direct execution reproduces the lookup
+**Data/predictor:** the 2 000-scenario `av2_test` arm (primary predictor, same checkpoint, `mc=0`,
+decide_every = 5, MRM 4.0 m/s^2, reactive traffic). A random subset of **150** stored scenarios (seed 0).
+**Triggers:** geometric score, four configurations: LTT threshold certified on `av2_cal` at alpha = 0.05,
+delta = 0.10 with 0 and with 1 decision tick of latency (`latency_steps` = 5); and the 25th and 75th
+percentile of the calibration scenarios' peak geometric score (thresholds at which about 75 % and 25 % of
+scenarios fire), zero latency. (A 3-scenario smoke test, which agreed with the lookup, showed that the
+originally planned tuned thresholds at alpha = 0.01 and 0.20 were degenerate, always firing and never
+firing, so they were replaced by the percentile thresholds before the main run. The smoke scenarios are not
+excluded from it.)
+**Procedure:** for each scenario and configuration run `rollout()` live (predictor scoring every decision
+tick, no `score_trace`, no `fire_step`, no `ref_ego`), then score it with the nuPlan harm definition used
+everywhere else and compare, per scenario, with `Scenario` lookup at the same threshold and latency.
+**Quantities:** firing step, miss, unnecessary stop, induced collision, harm anywhere in the run,
+route completion (mean absolute difference).
+**Claim:** the lookup is a faithful substitute for direct execution.
+**Refuted if:** for any of firing step, miss, stop, induced, harm-in-run the per-scenario disagreement
+rate over all scenario x configuration pairs exceeds 5 %. Aggregate rate differences (direct minus
+lookup) are reported with paired bootstrap 95 % CIs. Every disagreement is listed with its cause when one
+can be identified. No scenario is excluded except those whose direct run raises an error, and the count of
+those is reported.
+
+**Run-length rule (fixed 2026-10-02, with no disagreement-based information used):** the job was launched for
+120 scenarios (2 processes) but throughput on the shared machine is about 1.5 scenarios per minute in total.
+It is stopped when 60 scenarios have all four configurations complete, or earlier only if it crashes, and the
+analysis uses the scenarios with every configuration complete (`src/direct_validation_report.py`). The
+deviation from the planned 150 scenarios is therefore a compute-time decision, not an outcome-based one.
+Other quantities in the paper added after the same external review are descriptive and not hypothesis tests:
+shift severity (domain-classifier AUROC), induced-collision breakdown, and a scene-level cluster bootstrap of
+the nuScenes miss rate (`src/shift_and_cost.py`).
+
+### Amendment 7 outcome (2026-10-02), read against the rule fixed above
+V1: 61 scenarios x 4 triggers = 244 pairs, no direct-run errors. Disagreement with the lookup: firing step 0/244,
+miss 0/244, unnecessary stop 0/244, induced collision 0/244, harm anywhere in the run 1/244 (seed 1934, certified
+threshold, lookup has post-fire harm the direct run lacks; cause not traced), route completion identical in
+120/244 pairs and within 0.018 in all. No quantity exceeds the 5 % disagreement rule, so the lookup is NOT refuted
+as a substitute for direct execution on this sample. Limits: one dataset, predictor and maneuver; deterministic
+traffic only; 61 scenarios. Files: `results/final/direct_validation.json`, `direct_validation.part*.jsonl`.
+Descriptive additions: nuScenes failure under scene-level clustering is [6.1, 21.0] (37 scenes) and 9.5 %
+[3.9, 16.5] on a disjoint 23-scene sample; domain AUROC 0.97 (nuScenes) vs 0.91 (Waymo); induced collisions
+concentrate at early firing (9.2 % vs 3.0 %). See `results/final/shift_and_cost.json`.
