@@ -67,13 +67,13 @@ def fig_operating_points():
             if "conf_conflict" in s.traces]
     g = lam_grid(test, "geom")
     M, S = matrices(test, "geom", g)[:2]
-    fig, ax = plt.subplots(figsize=(COL_W, 2.5))
+    fig, ax = plt.subplots(figsize=(COL_W, 2.3))
     ax.plot(100 * S.mean(0), 100 * M.mean(0), color=GRAY, lw=1.0, zorder=2,
             label="Geometric score, every threshold")
     target_line(ax)
     # Direct offsets for well-separated points; leader lines for the cluster below (CDT/oracle/
     # tuned/LTT sit within 5 points of x and y of each other and cannot take direct labels).
-    offsets = {"T1 confidence": (-40, 7), "T2 ensemble": (5, -9),
+    offsets = {"T1 confidence": (-40, 7), "T2 ensemble": (6, 1),
                "ACI": (6, 2), "Never fire": (8, -13), "Always fire": (-20, 12)}
     for key, (lab, col, mk) in groups.items():
         v = h[key]
@@ -94,7 +94,7 @@ def fig_operating_points():
             ax.annotate(lab, (x, y), xytext=(tx, ty0 - dty * i), fontsize=6.5, color=INK, ha=ha,
                        arrowprops=dict(arrowstyle="-", color=INK2, lw=0.5, shrinkA=2, shrinkB=4))
 
-    leader_stack(["CDT", "Oracle (hindsight)", "Tuned geometric = CRC", "LTT (certified)"], 10, 14.5, 2.6)
+    leader_stack(["CDT", "Oracle (hindsight)", "Tuned geometric = CRC", "LTT (certified)"], 16, 14.2, 2.5)
     leader_stack(["T3 open-loop conformal"], 56, 8.0, 0, ha="right")
     ax.text(88, 100 * ALPHA + 0.4, "5 % target", fontsize=6.5, color=INK2, ha="right")
     ax.set_xlabel("Unnecessary stops (%)")
@@ -133,7 +133,7 @@ def fig_validity():
             draws["CRC"].append(summarize(test, "geom", crc(cal, "geom", ALPHA))["miss"])
         cache.write_text(json.dumps(draws))
     order = [("LTT (certified)", BLUE), ("CRC", AQUA), ("Tuned (no certificate)", ORANGE)]
-    fig, axes = plt.subplots(3, 1, figsize=(COL_W, 2.15), sharex=True)
+    fig, axes = plt.subplots(3, 1, figsize=(COL_W, 1.95), sharex=True)
     bins = np.arange(1.5, 8.01, 0.25)
     for ax, (lab, col) in zip(axes, order):
         x = 100 * np.asarray(draws[lab])

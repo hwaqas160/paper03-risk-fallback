@@ -185,27 +185,23 @@ version-controlled note before the data were collected. Refuted and
 unsupported hypotheses are reported as such, and analyses run after the
 pre-registered verdicts are labeled exploratory.
 
-The remainder of the paper is organized as follows.
-Section~\ref{sec:related} situates this work against open-loop
-conformal prediction for driving, task-relevant failure detection, and
-closed-loop safety evaluation. Section~\ref{sec:method}
-formalizes the triggering problem and the certification procedure.
-Section~\ref{sec:setup} describes the closed-loop evaluation
-environment, the fallback maneuver, the harm labels and the baselines.
-Section~\ref{sec:results} reports results, ablations and the shift
-experiments. Section~\ref{sec:discussion} states the scope of the
-claims, and Section~\ref{sec:conclusion} concludes.
-
 %=======================================================================
 \section{Related Work}
 \label{sec:related}
 
 \subsection{Conformal prediction for autonomous driving}
-Conformal prediction~\cite{vovk2005} constructs prediction sets with a
-distribution-free, finite-sample marginal coverage guarantee under
-exchangeability between calibration and test data, and has been applied
-extensively to trajectory forecasting and to safe planning under
-uncertainty. Lindemann~\emph{et al.}~\cite{lindemann2023} embed conformal prediction regions
+Conformal prediction~\cite{vovk2005,angelopoulos2024book} constructs
+prediction sets with a distribution-free, finite-sample marginal coverage
+guarantee under exchangeability between calibration and test data, and
+has been applied extensively to trajectory forecasting and to safe
+planning under uncertainty~\cite{lindemann2024formal}. Recent work
+calibrates trajectory-prediction uncertainty separately for each
+scenario type~\cite{shu2025scenario}, feeds realized trajectories back
+into the prediction region during optimization~\cite{wang2025fbcp},
+certifies the clearance of a selected driving trajectory with a CVaR
+margin~\cite{chang2026cvar}, and couples online calibration with
+runtime-certified navigation in crowds~\cite{guo2026coconav}.
+Lindemann~\emph{et al.}~\cite{lindemann2023} embed conformal prediction regions
 directly into a model predictive controller to obtain probabilistic
 safety guarantees, but their guarantee collapses once the deployment
 distribution shifts away from the calibration distribution, a
@@ -216,7 +212,7 @@ shift, evaluated in a synthetic multi-agent corridor. SafePath
 path-planning pipeline, providing a guarantee that a set of candidate
 paths contains a safe one with a user-specified probability, and reports
 both open-loop (nuScenes) and closed-loop (highway-env, synthetic
-traffic) results. In all three cases the guarantee is on the
+traffic) results. In all of these cases the guarantee is on the
 \emph{prediction}, not on the eventual control decision the region is
 used to make: a region contains the truth, or a path set contains a
 safe path, but none evaluates a fallback-triggering decision on real,
@@ -247,6 +243,17 @@ methods as baselines (Section~\ref{sec:baselines}), applied
 episode-by-episode, which is the natural online counterpart of our
 setting.
 
+Offline risk control has also moved past a single monotone loss. It now
+covers non-monotone losses~\cite{angelopoulos2026nonmono}, several risks
+controlled at once with user-defined priorities~\cite{multirisk2025},
+and planning with control barrier functions~\cite{gonzales2026}.
+Closest in spirit to our accounting of what the fallback does,
+Joshi~\emph{et al.}~\cite{joshi2026post} certify the outcome of switching
+from a baseline policy to a fallback policy. Their decision is made per
+instance and independently, with no notion of timing. An MRM trigger is
+sequential and absorbing: \emph{when} it fires determines every outcome
+after it.
+
 \subsection{Task-relevant and closed-loop failure detection}
 Farid~\emph{et al.}~\cite{taskrelevant2022} propose a run-time monitor
 for trajectory-prediction failures that is \emph{task-relevant} by
@@ -271,15 +278,10 @@ no alert, using as few as $1/\epsilon$ unsafe examples. Their unsafe
 label is a threshold on a safety score of the logged future, their
 predictor is Trajectron++, and their driving experiments (nuScenes and
 Lyft) score alerts against the logged data. The alert triggers nothing.
-We adopt the same principle and do not claim it as new. Table~\ref{tab:luo}
-lists the differences that matter here. Their target is class-conditional
-(a miss rate among unsafe situations), ours is marginal over scenarios.
-Their false-positive rate counts alerts on safe situations, whereas we
-execute the fallback and price it in unnecessary stops, induced
-collisions and residual harm. They study robustness to a change in the
-proportion of unsafe examples but not to a change of dataset. We
-implement their certificate inside our framework and report it as a
-baseline (Section~\ref{sec:res-cost}).
+We adopt the same principle and do not claim it as new.
+Table~\ref{tab:luo} lists the differences that matter here, chiefly that
+we execute the fallback and price it, and we implement their certificate
+inside our framework as a baseline (Section~\ref{sec:res-cost}).
 
 \begin{table}[t]
 \caption{Luo~\emph{et al.}~\cite{luo2022} versus this study.}
@@ -310,9 +312,16 @@ perception-free fallback plan feasible, demonstrated on aircraft taxiing.
 Their fallback is part of the controller design, whereas ours is an
 irreversible maneuver whose trigger is the object of study.
 
+Atoui~\emph{et al.}~\cite{atoui2025mrm} design and experimentally
+validate an MRM fallback controller for sensor failure on highways,
+taking the decision to engage it as given; we study that decision.
 Scenario-based simulation is a standard route to evaluating automated
-vehicle safety~\cite{sohrabi2021,xie2025}. We use replay of real logs with
-reactive traffic rather than synthetic scenarios.
+vehicle safety~\cite{sohrabi2021,xie2025}. Its conclusions need a
+statistical foundation for stopping rules and risk
+estimates~\cite{zhao2025stat}, and risk-based filtering can select
+informative scenarios from large driving logs~\cite{puphal2025risk}. We
+use replay of real logs with reactive traffic rather than synthetic
+scenarios, and report every rate with a confidence interval.
 
 \subsection{Risk-sensitive analysis and closed-loop infrastructure}
 Chapman~\emph{et al.}~\cite{cvar2022} develop risk-sensitive safe sets
@@ -580,7 +589,8 @@ recorded as an \emph{induced collision}, the concrete, measurable cost
 of a false or premature trigger.
 
 \subsection{Predictor}
-The trajectory predictor is AutoBot~\cite{autobot2022} (6 modes, 2.1\,s
+The trajectory predictor is AutoBot~\cite{autobot2022}, one of many
+learned multi-modal forecasters~\cite{shi2025survey} (6 modes, 2.1\,s
 history, 6\,s horizon), trained with the UniTraj framework~\cite{unitraj2024}
 on the Argoverse~2 Motion Forecasting training split (minADE$_6$ = 1.09\,m
 on held-out AV2 validation scenes). It runs online inside the closed loop, so its input is the actual,
@@ -952,9 +962,9 @@ nuScenes & Always fire & 5.0 & 1.6 & 16.2 & 3.8 & 9.7 / 6.4 \\
 \end{tabular}
 \end{table}
 
-\emph{Reading a 5\,\% marginal target.} Harm occurs in 15.8\,\% of
-calibration scenarios, so the certified 3.7\,\% miss rate leaves 24\,\% of
-harmful scenarios (58\,\% on nuScenes) without an alert before harm.
+\emph{Reading a 5\,\% marginal target.} As noted in
+Section~\ref{sec:formulation}, 24\,\% of harmful scenarios go unalerted
+(58\,\% on nuScenes).
 
 \emph{Class-conditional certification.} Table~\ref{tab:luoresult}
 implements the Luo~\emph{et al.} certificate in our framework: Mondrian
@@ -1162,10 +1172,6 @@ T1 confidence & 4.8 & 50.0 & 4.6 & 46.0 \\
 %=======================================================================
 \section{Scope and Future Work}
 \label{sec:discussion}
-The claims above are deliberately scoped. Each boundary below is a
-design choice with a stated rationale, and each suggests a direct
-extension.
-
 \emph{What we claim, and what we do not.} We claim that certification is
 what makes a closed-loop trigger keep its stated miss rate, that it costs
 a measurable number of unnecessary stops, and that the guarantee is
@@ -1274,8 +1280,8 @@ control,'' \emph{Ann. Appl. Statist.}, vol.~19, no.~2, pp.~1641--1662,
 
 \bibitem{crc2022}
 A.~N.~Angelopoulos, S.~Bates, A.~Fisch, L.~Lei, and T.~Schuster,
-``Conformal risk control,'' \emph{arXiv preprint arXiv:2208.02814},
-2022.
+``Conformal risk control,'' in \emph{Proc. Int. Conf. Learn.
+Represent. (ICLR)}, 2024.
 
 \bibitem{lindemann2023}
 L.~Lindemann, M.~Cleaveland, G.~Shim, and G.~J.~Pappas, ``Safe planning
@@ -1303,6 +1309,75 @@ driving,'' in \emph{Proc. IEEE/CVF Conf. Comput. Vis. Pattern Recognit.
 M.~Treiber, A.~Hennecke, and D.~Helbing, ``Congested traffic states in
 empirical observations and microscopic simulations,'' \emph{Phys. Rev.
 E}, vol.~62, no.~2, pp.~1805--1824, 2000.
+
+\bibitem{angelopoulos2024book}
+A.~N.~Angelopoulos, R.~Foygel~Barber, and S.~Bates, ``Theoretical
+foundations of conformal prediction,'' Cambridge Univ. Press (to appear),
+\emph{arXiv preprint arXiv:2411.11824}, 2024.
+
+\bibitem{lindemann2024formal}
+L.~Lindemann, Y.~Zhao, X.~Yu, G.~J.~Pappas, and J.~V.~Deshmukh,
+``Formal verification and control with conformal prediction,''
+\emph{arXiv preprint arXiv:2409.00536}, 2024.
+
+\bibitem{shu2025scenario}
+Y.~Shu, J.~Xu, L.~Kong, F.~Zhang, G.~Yin, and C.~Sun, ``Scenario-aware
+uncertainty quantification for trajectory prediction with statistical
+guarantees,'' \emph{arXiv preprint arXiv:2512.05682}, 2025.
+
+\bibitem{wang2025fbcp}
+H.~Wang and C.~Ning, ``Conformal prediction in the loop: A
+feedback-based uncertainty model for trajectory optimization,'' in
+\emph{Proc. Adv. Neural Inf. Process. Syst. (NeurIPS)}, 2025.
+
+\bibitem{chang2026cvar}
+P.~Y.~Chang and Q.~Ahmed, ``Barrier function conformal safety clearance
+certification with CVaR for driving trajectory selection,'' \emph{arXiv
+preprint arXiv:2608.26533}, 2026.
+
+\bibitem{guo2026coconav}
+C.~Guo \emph{et al.}, ``CoCoNav: Conformal control for safe robot
+navigation in crowds,'' \emph{arXiv preprint arXiv:2608.07751}, 2026.
+
+\bibitem{angelopoulos2026nonmono}
+A.~N.~Angelopoulos, ``Conformal risk control for non-monotonic losses,''
+\emph{Phil. Trans. R. Soc. A}, 2026, doi:~10.1098/rsta.2025.0068.
+
+\bibitem{multirisk2025}
+S.~Joshi, Y.~Sun, H.~Hassani, and E.~Dobriban, ``MultiRisk: Multiple
+risk control via iterative score thresholding,'' \emph{arXiv preprint
+arXiv:2512.24587}, 2025.
+
+\bibitem{gonzales2026}
+J.~Gonzales, K.~Mizuta, K.~Leung, and L.~J.~Ratliff, ``Safe
+probabilistic planning for human-robot interaction using conformal risk
+control,'' \emph{arXiv preprint arXiv:2603.10392}, 2026.
+
+\bibitem{joshi2026post}
+S.~Joshi, T.~Wang, H.~Hassani, and E.~Dobriban, ``Risk-controlled
+post-processing of decision policies,'' \emph{arXiv preprint
+arXiv:2605.06479}, 2026.
+
+\bibitem{atoui2025mrm}
+H.~Atoui \emph{et al.}, ``Minimum risk maneuver fallback strategy for
+autonomous vehicles: Design and experimental validation,'' in
+\emph{Proc. IEEE Intell. Veh. Symp. (IV)}, 2025,
+doi:~10.1109/IV64158.2025.11097617.
+
+\bibitem{zhao2025stat}
+X.~Zhao, R.~Aghazadeh-Chakherlou, C.-H.~Cheng, P.~Popov, and
+L.~Strigini, ``On the need for a statistical foundation in
+scenario-based testing of autonomous vehicles,'' in \emph{Proc. IEEE Int.
+Conf. Intell. Transp. Syst. (ITSC)}, 2025.
+
+\bibitem{puphal2025risk}
+T.~Puphal, V.~Ramtekkar, and K.~Nishimiya, ``Risk-based filtering of
+valuable driving situations in the Waymo Open Motion Dataset,''
+\emph{arXiv preprint arXiv:2506.23433}, 2025.
+
+\bibitem{shi2025survey}
+J.~Shi \emph{et al.}, ``Motion forecasting for autonomous vehicles: A
+survey,'' \emph{arXiv preprint arXiv:2502.08664}, 2025.
 
 \bibitem{robustcp2026}
 K.~Rahaman, J.~V.~Deshmukh, A.~R.~Hota, and L.~Lindemann, ``When
@@ -1405,38 +1480,39 @@ Automobile Eng.}, 2025.
 \end{thebibliography}
 
 \begin{IEEEbiography}[{\includegraphics[width=1in,height=1.25in,clip,keepaspectratio]{hassan_photo.jpeg}}]{Hassan Waqas Saleem}
-received his B.Tech. (Pass) in Electrical Technology from Bahauddin
-Zakariya University, Multan, Pakistan, in 2014, his B.Sc. in Electrical
-Engineering from the University of Engineering and Technology, Taxila,
-Pakistan, in 2018, and his M.S. in Electrical Engineering (Artificial
-Intelligence and Autonomous Systems) from the School of Electrical
-Engineering and Computer Science (SEECS), National University of
-Sciences and Technology (NUST), Islamabad, Pakistan, in 2024. He
-currently serves as Manager (Technical) at a public sector organization
-in Pakistan. His research topics mainly include: artificial
-intelligence, graph neural networks, large language models, knowledge
-graph completion, robotics, and simultaneous localization and mapping
-(SLAM).
+received the B.Tech. degree in electrical technology from Bahauddin
+Zakariya University, Multan, Pakistan, in 2014, the B.Sc. degree in
+electrical engineering from the University of Engineering and
+Technology, Taxila, Pakistan, in 2018, and the M.S. degree in electrical
+engineering, with a specialization in artificial intelligence and
+autonomous systems, from the School of Electrical Engineering and
+Computer Science, National University of Sciences and Technology (NUST),
+Islamabad, Pakistan, in 2024. He is currently a Manager (Technical) with a public-sector organization
+in Pakistan. His research interests include artificial intelligence for
+autonomous systems, uncertainty quantification and safety assurance for
+automated driving, graph neural networks, knowledge graph completion,
+large language models, robotics, and simultaneous localization and
+mapping.
 \end{IEEEbiography}
 
 \begin{IEEEbiographynophoto}{Rahat Zeeshan Saleem}
-received his MBA from Bahauddin Zakariya University, Multan, Pakistan,
-in 2021, graduating as a Gold Medalist, and his M.S. in Supply Chain
-Management from NUST Business School (NBS), National University of
-Sciences and Technology (NUST), Islamabad, Pakistan, in 2023. He
-currently serves as Project Lead of the Supply Chain Management team at
-a private sector organization in Pakistan. His research topics mainly
-include: supply chain management, sustainable and resilient supply
-networks, supplier selection and substitution, and applications of
-artificial intelligence to supply chain decision support.
+received the M.B.A. degree from Bahauddin Zakariya University, Multan,
+Pakistan, in 2021, where he was awarded a gold medal, and the M.S. degree
+in supply chain management from the NUST Business School, National
+University of Sciences and Technology (NUST), Islamabad, Pakistan, in
+2023. He is currently a Project Lead with the Supply Chain Management team of
+a private-sector organization in Pakistan. His research interests
+include artificial intelligence for decision support, sustainable and
+resilient supply networks, supplier selection and substitution, and
+supply chain management.
 \end{IEEEbiographynophoto}
 
 \begin{IEEEbiographynophoto}{Hina Maryam}
-received her M.Phil. in Statistics from Bahauddin Zakariya University,
-Multan, Pakistan, in 2019, graduating as a Gold Medalist. She currently
-serves as Assistant Director at the State Bank of Pakistan (SBP). Her
-research topics mainly include: statistical modeling, data
-optimization, applied data analysis, and quantitative methods for
+received the M.Phil. degree in statistics from Bahauddin Zakariya
+University, Multan, Pakistan, in 2019, where she was awarded a gold
+medal. She is currently an Assistant Director with the State Bank of Pakistan,
+Karachi, Pakistan. Her research interests include statistical modeling,
+data optimization, applied data analysis, and quantitative methods for
 economic and financial data.
 \end{IEEEbiographynophoto}
 \vfill
