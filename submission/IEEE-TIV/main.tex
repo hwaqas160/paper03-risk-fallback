@@ -21,7 +21,8 @@ Fallback Triggers: Closed-Loop Evaluation\\
 Under Dataset Shift}
 
 \author{Hassan~Waqas~Saleem, Rahat~Zeeshan~Saleem, and Hina~Maryam
-\thanks{Manuscript received XX XXXX 2026; revised XX XXXX 2026.}%
+\thanks{Manuscript received XX XXXX 2026; revised XX XXXX 2026. This
+work received no external funding.}%
 \thanks{H.~W.~Saleem (corresponding author) is with the School of
 Electrical Engineering and Computer Science (SEECS), National
 University of Sciences and Technology (NUST), H-12, Islamabad 44000,
@@ -75,16 +76,13 @@ maneuver (MRM): slow to a stop, pull to the shoulder, or otherwise hand
 control back to a human. The decision of \emph{when} to invoke this
 behavior is, in nearly every deployed and published system, a
 hand-tuned threshold on some scalar confidence or uncertainty score
-produced by a perception or prediction module. That practice has a
-specific and largely unexamined weakness: the very quantity the
+produced by a perception or prediction module. The quantity the
 threshold is applied to, a learned model's uncertainty estimate, is
-exactly what has been shown to degrade under the kind of distribution
-shift a vehicle experiences when it enters a new city, a new weather
-condition, or simply a stretch of road unlike anything in its
-calibration set. A threshold tuned under one operating distribution
-carries no guarantee once that distribution has moved, and the failure
-is silent: the system continues to report a confidence number, and nothing
-in the number itself signals that the number is now wrong.
+known to degrade under the distribution shift a vehicle meets in a new
+city, a new weather condition, or an unfamiliar stretch of road. A
+threshold tuned under one distribution then carries no guarantee, and
+the failure is silent: the system still reports a confidence number,
+and nothing in it signals that it is now wrong.
 
 Conformal prediction offers a principled alternative: rather than a
 point confidence score, it produces a prediction region with a
@@ -92,19 +90,13 @@ distribution-free, finite-sample coverage guarantee under
 exchangeability. A substantial and fast-growing literature has applied
 conformal prediction to trajectory forecasting and to planning under
 uncertainty in autonomous driving. Almost without exception, however,
-this literature is \emph{open-loop}: it constructs a prediction region,
-reports its coverage and its size, and stops. Two things are invisible
-from that vantage point. First, a region's effect on a downstream
-control decision, specifically whether it triggers a fallback, is
-not evaluated at all. Open-loop coverage and closed-loop safety outcome
-are simply assumed to move together. Second, and more
-consequentially, \emph{triggering the fallback is not free}. A vehicle
-that stops in a live lane because its uncertainty region grew large is
-not obviously safer than one that continues. An evaluation that reports
-only coverage, or only collision rate under the fallback, cannot see the
-trade-off between the two, and cannot see that a policy which triggers
-whenever it is asked to would trivially achieve a good miss rate while
-being useless.
+this literature is \emph{open-loop}: it reports a region's coverage and
+size, and stops. Two things are invisible from there. First, whether the
+region triggers a fallback is not evaluated, and open-loop coverage and
+closed-loop safety are assumed to move together. Second, \emph{triggering
+the fallback is not free}. A vehicle that stops in a live lane is not
+obviously safer than one that continues, and a policy that always
+triggers achieves a perfect miss rate while being useless.
 
 We ask a narrower question than ``which trigger is best'':
 \emph{how reliable is a statistically certified fallback trigger when it
@@ -163,26 +155,20 @@ report as refuted. The certified quantity is the alert, not the outcome:
 residual harm after the fallback is larger than the certified miss rate,
 part of it created by the intervention. Confidence and ensemble triggers,
 the deployed practice, need several times more unnecessary stops than a
-geometric score. A class-conditional certificate in the style of
-Luo~\emph{et al.}, implemented in the same framework, is vacuous at a
-5\,\% target on this predictor.
+geometric score.
 \item \textbf{The certificate under real dataset shift.} An Argoverse~2
 certificate fails on nuScenes but holds, conservatively, on Waymo: the
 failure is dataset-dependent, not universal. The nuScenes data also
 expose a floor, harm present at the first decision tick, which no
 trigger can prevent and which can make a target unreachable. A
 density-ratio-weighted certificate that reports its effective sample
-size repairs part of the gap, and in an exploratory analysis the
-reverse transfer (nuScenes to Argoverse~2) is asymmetric.
+size repairs part of the gap.
 \item \textbf{Operating-point findings for practitioners.} One decision
 tick of actuation latency breaks the target, so latency must be part of
 the certified quantity, and open-loop AUROC ranks triggers only
 approximately as closed-loop stops do.
 \end{enumerate}
-
-All hypotheses, thresholds and refutation rules were recorded in a
-version-controlled note before the data were collected. Refuted and
-unsupported hypotheses are reported as such, and analyses run after the
+Refuted hypotheses are reported as such, and analyses run after the
 pre-registered verdicts are labeled exploratory.
 
 %=======================================================================
@@ -201,47 +187,33 @@ into the prediction region during optimization~\cite{wang2025fbcp},
 certifies the clearance of a selected driving trajectory with a CVaR
 margin~\cite{chang2026cvar}, and couples online calibration with
 runtime-certified navigation in crowds~\cite{guo2026coconav}.
-Lindemann~\emph{et al.}~\cite{lindemann2023} embed conformal prediction regions
-directly into a model predictive controller to obtain probabilistic
-safety guarantees, but their guarantee collapses once the deployment
-distribution shifts away from the calibration distribution, a
-limitation Rahaman~\emph{et al.}~\cite{robustcp2026} address with robust
-conformal prediction driven by a conditional generative model of the
-shift, evaluated in a synthetic multi-agent corridor. SafePath
-\cite{safepath2025} integrates conformal prediction into an LLM-based
-path-planning pipeline, providing a guarantee that a set of candidate
-paths contains a safe one with a user-specified probability, and reports
-both open-loop (nuScenes) and closed-loop (highway-env, synthetic
-traffic) results. In all of these cases the guarantee is on the
-\emph{prediction}, not on the eventual control decision the region is
-used to make: a region contains the truth, or a path set contains a
-safe path, but none evaluates a fallback-triggering decision on real,
-replayed driving logs under reactive traffic. Our guarantee is instead
-on the decision, the probability that a minimum-risk maneuver fires
-before a harmful event, evaluated end-to-end in closed loop.
+Lindemann~\emph{et al.}~\cite{lindemann2023} embed conformal prediction
+regions in a model predictive controller, but the guarantee collapses
+under distribution shift, which Rahaman~\emph{et al.}~\cite{robustcp2026}
+address with a generative model of the shift in a synthetic multi-agent
+corridor. SafePath~\cite{safepath2025} guarantees that a set of
+LLM-proposed paths contains a safe one, with open-loop (nuScenes) and
+synthetic closed-loop results. In all of these the guarantee is on the
+\emph{prediction}, and none evaluates a fallback-triggering decision on
+replayed driving logs under reactive traffic. Our guarantee is on the
+decision, the probability that a minimum-risk maneuver fires before a
+harmful event, evaluated in closed loop.
 
 \subsection{Online and decision-level conformal methods}
 Adaptive Conformal Inference (ACI)~\cite{aci2021} updates the
 miscoverage level online so that long-run coverage holds even under
-arbitrary shift. Dixit~\emph{et al.}~\cite{dixit2023} apply this idea
-inside a model predictive controller, adapting the size of a prediction
-uncertainty set online from delayed observations of nearby agents to
-navigate safely among them; the guarantee, as with Lindemann~\emph{et
-al.} above, is on the prediction region a planner consumes, not on a
-fallback decision. Conformal Decision Theory (CDT)~\cite{cdt2024} carries
-the same idea from prediction sets to decisions: it updates a
-decision parameter $\lambda_{t+1} = \lambda_t + \eta(\varepsilon - \ell_t)$
-so that the long-run average risk converges to $\varepsilon$ at rate
-$O(1/t)$, with no distributional assumptions. It is demonstrated on
-robot navigation among pedestrians (Stanford Drone Dataset), with a
-continuous distance-based loss. Both give \emph{asymptotic, average}
-guarantees for a quantity adjusted continuously as data arrive. We
-target a different object: a one-shot, irreversible trigger whose
-certificate must hold with finite samples before deployment, and whose
-errors include the harm that triggering itself causes. We adopt both
-methods as baselines (Section~\ref{sec:baselines}), applied
-episode-by-episode, which is the natural online counterpart of our
-setting.
+arbitrary shift. Dixit~\emph{et al.}~\cite{dixit2023} use it to size a
+prediction set inside a model predictive controller, again a guarantee on
+the region a planner consumes. Conformal Decision Theory
+(CDT)~\cite{cdt2024} moves the idea to decisions, updating
+$\lambda_{t+1} = \lambda_t + \eta(\varepsilon - \ell_t)$ so that the
+long-run average risk converges to $\varepsilon$, demonstrated on robot
+navigation among pedestrians. Both give \emph{asymptotic, average}
+guarantees for a quantity adjusted as data arrive. We target a one-shot,
+irreversible trigger whose certificate must hold with finite samples
+before deployment, and whose errors include the harm that triggering
+causes. We adopt both as episode-by-episode baselines
+(Section~\ref{sec:baselines}).
 
 Offline risk control has also moved past a single monotone loss. It now
 covers non-monotone losses~\cite{angelopoulos2026nonmono}, several risks
@@ -255,20 +227,15 @@ sequential and absorbing: \emph{when} it fires determines every outcome
 after it.
 
 \subsection{Task-relevant and closed-loop failure detection}
-Farid~\emph{et al.}~\cite{taskrelevant2022} propose a run-time monitor
-for trajectory-prediction failures that is \emph{task-relevant} by
-construction: it flags a misprediction only when the resulting planning
-cost is anomalous relative to the predicted cost distribution, with
-data-free false-positive and false-negative rate bounds. Their detector
-is evaluated against hand-labeled scenarios in an open-loop and
-semi-reactive setting, and, like the conformal-prediction literature
-above, does not close the loop through an actuated fallback and
-re-measure the outcome. Their central insight, that a
-task-irrelevant misprediction should not count against a detector, is
-reflected in our harm labeling: a collision the ego vehicle
-suffers while already stopped or while being struck from behind is
-scored as a distinct \emph{induced-collision} cost of the fallback
-itself, never as a missed intervention.
+Farid~\emph{et al.}~\cite{taskrelevant2022} propose a
+\emph{task-relevant} monitor that flags a misprediction only when the
+resulting planning cost is anomalous, with false-positive and
+false-negative bounds, evaluated open-loop and semi-reactively without
+an actuated fallback. Their insight, that a task-irrelevant
+misprediction should not count against a detector, is reflected in our
+labeling: a collision suffered while stopped or struck from behind is an
+\emph{induced-collision} cost of the fallback, never a missed
+intervention.
 
 Closest to our certification step, Luo~\emph{et al.}~\cite{luo2022}
 tune the threshold of a warning system with Mondrian conformal
@@ -281,7 +248,8 @@ Lyft) score alerts against the logged data. The alert triggers nothing.
 We adopt the same principle and do not claim it as new.
 Table~\ref{tab:luo} lists the differences that matter here, chiefly that
 we execute the fallback and price it, and we implement their certificate
-inside our framework as a baseline (Section~\ref{sec:res-cost}).
+inside our framework as a baseline (Section~\ref{sec:res-cost} and
+Supplementary Section~S1).
 
 \begin{table}[t]
 \caption{Luo~\emph{et al.}~\cite{luo2022} versus this study.}
@@ -324,20 +292,14 @@ use replay of real logs with reactive traffic rather than synthetic
 scenarios, and report every rate with a confidence interval.
 
 \subsection{Risk-sensitive analysis and closed-loop infrastructure}
-Chapman~\emph{et al.}~\cite{cvar2022} develop risk-sensitive safe sets
-using Conditional Value-at-Risk to assess the severity, not merely the
-probability, of constraint violation along a stochastic trajectory,
-providing the risk-sensitive vocabulary this paper borrows in
-motivating a mean missed-intervention rate as the quantity to control,
-even though a tail-severity extension (Section~\ref{sec:discussion}) is
-left to future work. ScenarioNet~\cite{scenarionet2023} unifies
-heterogeneous real-world driving logs (including Argoverse~2, nuScenes,
-nuPlan, and Lyft Level~5) into a common scenario description replayed
-interactively in the MetaDrive simulator, with either logged-trajectory
-or reactive rule-based (IDM) traffic. We build directly on that
-infrastructure: every scenario reported in Section~\ref{sec:results} is
-a real logged driving scenario, replayed headless with reactive
-traffic, not a synthetic or hand-crafted one.
+Chapman~\emph{et al.}~\cite{cvar2022} use Conditional Value-at-Risk to
+assess the severity, not only the probability, of constraint violation;
+we control a mean miss rate and leave a tail-severity extension to
+future work (Section~\ref{sec:discussion}). ScenarioNet~\cite{scenarionet2023}
+unifies real driving logs (Argoverse~2, nuScenes, nuPlan, Lyft Level~5)
+for interactive replay in MetaDrive with logged or reactive (IDM)
+traffic. Every scenario in Section~\ref{sec:results} is a real logged
+scenario replayed this way.
 
 %=======================================================================
 \section{Problem Formulation and Method}
@@ -661,8 +623,8 @@ intervals. Validity of each certificate is assessed over 200 random
 resplits of the pooled calibration and test scenarios. A valid
 certificate keeps the frequency of test miss rate above $\alpha$ at or
 below $\delta$. Harm is scored with the single nuPlan definition above.
-Its sensitivity to the time-to-collision threshold is not evaluated here
-(Section~\ref{sec:discussion}).
+Section~\ref{sec:res-robust} repeats the key comparison under three
+alternative harm definitions.
 
 \subsection{Pre-registration and reproducibility}
 \label{sec:prereg}
@@ -701,7 +663,8 @@ Waymo recalibration (R1--R4) is pre-registered; the consequences of the
 intervention, the class-conditional comparison, the reverse shift,
 few-label recalibration and the robustness checks
 (Section~\ref{sec:res-robust}) are post hoc or partly so, and are
-labeled.
+labeled. Full details of the exploratory analyses are in the
+Supplementary Material.
 
 \subsection{Does a certificate keep its promise, and what does it cost? (RQ1)}
 \label{sec:res-main}
@@ -966,92 +929,17 @@ nuScenes & Always fire & 5.0 & 1.6 & 16.2 & 3.8 & 9.7 / 6.4 \\
 Section~\ref{sec:formulation}, 24\,\% of harmful scenarios go unalerted
 (58\,\% on nuScenes).
 
-\emph{Class-conditional certification.} Table~\ref{tab:luoresult}
-implements the Luo~\emph{et al.} certificate in our framework: Mondrian
-split conformal prediction on the unsafe class, where unsafe means harm in
-the reference run and an alert means firing before it, with the
-finite-sample correction and without their tie randomization. At
-$\epsilon=0.05$ on the 316 unsafe calibration scenarios it selects a
-threshold equivalent to always firing, so the class-conditional target is
-vacuous for this predictor at this level: the score separates harmful from
-harmless scenarios well enough for a marginal target (AUROC 0.83) but not
-for a 5\,\% miss rate among harmful ones. At the marginal-matched
-$\epsilon=\alpha/\pi=0.32$ it selects the same threshold as empirical
-tuning. Deployed on nuScenes, that certificate has a conditional miss rate
-of 66\,\% against its 32\,\% target. The harm base rate rises from 15.8\,\% to
-22.1\,\%, but the conditional miss rate is far above what that alone
-explains, so the class-conditional guarantee does not survive the
-dataset shift either.
+\emph{Class-conditional certification and reverse shift.} A Luo-style
+class-conditional certificate at $\epsilon=0.05$ selects a threshold
+equivalent to always firing (84.9\,\% unnecessary stops). At the
+marginal-matched $\epsilon=0.32$ its conditional miss rate on nuScenes is
+66\,\% against its 32\,\% target, so it does not survive the shift either
+(Supplementary Material, Section~S1 and Table~S1). Certifying on
+nuScenes and deploying on Argoverse~2 transfers safely but
+conservatively (miss 1.9--2.0\,\%, Section~S2), a single-pair
+observation.
 
-\begin{table}[t]
-\caption{Marginal certificate (LTT) versus class-conditional certificates
-(Luo-style), thresholds certified on Argoverse~2. Miss: marginal miss
-rate; Cond.: miss rate among scenarios with harm in the reference run.}
-\label{tab:luoresult}
-\centering
-\scriptsize
-\setlength{\tabcolsep}{3pt}
-\begin{tabular}{lcccccc}
-\toprule
- & \multicolumn{3}{c}{Argoverse~2 test} & \multicolumn{3}{c}{nuScenes} \\
-\cmidrule(lr){2-4}\cmidrule(lr){5-7}
-Certificate & Miss & Cond. & Unnec. & Miss & Cond. & Unnec. \\
-\midrule
-LTT, marginal $\alpha=0.05$ & 3.7 & 24.2 & 28.5 & 13.2 & 58.1 & 26.1 \\
-Luo-style, $\epsilon=0.05$ & 0.0 & 0.0 & 84.9 & 5.0 & 19.6 & 77.9 \\
-Luo-style, $\epsilon=0.32$ & 4.3 & 28.5 & 26.0 & 14.9 & 66.0 & 21.3 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\subsection{Reverse shift (exploratory, post hoc)}
-\label{sec:res-reverse}
-We also certified on half of the nuScenes scenarios and deployed on
-Argoverse~2 test, a direction pre-registered as a reverse-shift analysis.
-As pre-registered, with all scenarios, the procedure \emph{refused to
-certify} on both halves, because of the 5.0\,\% floor. On the avoidable
-subset (post hoc), thresholds certified on nuScenes ($n\!\approx\!715$)
-give an Argoverse~2 miss rate of 1.9\,\% and 2.0\,\%, both below the
-target, at 40.6\,\% and 39.5\,\% unnecessary stops. A certificate from the
-harder dataset therefore transfers safely but conservatively, while the
-reverse does not transfer. This asymmetry is a single-pair observation
-pending replication.
-
-\subsection{Recalibration with a few labeled target scenes (exploratory)}
-\label{sec:res-fewshot}
-Table~\ref{tab:recal} draws $k$ labeled nuScenes scenes at random (60
-draws each) and evaluates on the rest, on the avoidable subset. This
-analysis was not pre-registered; its Waymo counterpart was
-(Section~\ref{sec:res-waymo}). Uncertified tuning on 40--60 target
-scenes exceeds the target in about two draws in three. A certified
-threshold on the same scenes keeps the target (violations 0--10\,\%) but
-stops in 53--81\,\% of scenarios, against 27\,\% without target labels.
-A handful of labeled scenes therefore restores a \emph{valid}
-certificate, not the original operating point.
-
-\begin{table}[t]
-\caption{Recalibration with $k = 60$ labeled target scenes. nuScenes:
-exploratory, avoidable subset, 60 draws. Waymo: pre-registered
-(R1--R4), all scenarios, 200 draws. Viol.: fraction of draws with test
-miss $>\alpha$. Rates in \%.}
-\label{tab:recal}
-\centering
-\scriptsize\setlength{\tabcolsep}{2.5pt}
-\begin{tabular}{lcccccc}
-\toprule
-& \multicolumn{3}{c}{nuScenes} & \multicolumn{3}{c}{Waymo} \\
-\cmidrule(lr){2-4}\cmidrule(lr){5-7}
-Method & Miss & Viol. & Unnec. & Miss & Viol. & Unnec. \\
-\midrule
-AV2-certified, no labels & 9.2 & -- & 27.1 & 2.7 & 0 & 45.0 \\
-Target-only tuned & 6.0 & 70 & 36.7 & 6.2 & 59 & 29.6 \\
-Target-only LTT & 0.8 & 0 & 72.5 & 1.5 & 2.5 & 58.6 \\
-AV2 + 60, weighted LTT & 2.8 & 0 & 53.3 & 1.7 & 0 & 49.8 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\subsection{Second shifted dataset and sensitivity}
+\subsection{Second shifted dataset and recalibration}
 \label{sec:res-waymo}
 \emph{Waymo Open Motion.} Table~\ref{tab:shift} and
 Fig.~\ref{fig:shift-latency}a deploy the same
@@ -1072,9 +960,10 @@ rankings agree most closely on Waymo ($\tau = 0.73$,
 Section~\ref{sec:res-h1}), with a geometric score (the isotropic
 variant) first under both.
 
-\emph{Waymo recalibration (pre-registered R1--R4).} Table~\ref{tab:recal}
-repeats the few-shot design on Waymo, this time pre-registered before
-any Waymo outcome was read. Uncertified tuning violates the target in
+\emph{Waymo recalibration (pre-registered R1--R4).} We draw $k$ labeled
+Waymo scenes at random (200 draws) and evaluate on the rest, a design
+pre-registered before any Waymo outcome was read (full table and the
+exploratory nuScenes counterpart in Supplementary Section~S3). Uncertified tuning violates the target in
 69.5\,\% and 59\,\% of draws with 40 and 60 target scenes (\textbf{R1
 holds}: violation $\ge 50\,\%$ at both). Weighting the Argoverse~2
 calibration set with 60 Waymo scenes ($n_{\mathrm{eff}} = 232$) keeps
@@ -1085,21 +974,12 @@ source certificate already holds on Waymo, so there was nothing to
 repair. Few labeled target scenes are therefore dangerous without a
 certificate even when the source certificate transfers.
 
-\emph{Sensitivity.} Three changes to the simulator, each paired by
-scenario seed against the main run (reactive traffic, 4.0\,m/s$^2$,
-2\,Hz), leave every conclusion above unchanged. Non-reactive log-replay
-traffic raises the harm base rate (17.7\,\% versus the main run's
-15.1\,\%, since logged agents cannot react to an ego that deviates from
-its log) and, with it, unnecessary stops by 7.9 points [95\,\% CI 5.3,
-10.8]; the miss rate itself does not move (paired difference $-0.5$
-points [$-1.3$, 0.0]). A 2.0\,m/s$^2$ comfort deceleration changes
-neither miss nor stops (paired difference exactly 0 in both), because
-both alert-level quantities depend only on the reference run and the
-firing tick (Observation~\ref{prop:exact}), not on how hard the vehicle
-then brakes; it does lower induced collisions (2.6\,\% to 1.6\,\%), the
-one quantity that does depend on post-fire kinematics. 10\,Hz decisions
-on 100 scenarios give a miss rate of 2.9\,\% [1.0, 8.2], consistent with
-the main run within an interval widened by the smaller sample.
+\emph{Sensitivity.} Non-reactive log-replay traffic, a 2.0\,m/s$^2$
+comfort deceleration and 10\,Hz decisions, each paired by scenario seed
+against the main run, leave every conclusion above unchanged. The
+certified miss rate stays below the target in all three, and only log
+replay raises unnecessary stops, by 7.9 points, through a higher harm
+base rate (Supplementary Section~S4).
 
 \subsection{Robustness checks (post hoc)}
 \label{sec:res-robust}
@@ -1194,10 +1074,9 @@ on the primary predictor, but this specific comparison remains
 untested.
 
 \emph{Unavoidable harm.} The 5.0\,\% first-tick floor on nuScenes shows
-that a miss metric defined on harm anywhere in a replayed snippet mixes
-events a fallback could prevent with events already under way. We report
-the pre-registered definition and the avoidable-only variant side by side,
-and propose the latter as a refinement for future benchmarks.
+that a miss metric on harm anywhere in a replayed snippet mixes
+preventable events with events already under way. We propose the
+avoidable-only variant as a refinement for future benchmarks.
 
 \emph{Marginal versus class-conditional targets, and alert versus
 outcome.} The certificate bounds the probability, over the scenario
@@ -1206,15 +1085,11 @@ quantity a deployment authority can audit, but it is a weaker statement
 than a bound among harmful scenarios, and it bounds the alert, not the
 outcome: harm still occurs after some alerts and is sometimes created by
 the intervention. Certifying outcome-level harm, or a class-conditional
-miss rate, would need a stronger score or a different loss. It does not
-bound the risk of any individual scenario, and stratified certification
-by scenario type follows from the same procedure applied within strata.
+miss rate, would need a stronger score or a different loss.
 
-\emph{Covariate shift and few-shot recalibration.} The weighted certificate
-covers shift in observable scenario covariates, and its effective sample
-size, 68 in our nuScenes subset, shows when it becomes unreliable. The
-few-label recalibration result is exploratory and single-pair. It needs
-replication on a second target before we rely on it.
+\emph{Covariate shift.} The weighted certificate covers shift in
+observable scenario covariates, and its effective sample size, 68 in our
+nuScenes subset, shows when it becomes unreliable.
 
 \emph{Harm definition, object states, and one fallback family.} The
 geometric score's advantage over confidence and ensemble scores holds
@@ -1241,15 +1116,12 @@ about 2.5 points of unnecessary stops, and deployed-practice confidence and
 ensemble triggers need 68--71\,\% stops for similar safety. The certificate
 controls the alert, not the outcome: harm in the intervened run is 6.5\,\%,
 1.1\,\% of it created by the intervention, and a 5\,\% marginal target leaves
-about a quarter of harmful scenarios unalerted. A class-conditional
-certificate in the style of Luo~\emph{et al.} is vacuous at 5\,\% for this
-predictor. The same certificate fails on nuScenes (13.2\,\% missed) but
-holds, conservatively, on Waymo (2.7\,\% missed): failure under shift is
-dataset-dependent, not universal. It is also broken by one decision tick
-of latency, and can be unreachable when the target data contain harm no
-trigger can prevent. Recalibrating with a few dozen labeled target
-scenes restores a valid certificate at a large operating cost in an
-exploratory analysis. These findings argue for treating certification,
+about a quarter of harmful scenarios unalerted. The same certificate fails
+on nuScenes (13.2\,\% missed) but holds, conservatively, on Waymo
+(2.7\,\% missed), so failure under shift is dataset-dependent, not
+universal. It is also broken by one decision tick of latency, and can be
+unreachable when the target data contain harm no trigger can prevent.
+These findings argue for treating certification,
 shift monitoring and
 latency as one audited quantity, and the evaluation protocol makes that
 audit inexpensive to repeat for any trigger.
@@ -1260,7 +1132,6 @@ The authors thank the maintainers of MetaDrive and ScenarioNet for
 releasing the simulation infrastructure this work builds on.
 
 \section*{Conflict of Interest}
-% CONFIRM WITH ALL AUTHORS BEFORE SUBMISSION
 The authors declare that they have no known competing financial
 interests or personal relationships that could have appeared to
 influence the work reported in this paper.
@@ -1480,14 +1351,14 @@ Automobile Eng.}, 2025.
 \end{thebibliography}
 
 \begin{IEEEbiography}[{\includegraphics[width=1in,height=1.25in,clip,keepaspectratio]{hassan_photo.jpeg}}]{Hassan Waqas Saleem}
-received the B.Tech. degree in electrical technology from Bahauddin
-Zakariya University, Multan, Pakistan, in 2014, the B.Sc. degree in
-electrical engineering from the University of Engineering and
-Technology, Taxila, Pakistan, in 2018, and the M.S. degree in electrical
-engineering, with a specialization in artificial intelligence and
-autonomous systems, from the School of Electrical Engineering and
-Computer Science, National University of Sciences and Technology (NUST),
-Islamabad, Pakistan, in 2024. He is currently a Manager (Technical) with a public-sector organization
+received the M.S. degree in electrical engineering, with a
+specialization in artificial intelligence and autonomous systems, from
+the School of Electrical Engineering and Computer Science, National
+University of Sciences and Technology (NUST), Islamabad, Pakistan, in
+2024, the B.Sc. degree in electrical engineering from the University of
+Engineering and Technology, Taxila, Pakistan, in 2018, and the B.Tech.
+degree in electrical technology from Bahauddin Zakariya University,
+Multan, Pakistan, in 2014. He is currently a Manager (Technical) with a public-sector organization
 in Pakistan. His research interests include artificial intelligence for
 autonomous systems, uncertainty quantification and safety assurance for
 automated driving, graph neural networks, knowledge graph completion,
@@ -1500,11 +1371,9 @@ received the M.B.A. degree from Bahauddin Zakariya University, Multan,
 Pakistan, in 2021, where he was awarded a gold medal, and the M.S. degree
 in supply chain management from the NUST Business School, National
 University of Sciences and Technology (NUST), Islamabad, Pakistan, in
-2023. He is currently a Project Lead with the Supply Chain Management team of
-a private-sector organization in Pakistan. His research interests
-include artificial intelligence for decision support, sustainable and
-resilient supply networks, supplier selection and substitution, and
-supply chain management.
+2023. He is currently a Project Lead with a private-sector organization
+in Pakistan. His research interests include artificial intelligence and
+data-driven decision support.
 \end{IEEEbiographynophoto}
 
 \begin{IEEEbiographynophoto}{Hina Maryam}
@@ -1512,8 +1381,7 @@ received the M.Phil. degree in statistics from Bahauddin Zakariya
 University, Multan, Pakistan, in 2019, where she was awarded a gold
 medal. She is currently an Assistant Director with the State Bank of Pakistan,
 Karachi, Pakistan. Her research interests include statistical modeling,
-data optimization, applied data analysis, and quantitative methods for
-economic and financial data.
+data optimization, and applied data analysis.
 \end{IEEEbiographynophoto}
 \vfill
 

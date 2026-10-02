@@ -6,7 +6,8 @@ this file with the actual guidelines document if you have a more current or offi
 numbers below against it before final submission, since anything fetched from the web can be stale.
 
 ## Page limits and charges
-- Regular paper: **10 pages** suggested length (our manuscript is currently 9 pages)
+- Regular paper: **10 pages** suggested length (our manuscript is exactly 10 pages, including
+  references and biographies; exploratory analyses are in `supplementary.pdf`)
 - Perspectives/Letters/Communications: 5 pages
 - Survey papers: 18 pages
 - Practitioner papers: 6 pages
@@ -15,7 +16,7 @@ numbers below against it before final submission, since anything fetched from th
 ## Abstract and keywords
 - **150-250 words**, single paragraph, no abbreviations, no footnotes
 - **3-4 keywords**
-- Current draft: **~280 words (raw), 8 keywords** -- both need trimming before submission
+- Current draft: 227 words, 4 keywords
 
 ## Required files at submission
 - PDF of the paper
@@ -43,20 +44,25 @@ numbers below against it before final submission, since anything fetched from th
 - https://ieee.atyponrex.com/journal/t-iv
 - Editorial contact: tiv-eic@ieee.org
 
-## Outstanding items for THIS manuscript, updated 2026-09-30
+## Outstanding items for THIS manuscript, updated 2026-10-02
 - [x] Trim abstract to 150-250 words (done 2026-09-29)
 - [x] Trim keywords to 3-4 (done 2026-09-29)
 - [x] Write short biography for each of the 3 authors (done 2026-09-30)
 - [x] Confirm institutional email for all 3 authors -- confirmed by the corresponding author
       2026-09-30: rahat.mscm21nbs@student.nust.edu.pk, hina.maryam@sbp.org.pk (both match what
       was already in the manuscript)
-- [x] Reserve a Zenodo DOI for the eventual code/data release: `10.5281/zenodo.23054071`
-      (draft, unpublished -- see `zenodo.md` in this folder)
-- [ ] Decide traditional vs. open-access route
-- [ ] Draft a conflict-of-interest statement (currently omitted from the manuscript body per an
-      earlier decision -- confirm whether the SUBMISSION SYSTEM form suffices or the manuscript
-      itself also needs one; T-IV's own checklist above lists it as a submission-system item, not
-      necessarily an in-manuscript section, so this may not require re-adding it to main.tex)
+- [x] Reserve a Zenodo DOI for the code/data release: `10.5281/zenodo.23054382`
+      (draft, unpublished -- see `zenodo.md`; publish it before submitting so the DOI resolves)
+- [x] Route: **traditional (free)**, decided 2026-10-02. No open-access fee. The paper is held
+      at 10 pages so no overlength charge ($175/page) applies either; keep it at 10 pages through
+      revisions.
+- [x] Conflict-of-interest statement in the manuscript (2026-10-02); answer the portal's COI form
+      the same way
+- [x] Funding: no external funding, stated in the first-page footnote (2026-10-02)
+- [x] Supplementary Material (`supplementary.pdf`, source `supplementary.tex`): class-conditional
+      comparison, reverse shift, few-label recalibration table, simulator sensitivity. Upload it
+      as "Supplementary Material" in the portal.
+- [x] Block diagram (Fig. 1) exported as `figures/protocol.pdf` (source `paper/figures/protocol.tex`)
 - [x] Hassan's high-resolution author photo added to the biography section 2026-09-30
       (`paper/hassan_photo.jpeg`). Rahat's and Hina's photos are still pending -- their
       biographies currently use `\IEEEbiographynophoto`; swap to `\IEEEbiography` with a photo

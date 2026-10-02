@@ -1,0 +1,137 @@
+\documentclass[lettersize,journal]{IEEEtran}
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{array}
+\usepackage{url}
+\usepackage{booktabs}
+\renewcommand{\thetable}{S\arabic{table}}
+\renewcommand{\thesection}{S\arabic{section}}
+\hyphenation{op-tical net-works semi-conduc-tor IEEE-Xplore}
+
+\begin{document}
+
+\title{Supplementary Material for\\ ``Statistical Certification of Autonomous
+Vehicle Fallback Triggers: Closed-Loop Evaluation Under Dataset Shift''}
+\author{Hassan~Waqas~Saleem, Rahat~Zeeshan~Saleem, and Hina~Maryam}
+\markboth{Supplementary Material}{Saleem \MakeLowercase{\textit{et al.}}:
+Certifying Fallback Triggers in Closed Loop}
+\maketitle
+
+This document contains the exploratory and post hoc analyses summarized
+in Section~V of the main paper. All numbers use the same settings as the
+main paper ($\alpha = 0.05$, $\delta = 0.10$, 1{,}994 Argoverse~2
+calibration and 1{,}996 test scenarios, 1{,}504 nuScenes scenarios) and
+can be regenerated from the released per-scenario records without
+re-simulation.
+
+\section{Class-Conditional Certification (Post Hoc)}
+\label{sec:s-luo}
+Table~\ref{tab:luoresult} implements the certificate of Luo~\emph{et al.}
+(cited in the main paper) in our framework: Mondrian split conformal
+prediction on the unsafe class, where unsafe means harm in the reference
+run and an alert means firing before it, with the finite-sample
+correction and without their tie randomization. At $\epsilon=0.05$ on the
+316 unsafe calibration scenarios it selects a threshold equivalent to
+always firing, so the class-conditional target is vacuous for this
+predictor at this level. The score separates harmful from harmless
+scenarios well enough for a marginal target (AUROC 0.83) but not for a
+5\,\% miss rate among harmful ones. At the marginal-matched
+$\epsilon=\alpha/\pi=0.32$ it selects the same threshold as empirical
+tuning. Deployed on nuScenes, that certificate has a conditional miss
+rate of 66\,\% against its 32\,\% target. The harm base rate rises from
+15.8\,\% to 22.1\,\%, but the conditional miss rate is far above what that
+alone explains, so the class-conditional guarantee does not survive the
+dataset shift either.
+
+\begin{table}[h]
+\caption{Marginal certificate (LTT) versus class-conditional certificates
+(Luo-style), thresholds certified on Argoverse~2. Miss: marginal miss
+rate; Cond.: miss rate among scenarios with harm in the reference run.
+Rates in \%.}
+\label{tab:luoresult}
+\centering
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{lcccccc}
+\toprule
+ & \multicolumn{3}{c}{Argoverse~2 test} & \multicolumn{3}{c}{nuScenes} \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}
+Certificate & Miss & Cond. & Unnec. & Miss & Cond. & Unnec. \\
+\midrule
+LTT, marginal $\alpha=0.05$ & 3.7 & 24.2 & 28.5 & 13.2 & 58.1 & 26.1 \\
+Luo-style, $\epsilon=0.05$ & 0.0 & 0.0 & 84.9 & 5.0 & 19.6 & 77.9 \\
+Luo-style, $\epsilon=0.32$ & 4.3 & 28.5 & 26.0 & 14.9 & 66.0 & 21.3 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Reverse Shift (Exploratory, Post Hoc)}
+\label{sec:s-reverse}
+We also certified on half of the nuScenes scenarios and deployed on
+Argoverse~2 test, a direction pre-registered as a reverse-shift analysis.
+As pre-registered, with all scenarios, the procedure \emph{refused to
+certify} on both halves, because of the 5.0\,\% floor. On the avoidable
+subset (post hoc), thresholds certified on nuScenes ($n\!\approx\!715$)
+give an Argoverse~2 miss rate of 1.9\,\% and 2.0\,\%, both below the
+target, at 40.6\,\% and 39.5\,\% unnecessary stops. A certificate from the
+harder dataset therefore transfers safely but conservatively, while the
+reverse does not transfer. This asymmetry is a single-pair observation
+pending replication.
+
+\section{Recalibration With a Few Labeled Target Scenes}
+\label{sec:s-fewshot}
+Table~\ref{tab:recal} draws $k$ labeled target scenes at random and
+evaluates on the rest. The nuScenes analysis (avoidable subset, 60 draws)
+was exploratory and not pre-registered. Its Waymo counterpart (all
+scenarios, 200 draws) was pre-registered as R1--R4 before any Waymo
+outcome was read, and its outcomes are reported in Section~V of the main
+paper. On nuScenes, uncertified tuning on 40--60 target scenes exceeds the
+target in about two draws in three. A certified threshold on the same
+scenes keeps the target (violations 0--10\,\%) but stops in 53--81\,\% of
+scenarios, against 27\,\% without target labels. A handful of labeled
+scenes therefore restores a \emph{valid} certificate, not the original
+operating point. On Waymo, uncertified tuning violates the target in
+69.5\,\% and 59\,\% of draws with 40 and 60 target scenes, and weighting
+the Argoverse~2 calibration set with 60 Waymo scenes
+($n_{\mathrm{eff}} = 232$) keeps validity at 0\,\% violation.
+
+\begin{table}[h]
+\caption{Recalibration with $k = 60$ labeled target scenes. nuScenes:
+exploratory, avoidable subset, 60 draws. Waymo: pre-registered
+(R1--R4), all scenarios, 200 draws. Viol.: fraction of draws with test
+miss $>\alpha$. Rates in \%.}
+\label{tab:recal}
+\centering
+\scriptsize\setlength{\tabcolsep}{2.5pt}
+\begin{tabular}{lcccccc}
+\toprule
+& \multicolumn{3}{c}{nuScenes} & \multicolumn{3}{c}{Waymo} \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}
+Method & Miss & Viol. & Unnec. & Miss & Viol. & Unnec. \\
+\midrule
+AV2-certified, no labels & 9.2 & -- & 27.1 & 2.7 & 0 & 45.0 \\
+Target-only tuned & 6.0 & 70 & 36.7 & 6.2 & 59 & 29.6 \\
+Target-only LTT & 0.8 & 0 & 72.5 & 1.5 & 2.5 & 58.6 \\
+AV2 + 60, weighted LTT & 2.8 & 0 & 53.3 & 1.7 & 0 & 49.8 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Simulator Sensitivity}
+\label{sec:s-sens}
+Three changes to the simulator, each paired by scenario seed against the
+main run (reactive traffic, 4.0\,m/s$^2$, 2\,Hz), leave every conclusion
+of the main paper unchanged. Non-reactive log-replay traffic raises the
+harm base rate (17.7\,\% versus the main run's 15.1\,\%, since logged
+agents cannot react to an ego that deviates from its log) and, with it,
+unnecessary stops by 7.9 points [95\,\% CI 5.3, 10.8]. The miss rate
+itself does not move (paired difference $-0.5$ points [$-1.3$, 0.0]). A
+2.0\,m/s$^2$ comfort deceleration changes neither miss nor stops (paired
+difference exactly 0 in both), because both alert-level quantities depend
+only on the reference run and the firing tick (Observation~1 of the main
+paper), not on how hard the vehicle then brakes. It does lower induced
+collisions (2.6\,\% to 1.6\,\%), the one quantity that does depend on
+post-fire kinematics. Decisions at 10\,Hz on 100 scenarios give a miss
+rate of 2.9\,\% [1.0, 8.2], consistent with the main run within an
+interval widened by the smaller sample.
+
+\end{document}

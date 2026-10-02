@@ -11,7 +11,12 @@ Snapshot of the files to upload to the T-IV submission portal
   web can be stale, and the checklist inside it lists what's still outstanding (bios, COI statement,
   OA/traditional route decision, etc.)
 
+- `supplementary.tex`, `supplementary.pdf` — Supplementary Material (exploratory analyses)
+- `figures/` — high-resolution figures as separate files (Fig. 1 block diagram and three plots)
+
 To refresh this snapshot from the working copy:
 ```
-cp paper/main.tex paper/main.pdf paper/IEEEtran.cls submission/IEEE-TIV/
+cp paper/main.tex paper/main.pdf paper/IEEEtran.cls paper/hassan_photo.jpeg submission/IEEE-TIV/
+cp paper/supplementary.tex paper/supplementary.pdf submission/IEEE-TIV/
+cp paper/figures/*.pdf submission/IEEE-TIV/figures/
 ```
