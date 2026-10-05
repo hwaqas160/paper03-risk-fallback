@@ -743,3 +743,43 @@ difference is reported in one sentence. (`src/online_calsel.py`)
 C1 outcome (2026-10-05): CDT with the step chosen on calibration (0.01): miss 4.6 %, stops 25.1 % versus test-selected (0.1)
 5.0 % / 24.0 %; ACI selects 0.5 either way, identical. Both differences are inside the stated thresholds (1 point miss,
 3 points stops), so the main-table rows are kept and the difference is reported in one sentence.
+
+
+## Amendment 9 — 2026-10-05, BEFORE any of the analyses below exist (third external review: robustness and breadth)
+
+Written before running anything in this amendment. It adds natural shifts and baselines the paper lacks. None of H1-H3,
+alpha, delta or any earlier verdict changes; every item below is evaluated once, with the reading rule fixed here.
+
+### A1 Leave-one-city-out: does the certificate survive natural shifts inside Argoverse 2?
+City labels come from the raw AV2 scenario parquet (`city`), joined to stored rows through the scenario id in the
+ScenarioNet file list. **Data:** all stored `av2_cal` + `av2_test` rows (about 3,990), cities with n >= 150.
+**Method:** for each such city c, run LTT (geometric score, alpha = 0.05, delta = 0.10) on all scenarios NOT in c and
+deploy the threshold on c, reporting miss and unnecessary stops with Wilson 95 % CIs; the tuned (uncertified)
+threshold is reported alongside. **Claim:** the certificate transfers across cities, i.e. the held-out miss rate
+(point estimate) is <= alpha for at least 80 % of the evaluated cities. **Refuted if** fewer than 80 % of the cities
+have miss <= alpha. Per-city miss at the in-pool threshold is also reported descriptively (heterogeneity), without test.
+
+### B1 Behavior-model shift: traffic that does not react
+Thresholds are certified/tuned on the reactive `av2_cal` and deployed on the non-reactive log-replay arm
+`av2_test_replay` (n about 504, paired by seed with `av2_test`). **Claim:** the geometric certified trigger still
+meets alpha = 0.05 on replay traffic. **Refuted if** its miss exceeds 0.05 with the Wilson interval excluding 0.05
+from above. Also reported: whether the stop-rate advantage over tuned T1 persists (paired bootstrap, among methods
+meeting the target; if T1 does not meet it, reported as such).
+
+### C1 Induced collisions: severity and striker behavior (re-simulation of the affected scenarios only)
+For the scenarios with an induced collision at the certified threshold on `av2_test` (51), re-run the single forced
+rollout at the stored firing tick with the same seed and record, for each contact, ego speed, striker speed, relative
+closing speed and the striker's distance to the ego at the firing step. Descriptive only. The forced rollout must
+reproduce the stored collision steps; scenarios that do not are reported as non-reproduced.
+
+### D1 Larger direct-execution check
+Repeat Amendment 7's V1 (same four triggers, same rule: refuted if any quantity disagrees in more than 5 % of pairs)
+on a second independent random draw (seed 1) of about 140 further `av2_test` scenarios, merged with the first 61 by seed.
+
+### E1 Second predictor, ensemble baseline
+For the second predictor (`av2_gpu_full`, minADE6 0.854) the reference run of every `av2_cal5_gpu` / `av2_test5_gpu`
+scenario is re-run with 5 Monte Carlo dropout passes to obtain the ensemble-spread trace; forced-fire outcomes are
+reused (they do not depend on any score; the re-run must reproduce the stored tick count and geometric trace, else the
+scenario is dropped and the count reported). **Claim:** with this predictor, LTT-geometric stops less than the tuned
+ensemble trigger T2 (among triggers meeting miss <= alpha on test; paired bootstrap 95 % CI excludes 0). **Refuted if** it
+does not. T3 (open-loop conformal) is not repeated because it needs open-loop error files for this predictor.
