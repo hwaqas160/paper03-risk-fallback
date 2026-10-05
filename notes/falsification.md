@@ -783,3 +783,34 @@ reused (they do not depend on any score; the re-run must reproduce the stored ti
 scenario is dropped and the count reported). **Claim:** with this predictor, LTT-geometric stops less than the tuned
 ensemble trigger T2 (among triggers meeting miss <= alpha on test; paired bootstrap 95 % CI excludes 0). **Refuted if** it
 does not. T3 (open-loop conformal) is not repeated because it needs open-loop error files for this predictor.
+
+### Amendment 9 outcome A1 (2026-10-05), read against the rule fixed above
+Leave-one-city-out (`results/final/city_shift.json`, pool n = 3,990, 6 cities, each n >= 229): LTT held-out miss
+austin 3.7 %, dearborn 2.0 %, palo-alto 4.4 %, pittsburgh 4.4 % (<= 5 %), miami 6.1 % [4.8, 7.8], washington-dc
+5.3 % [3.6, 7.8] (> 5 %). 4 of 6 = 67 % < 80 %, so **A1 is REFUTED** by the rule as written. Tuned (uncertified)
+threshold meets alpha in 3 of 6. The two failing cities have the highest harm base rates (19.7 %, 19.3 %); the
+in-pool threshold, which saw those cities, also misses 5.2 % and 5.1 % there, so the failure is the marginal
+certificate meeting a higher base rate, not a calibration artifact. Miami's interval excludes alpha, DC's does not.
+
+### Amendment 9 outcome B1 (2026-10-05)
+Behavior-model shift (`results/final/behavior_shift.json`, 378 scenarios with complete records, paired reactive vs replay):
+harm base rate 16.7 % (reactive) vs 17.7 % (replay). LTT-geometric certified on reactive calibration data misses 3.7 %
+[2.2, 6.1] on replay traffic, so **B1 is NOT refuted** (miss <= alpha, interval not excluding alpha from above). Tuned T1
+also meets the target on replay (3.4 %), at 71.7 % stops against 35.4 % for LTT; paired stop difference -36.2 points
+[-41.8, -30.7]. The geometric advantage persists under a different traffic behavior model.
+
+### Amendment 9 process note D1 (2026-10-05)
+The stop signal described in Amendment 7's run-length rule did not actually terminate the first direct-execution job
+(the process filter missed it), so that job ran to its full planned 120 scenarios (480 rows) after the paper's
+61-scenario snapshot was analysed. The paper's earlier figures (61 scenarios, 244 pairs) were taken from that snapshot
+as the rule stated. The final D1 report merges the complete first draw (120 scenarios) with the second independent draw
+(seed 1), by seed, as pre-registered in spirit; the snapshot figures are superseded, not hidden.
+
+### Amendment 9 outcome C1 (2026-10-05) (`results/final/induced_severity.json`, descriptive)
+All 51 scenarios with an induced collision at the certified threshold re-run (no errors). Re-run reproduces the stored
+induced-contact steps exactly in 34/51 and the FIRST induced contact in 49/51; later contacts diverge in 17/51 (contact
+dynamics after a first impact are not run-to-run reproducible). At the first induced contact: ego speed median 0.58 m/s
+(27 % below 0.1 m/s, 65 % below 1 m/s), striker speed median 3.6 m/s, speed difference median 2.4 m/s (IQR 1.2-5.8,
+max 11.8), 19 lateral and 32 rear contacts; time after firing median 6.5 s. At firing an agent was in the ego's lane
+behind it in 39/51, at median gap 8.3 m and median speed 0 m/s. Reading: low- to moderate-speed contacts with a slow
+or stationary ego by traffic proceeding along logged paths; not hard-braking surprises.

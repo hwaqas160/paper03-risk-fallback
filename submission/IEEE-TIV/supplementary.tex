@@ -270,7 +270,7 @@ possible there.
 \emph{Where the induced collisions come from.} At the certified threshold
 on Argoverse~2 test, 2.6\,\% of scenarios [1.9, 3.3] suffer an induced
 collision. All 129 induced contact events are other vehicles striking the
-stopped ego, 99 from behind and 30 from the side. They concentrate where
+ego, 99 from behind and 30 from the side. They concentrate where
 the ego is slow or fires early. Scenarios in the two lower terciles of
 initial ego speed (the lowest starts at standstill, the middle one below
 4.6\,m/s) have induced rates of 3.6\,\% [2.4, 5.3]
@@ -290,11 +290,27 @@ model, that does not yield to a vehicle which stays stationary in its path
 for many seconds, which a real driver would also be expected to avoid
 (released with the code). The 2.6\,\%
 induced rate should be read as an upper bound on the cost that stopping
-itself causes in this simulator. The fallback also costs progress: where it fires, the vehicle stops for 7.4\,s on
-average and completes 49\,\% of the route, against 94\,\% where it does not.
-Collision severity (closing speed) was not recorded in the stored rollouts, so
-we cannot grade these collisions, and the rates count scenarios, not
-contacts.
+itself causes in this simulator.
+
+To grade severity we re-ran the single forced rollout of each of the 51
+scenarios with instrumentation (Amendment~9, descriptive). The re-run
+reproduces the stored induced-contact steps exactly in 34 scenarios and
+the first induced contact in 49, but later contacts differ in 17, so
+the contact dynamics after a first impact are not run-to-run reproducible,
+which is one more way in which the forced-rollout table is exact only up
+to the first contact. At the first induced contact the ego's speed has a
+median of 0.6\,m/s (27\,\% below 0.1\,m/s and 65\,\% below 1\,m/s), the other
+vehicle's speed a median of 3.6\,m/s, and the speed difference a median of
+2.4\,m/s (quartiles 1.2 and 5.8, maximum 11.8; this is a scalar speed
+difference, not a closing speed along the contact axis). Nineteen of the
+51 first contacts are lateral and 32 are from behind, a median 6.5\,s after
+firing. At the firing step an agent was in the ego's lane behind it in 39
+of the 51 scenarios, at a median gap of 8.3\,m and a median speed of
+0\,m/s. These are therefore low- to moderate-speed contacts with a slow or
+stationary ego by traffic that keeps moving along its logged path, not
+hard-braking surprises. The fallback also costs progress: where it fires,
+the vehicle stops for 7.4\,s on average and completes 49\,\% of the route,
+against 94\,\% where it does not. The rates count scenarios, not contacts.
 
 \section{Direct Execution Against the Lookup}
 \label{sec:s-direct}
@@ -434,5 +450,97 @@ fixed function of the scenario and the threshold, but we report the
 frequency as measured. Across resplits the mean unnecessary-stop rate of
 the latency-aware certificate is 27.6, 31.8 and 57.0\,\%, so at two ticks
 the cost depends strongly on the calibration draw.
+
+\section{Natural Shifts Inside Argoverse 2: Leave-One-City-Out}
+\label{sec:s-city}
+The main paper's shift evidence rests on two target datasets. Argoverse~2
+labels each scenario with one of six cities, which gives six further
+natural shifts at no simulation cost. For each city we run LTT
+($\alpha = 0.05$, $\delta = 0.10$, geometric score) on all stored
+calibration and test scenarios outside that city (about 3{,}000 to
+3{,}800 scenarios) and deploy the threshold on the held-out city. We
+pre-registered (Amendment~9) that the certificate would count as
+transferring if the held-out miss rate were at most 5\,\% in at least 80\,\%
+of the cities.
+
+\begin{table}[h]
+\caption{Leave-one-city-out on Argoverse~2 (pooled calibration and test
+scenarios, $n = 3{,}990$). Harm: harm rate of the held-out city. Miss and
+stops: held-out city at the threshold certified on the other cities, with
+Wilson 95\,\% intervals for the miss rate. Tuned: miss of the uncertified
+threshold tuned on the other cities. Rates in \%.}
+\label{tab:city}
+\centering
+\scriptsize\setlength{\tabcolsep}{2.5pt}
+\begin{tabular}{lccccc}
+\toprule
+Held-out city & $n$ & Harm & LTT miss [CI] & LTT stops & Tuned miss \\
+\midrule
+Dearborn & 546 & 8.4 & 2.0 [1.1, 3.6] & 17.0 & 2.9 \\
+Palo Alto & 229 & 12.7 & 4.4 [2.4, 7.9] & 21.0 & 4.8 \\
+Austin & 931 & 14.2 & 3.7 [2.6, 5.1] & 26.7 & 4.1 \\
+Pittsburgh & 870 & 15.4 & 4.4 [3.2, 5.9] & 30.7 & 5.1 \\
+Washington, DC & 450 & 19.3 & 5.3 [3.6, 7.8] & 26.7 & 6.2 \\
+Miami & 964 & 19.7 & 6.1 [4.8, 7.8] & 30.2 & 7.0 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The certificate met the target in four of the six cities (67\,\%), below
+the 80\,\% we required, so the pre-registered claim is refuted. The
+uncertified threshold met it in three. The two failures, Miami and
+Washington, DC, are the two cities with the highest harm rates, and in
+only Miami does the interval exclude 5\,\%. The failure is not an artifact
+of holding the city out: the threshold certified on all cities, which
+saw them, also misses 5.2\,\% and 5.1\,\% there. This is what a
+\emph{marginal} guarantee implies, since the miss rate is the harm rate
+times the fraction of harmful scenarios left unalerted. Post hoc and
+descriptive, across these six cities and the two datasets of the main
+paper, the held-out miss rate and the harm rate of the target have a
+Spearman correlation of 0.90 ($n = 8$, so this is suggestive only). A
+shift in the base rate of harm, which an unlabeled-covariate reweighting
+cannot see, is therefore a plausible common cause of the failures, and
+it would also explain why the certificate failed on nuScenes (22.1\,\%
+harm) but held on Waymo (15.4\,\%).
+
+\section{Shift in the Traffic Behavior Model}
+\label{sec:s-behavior}
+All main results use reactive IDM traffic. To test a different behavior
+model we deploy the thresholds certified on reactive calibration data on
+the non-reactive log-replay arm, paired by scenario seed with the reactive
+test arm (378 scenarios with complete records). The harm base rate is
+16.7\,\% under reactive traffic and 17.7\,\% under replay. The certified
+geometric trigger misses 3.7\,\% [2.2, 6.1] on replay traffic, so the
+pre-registered claim that it still meets the 5\,\% target is not
+refuted. The tuned confidence trigger also meets the target (3.4\,\%), but at
+71.7\,\% unnecessary stops against 35.4\,\% for the certified geometric
+trigger (paired difference $-36.2$ points, 95\,\% CI $[-41.8, -30.7]$). The
+stop-rate advantage therefore persists under a second traffic model, although
+both are rule-based and neither is a learned agent model.
+
+\section{Outcome Partition of the Fallback}
+\label{sec:s-partition}
+The table partitions every scenario by what happens after the fallback fires, as described in the main paper.
+
+\begin{table}[h]
+\caption{Outcome partition (\% of scenarios). Residual = miss + too late +
+new harm. Induced: not-at-fault collision the no-fallback run avoids.}
+\label{tab:cost}
+\centering
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{llccccc}
+\toprule
+Data & Trigger & Miss & Too late & Prev. & New harm & Resid. / Induced \\
+\midrule
+AV2 & No fallback & 15.1 & 0.0 & 0.0 & 0.0 & 15.1 / 0.0 \\
+AV2 & LTT (certified) & 3.7 & 1.7 & 9.8 & 1.1 & 6.5 / 2.6 \\
+AV2 & Tuned geometric & 4.3 & 1.7 & 9.1 & 0.9 & 6.9 / 2.3 \\
+AV2 & Always fire & 0.0 & 1.0 & 14.1 & 3.1 & 4.1 / 6.5 \\
+nuScenes & LTT (AV2-cert.) & 13.2 & 1.0 & 8.2 & 1.7 & 15.6 / 2.4 \\
+nuScenes & Always fire & 5.0 & 1.6 & 16.2 & 3.8 & 9.7 / 6.4 \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \end{document}

@@ -49,17 +49,17 @@ happens under dataset shift. Because a rollout depends only on the tick
 at which the fallback fires, one reference run plus one forced rollout
 per decision tick evaluates every trigger, threshold, online method and
 latency by lookup, checked against direct execution. On replayed Argoverse~2, nuScenes and Waymo logs with
-reactive traffic, an in-lane stop, and harm defined as an at-fault
-collision or time-to-collision below 0.95\,s, we compare a Learn-then-Test-certified geometric trigger with
+reactive traffic and harm defined as an at-fault collision or
+time-to-collision below 0.95\,s, we compare a Learn-then-Test-certified geometric trigger with
 seven baselines. At a 5\,\% target, the certified trigger misses
 3.7\,\% of scenarios and exceeds the target in 9.5\,\% of 200 resplits,
 against 43.5\,\% for the same score tuned without a certificate, which
 stops less often. Certification buys reliability, not fewer stops. It
-also controls the alert, not the outcome: harm in the intervened run is
+controls the alert, not the outcome: harm in the intervened run is
 6.5\,\%, and 24\,\% of harmful scenarios go unalerted. Confidence and
 ensemble triggers need 68--71\,\% unnecessary stops. The certificate
-fails on nuScenes (13.2\,\% missed, with wide scene-level uncertainty)
-but holds on Waymo (2.7\,\%), so failure is
+fails on nuScenes (13.2\,\% missed, wide uncertainty) and in
+two of six held-out cities, but holds on Waymo (2.7\,\%), so failure is
 dataset-dependent. One decision tick (0.5\,s) of latency already breaks
 the target, and calibrating under that latency restores it only
 approximately.
@@ -806,23 +806,7 @@ Empirical tuning instead of LTT & 4.3 & 26.0 \\
 \bottomrule
 \end{tabular}
 \end{table}
-Table~\ref{tab:abl} shows that two components matter and one does not.
-Using the vehicle's planned, route-following path instead of a kinematic
-corridor makes the trigger fire in essentially every scenario (84.9\,\%
-stops), consistent with the route reaching conflict points that the
-harm label, which uses a kinematic extrapolation, does not count. Replacing geometry with confidence or ensemble spread costs 44--47
-points of stops. The length-aware box does not matter: a width-only
-isotropic radius performs the same (27.5\,\% versus 28.5\,\%). Delaying
-the intervention by one decision tick (0.5\,s) already lifts the miss
-rate above the target (5.3\,\%) and two ticks give 9.1\,\%, while
-stops fall (Fig.~\ref{fig:shift-latency}b), so a certificate calibrated
-at zero latency violates the target in 92\,\% and 100\,\% of resplits.
-Calibrating under the deployed latency, which the lookup supports without
-new simulation, brings the miss rate back to 3.6--4.1\,\% at 34.4\,\% and
-42.5\,\% stops, but its violation frequency, 12.0\,\% and 11.5\,\%
-(Wilson intervals [8.2, 17.2] and [7.8, 16.7]), is above $\delta$ as
-pre-registered, so we do not claim validity there
-(Supplementary Section~S9).
+Table~\ref{tab:abl} shows that two components matter and one does not. A route-following corridor makes the trigger fire in essentially every scenario (84.9\,\%), consistent with the route reaching conflict points that the kinematic harm label does not count, and replacing geometry with confidence or ensemble spread costs 44--47 points of stops. The length-aware box does not matter: a width-only isotropic radius performs the same (27.5\,\% versus 28.5\,\%). One decision tick (0.5\,s) of delay already lifts the miss rate above the target (5.3\,\%) and two ticks give 9.1\,\%, while stops fall (Fig.~\ref{fig:shift-latency}b), and the zero-latency certificate violates the target in 92\,\% and 100\,\% of resplits. Calibrating under the deployed latency, which the lookup supports without new simulation, gives 3.6--4.1\,\% missed at 34.4\,\% and 42.5\,\% stops, but its violation frequency, 12.0\,\% and 11.5\,\%, exceeds $\delta$ as pre-registered, so we do not claim validity there (Supplementary Section~S9).
 
 \subsection{Dataset shift (RQ3)}
 \label{sec:res-shift}
@@ -882,7 +866,15 @@ the covariates separates Argoverse~2 from nuScenes (cross-validated AUROC
 0.97, $n_{\mathrm{eff}}=66$) far more easily than from Waymo (0.91, 288)
 and not at all from its own test split (0.50), so the certificate failed
 under the larger measured shift and held under the smaller, but two
-targets cannot establish a trend.
+targets cannot establish a trend. Six further natural shifts, the cities
+of Argoverse~2 held out one at a time, add evidence. The certificate met
+the target in four of six (67\,\%), below the 80\,\% we pre-registered, so
+that claim is refuted. It failed in Miami (6.1\,\% missed [4.8, 7.8]) and
+Washington, DC (5.3\,\%), the two cities with the highest harm rates, and
+across these cities and the two datasets the held-out miss rate tracks the
+target's harm rate (Spearman 0.90, $n=8$, post hoc), which suggests a
+shift in the base rate of harm as a common cause (Supplementary
+Section~S10).
 
 Density-ratio weighting, using only unlabeled target covariates, moves
 the miss rate from 13.2\,\% to 7.0\,\%, still above the target, and
@@ -893,7 +885,7 @@ it reaches 2.2\,\%, below the target, but its effective sample size is only
 
 \subsection{What the intervention does, and a class-conditional certificate (post hoc)}
 \label{sec:res-cost}
-The certified quantity is the alert. Table~\ref{tab:cost} partitions every
+The certified quantity is the alert. Supplementary Section~S12 partitions every
 scenario by what happens after the fallback fires. At the certified
 threshold on Argoverse~2, 3.7\,\% of scenarios are missed, in a further
 1.7\,\% the fallback fires before harm but harm still occurs, and in
@@ -904,35 +896,10 @@ therefore 6.5\,\% (15.1\,\% without a fallback), almost twice the
 certified miss rate. On the fresh replication split it is 5.0\,\% [3.7,
 6.6] against 3.4\,\% missed. A trigger that always fires creates harm in
 3.1\,\% of scenarios. On nuScenes the same threshold leaves 15.6\,\%
-residual harm. Induced collisions are other vehicles striking the stopped
-ego, but typically long after it has stopped (median 8.3\,s after firing)
-and often where the ego starts at standstill, so this cost may partly
-reflect simulated traffic that does not yield to a stationary vehicle
-(Supplementary Section~S6). The fallback removes a large share of harm, but the
+residual harm. Induced collisions are other vehicles striking the ego, at low to moderate speed (median speed difference 2.4\,m/s), typically long after it has slowed (median 6.5\,s after firing) and often where it starts at standstill, so this cost may partly reflect simulated traffic that does not yield to a stationary vehicle (Supplementary Section~S6). The fallback removes a large share of harm, but the
 certificate does not speak to what remains, and certifying residual harm
 directly at 5\,\% required firing in nearly every scenario and still
 failed validity (Supplementary Section~S5).
-
-\begin{table}[t]
-\caption{Outcome partition (\% of scenarios). Residual = miss + too late +
-new harm. Induced: not-at-fault collision the no-fallback run avoids.}
-\label{tab:cost}
-\centering
-\scriptsize
-\setlength{\tabcolsep}{3pt}
-\begin{tabular}{llccccc}
-\toprule
-Data & Trigger & Miss & Too late & Prev. & New harm & Resid. / Induced \\
-\midrule
-AV2 & No fallback & 15.1 & 0.0 & 0.0 & 0.0 & 15.1 / 0.0 \\
-AV2 & LTT (certified) & 3.7 & 1.7 & 9.8 & 1.1 & 6.5 / 2.6 \\
-AV2 & Tuned geometric & 4.3 & 1.7 & 9.1 & 0.9 & 6.9 / 2.3 \\
-AV2 & Always fire & 0.0 & 1.0 & 14.1 & 3.1 & 4.1 / 6.5 \\
-nuScenes & LTT (AV2-cert.) & 13.2 & 1.0 & 8.2 & 1.7 & 15.6 / 2.4 \\
-nuScenes & Always fire & 5.0 & 1.6 & 16.2 & 3.8 & 9.7 / 6.4 \\
-\bottomrule
-\end{tabular}
-\end{table}
 
 \emph{Class-conditional certification and reverse shift.} A Luo-style
 class-conditional certificate at $\epsilon=0.05$ selects a threshold
@@ -952,10 +919,8 @@ Argoverse~2-certified threshold, unchanged, on 1{,}000 Waymo Open Motion
 validation scenarios~\cite{waymo2021} (9.1\,s, 1\,s of history). It misses 2.7\,\% [1.9, 3.9], below the
 5\,\% target. Hypothesis H3-W was pre-registered with the expectation
 that this interval would exclude $\alpha$ from above, as on nuScenes; it
-does exclude $\alpha$, but from below, so H3-W is \textbf{refuted}. Taken
-with H3, the guarantee's failure under shift is dataset-dependent, not
-universal: the same certified threshold fails on nuScenes and holds,
-conservatively, on Waymo. A density-ratio-weighted repair, applied for
+does exclude $\alpha$, but from below, so H3-W is \textbf{refuted} and
+failure under shift is dataset-dependent. A density-ratio-weighted repair, applied for
 consistency even though nothing here needed repairing, lowers the miss
 rate further to 1.2\,\% [0.7, 2.1] at a small increase in stops (45.1\,\%
 to 50.2\,\%).
@@ -976,14 +941,15 @@ certificate even when the source certificate transfers.
 
 \emph{Sensitivity.} Non-reactive replay traffic, a 2.0\,m/s$^2$ comfort
 deceleration and 10\,Hz decisions leave the certified miss rate below the
-target and every conclusion above unchanged. Only replay raises
-unnecessary stops, by 7.9 points, through a higher harm base rate
-(Supplementary Section~S4).
+target and every conclusion above unchanged (Supplementary Section~S4).
+Thresholds certified on reactive traffic and deployed on replay traffic
+still miss only 3.7\,\% [2.2, 6.1], with 35.4\,\% stops against 71.7\,\% for
+the tuned confidence trigger (Supplementary Section~S11).
 
 \subsection{Robustness checks (post hoc)}
 \label{sec:res-robust}
-Two objections are addressed directly, on data not used anywhere above.
-Both were pre-registered as post hoc robustness checks before running.
+Two objections are addressed on data not used above, in checks
+pre-registered as post hoc before running.
 
 \emph{Does the geometric score's advantage depend on matching the harm
 label?} The score and the nuPlan label are both proximity- and
@@ -1031,12 +997,10 @@ uncertified baselines), and its miss rate stays below $\alpha$
 \section{Scope and Future Work}
 \label{sec:discussion}
 \emph{What we claim, and what we do not.} We claim that certification is
-what makes a closed-loop trigger keep its stated alert-level miss rate,
-that it costs a measurable number of unnecessary stops, and that the
-guarantee is fragile to dataset shift and to latency. We do not claim a
-better-performing trigger, since a tuned threshold and an online method
-stop less often and the pre-registered hypothesis that said otherwise is
-refuted, and we do not claim a guarantee on the outcome.
+what makes a closed-loop trigger keep its alert-level miss rate, at a
+measurable cost in stops, and that the guarantee is fragile to shift and
+latency. We do not claim a better-performing trigger (the pre-registered
+hypothesis that said so is refuted) or a guarantee on the outcome.
 
 \emph{Alert versus outcome.} The certificate bounds the probability, over
 scenarios, that harm is not pre-empted by an alert. A deployment
@@ -1092,7 +1056,8 @@ stops, and deployed-practice confidence and ensemble triggers need
 not the outcome: harm in the intervened run is 6.5\,\%, 1.1\,\% of it
 created by the intervention, and a 5\,\% marginal target leaves about a
 quarter of harmful scenarios unalerted. The same certificate fails on
-nuScenes (13.2\,\% missed, with wide scene-level uncertainty) but holds,
+nuScenes (13.2\,\% missed, with wide uncertainty) and in two
+of six held-out Argoverse~2 cities, both with high harm rates, but holds,
 conservatively, on Waymo (2.7\,\% missed), so failure under shift is
 dataset-dependent. One decision tick of latency breaks it, and it can be
 unreachable when the target data contain harm no trigger can prevent.

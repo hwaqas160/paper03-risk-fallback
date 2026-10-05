@@ -1,0 +1,2237 @@
+{
+ "lam": 1.4701,
+ "n_scenarios": 51,
+ "results": [
+  {
+   "seed": 40,
+   "fire_step": 0,
+   "stored_steps": [
+    40,
+    96,
+    101,
+    104,
+    111
+   ],
+   "rerun_steps": [
+    40,
+    96,
+    101,
+    112
+   ],
+   "reproduced": false,
+   "log": [
+    {
+     "kind": "fire",
+     "step": 0,
+     "ego_speed": 1.309736849343073,
+     "follower_gap": 4.823443212628053,
+     "follower_speed": 0.0
+    },
+    {
+     "kind": "contact",
+     "step": 40,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.0355616776973059,
+     "other_speed": 0.1665436180838705,
+     "closing_speed": 0.1309819403865646
+    },
+    {
+     "kind": "contact",
+     "step": 96,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 2.3937390880128713,
+     "other_speed": 2.4460398299502075,
+     "closing_speed": 0.05230074193733625
+    },
+    {
+     "kind": "contact",
+     "step": 101,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 5.352845247595685,
+     "other_speed": 5.5907560263925795,
+     "closing_speed": 0.23791077879689482
+    },
+    {
+     "kind": "contact",
+     "step": 112,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.06760427181405469,
+     "other_speed": 0.16201236934592936,
+     "closing_speed": 0.09440809753187467
+    }
+   ]
+  },
+  {
+   "seed": 85,
+   "fire_step": 50,
+   "stored_steps": [
+    94
+   ],
+   "rerun_steps": [
+    94
+   ],
+   "reproduced": true,
+   "log": [
+    {
+     "kind": "fire",
+     "step": 50,
+     "ego_speed": 1.160077957196858,
+     "follower_gap": 3.7418329481102344,
+     "follower_speed": 2.0533689668835959e-13
+    },
+    {
+     "kind": "contact",
+     "step": 94,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 1.5125948958001434,
+     "other_speed": 3.9175458606465314,
+     "closing_speed": 2.404950964846388
+    }
+   ]
+  },
+  {
+   "seed": 110,
+   "fire_step": 5,
+   "stored_steps": [
+    59
+   ],
+   "rerun_steps": [
+    59
+   ],
+   "reproduced": true,
+   "log": [
+    {
+     "kind": "fire",
+     "step": 5,
+     "ego_speed": 3.2706384131606705,
+     "follower_gap": 21.4162812759387,
+     "follower_speed": 3.9559635356691696
+    },
+    {
+     "kind": "contact",
+     "step": 59,
+     "type": "active_lateral",
+     "at_fault": false,
+     "ego_speed": 0.04054042460836824,
+     "other_speed": 6.032311591031595,
+     "closing_speed": 5.991771166423227
+    }
+   ]
+  },
+  {
+   "seed": 145,
+   "fire_step": 40,
+   "stored_steps": [
+    105
+   ],
+   "rerun_steps": [
+    105
+   ],
+   "reproduced": true,
+   "log": [
+    {
+     "kind": "fire",
+     "step": 40,
+     "ego_speed": 10.914415601014909,
+     "follower_gap": null,
+     "follower_speed": null
+    },
+    {
+     "kind": "contact",
+     "step": 105,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.09433485900693578,
+     "other_speed": 6.201492081781779,
+     "closing_speed": 6.107157222774843
+    }
+   ]
+  },
+  {
+   "seed": 174,
+   "fire_step": 30,
+   "stored_steps": [
+    108,
+    113,
+    117
+   ],
+   "rerun_steps": [
+    108,
+    119
+   ],
+   "reproduced": false,
+   "log": [
+    {
+     "kind": "fire",
+     "step": 30,
+     "ego_speed": 8.509405301977653,
+     "follower_gap": 9.183707747273683,
+     "follower_speed": 2.2867516941512727e-16
+    },
+    {
+     "kind": "contact",
+     "step": 108,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.9589974982522428,
+     "other_speed": 3.0784348991219055,
+     "closing_speed": 2.119437400869663
+    },
+    {
+     "kind": "contact",
+     "step": 119,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.08651134682627507,
+     "other_speed": 0.12366873625805938,
+     "closing_speed": 0.037157389431784316
+    }
+   ]
+  },
+  {
+   "seed": 184,
+   "fire_step": 0,
+   "stored_steps": [
+    63,
+    76
+   ],
+   "rerun_steps": [
+    63,
+    76
+   ],
+   "reproduced": true,
+   "log": [
+    {
+     "kind": "fire",
+     "step": 0,
+     "ego_speed": 0.007142103021184771,
+     "follower_gap": 8.332424969645412,
+     "follower_speed": 0.0
+    },
+    {
+     "kind": "contact",
+     "step": 63,
+     "type": "active_lateral",
+     "at_fault": false,
+     "ego_speed": 0.15015886204303466,
+     "other_speed": 3.5018274192533196,
+     "closing_speed": 3.351668557210285
+    },
+    {
+     "kind": "contact",
+     "step": 76,
+     "type": "active_lateral",
+     "at_fault": false,
+     "ego_speed": 3.8189530696524003,
+     "other_speed": 4.932645578997112,
+     "closing_speed": 1.113692509344712
+    }
+   ]
+  },
+  {
+   "seed": 555,
+   "fire_step": 0,
+   "stored_steps": [
+    75,
+    80
+   ],
+   "rerun_steps": [
+    75,
+    80
+   ],
+   "reproduced": true,
+   "log": [
+    {
+     "kind": "fire",
+     "step": 0,
+     "ego_speed": 3.438313801885492e-05,
+     "follower_gap": 8.063129796837792,
+     "follower_speed": 9.63985638223572e-17
+    },
+    {
+     "kind": "contact",
+     "step": 75,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.05115628040454689,
+     "other_speed": 11.091493630375561,
+     "closing_speed": 11.040337349971015
+    },
+    {
+     "kind": "contact",
+     "step": 80,
+     "type": "active_lateral",
+     "at_fault": false,
+     "ego_speed": 0.06780688515847803,
+     "other_speed": 10.954882039853922,
+     "closing_speed": 10.887075154695445
+    }
+   ]
+  },
+  {
+   "seed": 568,
+   "fire_step": 40,
+   "stored_steps": [
+    104,
+    112,
+    115,
+    119,
+    121,
+    129
+   ],
+   "rerun_steps": [
+    104,
+    110,
+    115,
+    122,
+    127
+   ],
+   "reproduced": false,
+   "log": [
+    {
+     "kind": "fire",
+     "step": 40,
+     "ego_speed": 10.339070228308707,
+     "follower_gap": null,
+     "follower_speed": null
+    },
+    {
+     "kind": "contact",
+     "step": 104,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 4.700640776675726,
+     "other_speed": 4.61647008166409,
+     "closing_speed": 0.0841706950116361
+    },
+    {
+     "kind": "contact",
+     "step": 110,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.3024510852102493,
+     "other_speed": 0.5274969520736348,
+     "closing_speed": 0.22504586686338546
+    },
+    {
+     "kind": "contact",
+     "step": 115,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.10912741425743279,
+     "other_speed": 0.040890182987532976,
+     "closing_speed": 0.0682372312698998
+    },
+    {
+     "kind": "contact",
+     "step": 122,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.0883497105807935,
+     "other_speed": 0.10852446650199472,
+     "closing_speed": 0.02017475592120123
+    },
+    {
+     "kind": "contact",
+     "step": 127,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.10093325308592334,
+     "other_speed": 0.039225781573546746,
+     "closing_speed": 0.06170747151237659
+    }
+   ]
+  },
+  {
+   "seed": 722,
+   "fire_step": 5,
+   "stored_steps": [
+    42
+   ],
+   "rerun_steps": [
+    42
+   ],
+   "reproduced": true,
+   "log": [
+    {
+     "kind": "fire",
+     "step": 5,
+     "ego_speed": 2.1877394940368022,
+     "follower_gap": null,
+     "follower_speed": null
+    },
+    {
+     "kind": "contact",
+     "step": 42,
+     "type": "active_lateral",
+     "at_fault": false,
+     "ego_speed": 0.6727019029929113,
+     "other_speed": 2.879058727754823,
+     "closing_speed": 2.2063568247619116
+    }
+   ]
+  },
+  {
+   "seed": 1045,
+   "fire_step": 0,
+   "stored_steps": [
+    5
+   ],
+   "rerun_steps": [
+    5
+   ],
+   "reproduced": true,
+   "log": [
+    {
+     "kind": "fire",
+     "step": 0,
+     "ego_speed": 0.0008139457220719108,
+     "follower_gap": 7.312982240770592,
+     "follower_speed": 0.0
+    },
+    {
+     "kind": "contact",
+     "step": 5,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.07400452198623765,
+     "other_speed": 2.1976757872576598,
+     "closing_speed": 2.123671265271422
+    }
+   ]
+  },
+  {
+   "seed": 1140,
+   "fire_step": 10,
+   "stored_steps": [
+    86
+   ],
+   "rerun_steps": [
+    86
+   ],
+   "reproduced": true,
+   "log": [
+    {
+     "kind": "fire",
+     "step": 10,
+     "ego_speed": 4.539479378033141,
+     "follower_gap": null,
+     "follower_speed": null
+    },
+    {
+     "kind": "contact",
+     "step": 86,
+     "type": "active_lateral",
+     "at_fault": false,
+     "ego_speed": 0.054357486492691065,
+     "other_speed": 3.399908195096564,
+     "closing_speed": 3.345550708603873
+    }
+   ]
+  },
+  {
+   "seed": 1149,
+   "fire_step": 55,
+   "stored_steps": [
+    62
+   ],
+   "rerun_steps": [
+    62
+   ],
+   "reproduced": true,
+   "log": [
+    {
+     "kind": "fire",
+     "step": 55,
+     "ego_speed": 11.100708196654857,
+     "follower_gap": 32.197759478325125,
+     "follower_speed": 5.891404742911359
+    },
+    {
+     "kind": "contact",
+     "step": 62,
+     "type": "active_lateral",
+     "at_fault": false,
+     "ego_speed": 8.124137939160653,
+     "other_speed": 14.169461586760882,
+     "closing_speed": 6.045323647600229
+    }
+   ]
+  },
+  {
+   "seed": 1222,
+   "fire_step": 0,
+   "stored_steps": [
+    50
+   ],
+   "rerun_steps": [
+    50,
+    53
+   ],
+   "reproduced": false,
+   "log": [
+    {
+     "kind": "fire",
+     "step": 0,
+     "ego_speed": 0.22491767270976554,
+     "follower_gap": 7.9194807077889955,
+     "follower_speed": 0.0
+    },
+    {
+     "kind": "contact",
+     "step": 50,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.5763074648909999,
+     "other_speed": 0.6941473893051555,
+     "closing_speed": 0.11783992441415558
+    },
+    {
+     "kind": "contact",
+     "step": 53,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.012037085046492655,
+     "other_speed": 0.055913426141467715,
+     "closing_speed": 0.04387634109497506
+    }
+   ]
+  },
+  {
+   "seed": 1406,
+   "fire_step": 15,
+   "stored_steps": [
+    73
+   ],
+   "rerun_steps": [
+    72
+   ],
+   "reproduced": false,
+   "log": [
+    {
+     "kind": "fire",
+     "step": 15,
+     "ego_speed": 6.683269326101684,
+     "follower_gap": 26.73631117053084,
+     "follower_speed": 3.553473447534514e-08
+    },
+    {
+     "kind": "contact",
+     "step": 72,
+     "type": "active_lateral",
+     "at_fault": false,
+     "ego_speed": 0.048349326762699214,
+     "other_speed": 2.9254906266311433,
+     "closing_speed": 2.8771412998684442
+    }
+   ]
+  },
+  {
+   "seed": 1433,
+   "fire_step": 0,
+   "stored_steps": [
+    54
+   ],
+   "rerun_steps": [
+    54
+   ],
+   "reproduced": true,
+   "log": [
+    {
+     "kind": "fire",
+     "step": 0,
+     "ego_speed": 2.4811274810181727,
+     "follower_gap": 19.082761341485355,
+     "follower_speed": 7.738982610874401e-10
+    },
+    {
+     "kind": "contact",
+     "step": 54,
+     "type": "active_lateral",
+     "at_fault": false,
+     "ego_speed": 0.22116737211054135,
+     "other_speed": 8.6694372372318,
+     "closing_speed": 8.44826986512126
+    }
+   ]
+  },
+  {
+   "seed": 1478,
+   "fire_step": 20,
+   "stored_steps": [
+    104,
+    109
+   ],
+   "rerun_steps": [
+    104
+   ],
+   "reproduced": false,
+   "log": [
+    {
+     "kind": "fire",
+     "step": 20,
+     "ego_speed": 1.269354266635851,
+     "follower_gap": 4.032588903594702,
+     "follower_speed": 0.003726345055400392
+    },
+    {
+     "kind": "contact",
+     "step": 104,
+     "type": "active_lateral",
+     "at_fault": false,
+     "ego_speed": 1.4857689603377737,
+     "other_speed": 0.015481190947437358,
+     "closing_speed": 1.4702877693903365
+    },
+    {
+     "kind": "contact",
+     "step": 108,
+     "type": "stopped_track",
+     "at_fault": true,
+     "ego_speed": 0.43200181321404396,
+     "other_speed": 3.966348667578676e-06,
+     "closing_speed": 0.4319978468653764
+    }
+   ]
+  },
+  {
+   "seed": 1530,
+   "fire_step": 15,
+   "stored_steps": [
+    107
+   ],
+   "rerun_steps": [
+    107
+   ],
+   "reproduced": true,
+   "log": [
+    {
+     "kind": "fire",
+     "step": 15,
+     "ego_speed": 6.140035754650488,
+     "follower_gap": 11.503752424096644,
+     "follower_speed": 0.8272301084095441
+    },
+    {
+     "kind": "contact",
+     "step": 107,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.31220732398028245,
+     "other_speed": 1.5993773842039436,
+     "closing_speed": 1.287170060223661
+    }
+   ]
+  },
+  {
+   "seed": 1537,
+   "fire_step": 30,
+   "stored_steps": [
+    95,
+    106
+   ],
+   "rerun_steps": [
+    95,
+    102,
+    105
+   ],
+   "reproduced": false,
+   "log": [
+    {
+     "kind": "fire",
+     "step": 30,
+     "ego_speed": 1.0901206730547877,
+     "follower_gap": 3.7976304167991306,
+     "follower_speed": 0.10145565439714173
+    },
+    {
+     "kind": "contact",
+     "step": 95,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.971501974313914,
+     "other_speed": 3.2468256564916627,
+     "closing_speed": 2.2753236821777487
+    },
+    {
+     "kind": "contact",
+     "step": 102,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.193820488384107,
+     "other_speed": 0.3298581788485291,
+     "closing_speed": 0.13603769046442207
+    },
+    {
+     "kind": "contact",
+     "step": 105,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.20277211475564083,
+     "other_speed": 0.24316530792274815,
+     "closing_speed": 0.04039319316710732
+    }
+   ]
+  },
+  {
+   "seed": 1584,
+   "fire_step": 0,
+   "stored_steps": [
+    25,
+    28,
+    40,
+    42,
+    44,
+    51,
+    58,
+    60,
+    64,
+    68,
+    78,
+    80,
+    92,
+    98,
+    100,
+    102,
+    108,
+    114,
+    128
+   ],
+   "rerun_steps": [
+    25,
+    28,
+    46,
+    52,
+    72,
+    74,
+    82,
+    94,
+    96,
+    100,
+    106,
+    108,
+    110,
+    120
+   ],
+   "reproduced": false,
+   "log": [
+    {
+     "kind": "fire",
+     "step": 0,
+     "ego_speed": 0.0,
+     "follower_gap": 10.098462511787442,
+     "follower_speed": 0.0
+    },
+    {
+     "kind": "contact",
+     "step": 25,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.3665083070514487,
+     "other_speed": 0.09909870521067392,
+     "closing_speed": 0.2674096018407748
+    },
+    {
+     "kind": "contact",
+     "step": 28,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.0697785503965134,
+     "other_speed": 0.11422137867906154,
+     "closing_speed": 0.04444282828254814
+    },
+    {
+     "kind": "contact",
+     "step": 46,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.03192963909235123,
+     "other_speed": 0.12222170062676152,
+     "closing_speed": 0.0902920615344103
+    },
+    {
+     "kind": "contact",
+     "step": 52,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.013061958549539808,
+     "other_speed": 0.14784652104739265,
+     "closing_speed": 0.13478456249785284
+    },
+    {
+     "kind": "contact",
+     "step": 72,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.023816737879973886,
+     "other_speed": 0.14411738139005642,
+     "closing_speed": 0.12030064351008253
+    },
+    {
+     "kind": "contact",
+     "step": 74,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.025105308592977688,
+     "other_speed": 0.13615120170745398,
+     "closing_speed": 0.1110458931144763
+    },
+    {
+     "kind": "contact",
+     "step": 82,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.018186654915712707,
+     "other_speed": 0.13301115730361654,
+     "closing_speed": 0.11482450238790383
+    },
+    {
+     "kind": "contact",
+     "step": 94,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.018384704078349513,
+     "other_speed": 0.13451046519815332,
+     "closing_speed": 0.11612576111980381
+    },
+    {
+     "kind": "contact",
+     "step": 96,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.031086696599152745,
+     "other_speed": 0.1263573231327578,
+     "closing_speed": 0.09527062653360505
+    },
+    {
+     "kind": "contact",
+     "step": 100,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.04072343826375755,
+     "other_speed": 0.14602178243237873,
+     "closing_speed": 0.10529834416862119
+    },
+    {
+     "kind": "contact",
+     "step": 106,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.03024135168487688,
+     "other_speed": 0.1378403350802682,
+     "closing_speed": 0.10759898339539131
+    },
+    {
+     "kind": "contact",
+     "step": 108,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.026515543546804313,
+     "other_speed": 0.13097233555901155,
+     "closing_speed": 0.10445679201220724
+    },
+    {
+     "kind": "contact",
+     "step": 110,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.029544227190265407,
+     "other_speed": 0.14085407797220703,
+     "closing_speed": 0.11130985078194162
+    },
+    {
+     "kind": "contact",
+     "step": 120,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.0407600194438001,
+     "other_speed": 0.13815363415141105,
+     "closing_speed": 0.09739361470761095
+    }
+   ]
+  },
+  {
+   "seed": 1631,
+   "fire_step": 15,
+   "stored_steps": [
+    43
+   ],
+   "rerun_steps": [
+    43
+   ],
+   "reproduced": true,
+   "log": [
+    {
+     "kind": "fire",
+     "step": 15,
+     "ego_speed": 8.832410387007881,
+     "follower_gap": 48.27957342095951,
+     "follower_speed": 2.461208207867923
+    },
+    {
+     "kind": "contact",
+     "step": 43,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.995211936749686,
+     "other_speed": 3.4931412905717965,
+     "closing_speed": 2.4979293538221103
+    }
+   ]
+  },
+  {
+   "seed": 1653,
+   "fire_step": 5,
+   "stored_steps": [
+    111
+   ],
+   "rerun_steps": [
+    111
+   ],
+   "reproduced": true,
+   "log": [
+    {
+     "kind": "fire",
+     "step": 5,
+     "ego_speed": 7.191559709604692,
+     "follower_gap": 21.22695332642708,
+     "follower_speed": 0.17008218638822098
+    },
+    {
+     "kind": "contact",
+     "step": 111,
+     "type": "active_lateral",
+     "at_fault": false,
+     "ego_speed": 0.13081297507982992,
+     "other_speed": 7.380685088450917,
+     "closing_speed": 7.2498721133710875
+    }
+   ]
+  },
+  {
+   "seed": 1934,
+   "fire_step": 0,
+   "stored_steps": [
+    87
+   ],
+   "rerun_steps": [
+    87
+   ],
+   "reproduced": true,
+   "log": [
+    {
+     "kind": "fire",
+     "step": 0,
+     "ego_speed": 0.00271118419193661,
+     "follower_gap": null,
+     "follower_speed": null
+    },
+    {
+     "kind": "contact",
+     "step": 87,
+     "type": "active_lateral",
+     "at_fault": false,
+     "ego_speed": 0.3607180145177879,
+     "other_speed": 6.497304425793642,
+     "closing_speed": 6.136586411275854
+    }
+   ]
+  },
+  {
+   "seed": 1940,
+   "fire_step": 10,
+   "stored_steps": [
+    61
+   ],
+   "rerun_steps": [
+    61
+   ],
+   "reproduced": true,
+   "log": [
+    {
+     "kind": "fire",
+     "step": 10,
+     "ego_speed": 2.8162223808794247,
+     "follower_gap": null,
+     "follower_speed": null
+    },
+    {
+     "kind": "contact",
+     "step": 61,
+     "type": "active_lateral",
+     "at_fault": false,
+     "ego_speed": 0.06242088437189905,
+     "other_speed": 3.5564211194893707,
+     "closing_speed": 3.4940002351174715
+    }
+   ]
+  },
+  {
+   "seed": 1969,
+   "fire_step": 0,
+   "stored_steps": [
+    85,
+    113,
+    115,
+    119,
+    127,
+    129
+   ],
+   "rerun_steps": [
+    85,
+    114,
+    117,
+    123,
+    125,
+    127,
+    129
+   ],
+   "reproduced": false,
+   "log": [
+    {
+     "kind": "fire",
+     "step": 0,
+     "ego_speed": 0.8996307114206118,
+     "follower_gap": 4.61745936063771,
+     "follower_speed": 0.0
+    },
+    {
+     "kind": "contact",
+     "step": 85,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 3.639333215459969,
+     "other_speed": 2.695853957229116,
+     "closing_speed": 0.9434792582308531
+    },
+    {
+     "kind": "contact",
+     "step": 114,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.0411129469237836,
+     "other_speed": 0.15324750248657099,
+     "closing_speed": 0.11213455556278738
+    },
+    {
+     "kind": "contact",
+     "step": 117,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.04431362302257141,
+     "other_speed": 0.13009573214661255,
+     "closing_speed": 0.08578210912404113
+    },
+    {
+     "kind": "contact",
+     "step": 123,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.06657819618100907,
+     "other_speed": 0.14173670107966746,
+     "closing_speed": 0.07515850489865838
+    },
+    {
+     "kind": "contact",
+     "step": 125,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.058000599632570427,
+     "other_speed": 0.1350836458300246,
+     "closing_speed": 0.07708304619745418
+    },
+    {
+     "kind": "contact",
+     "step": 127,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.06163370582569017,
+     "other_speed": 0.13849716790305172,
+     "closing_speed": 0.07686346207736156
+    },
+    {
+     "kind": "contact",
+     "step": 129,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.0596890138147647,
+     "other_speed": 0.13650486318161653,
+     "closing_speed": 0.07681584936685183
+    }
+   ]
+  },
+  {
+   "seed": 2033,
+   "fire_step": 0,
+   "stored_steps": [
+    86,
+    97,
+    99,
+    101,
+    103
+   ],
+   "rerun_steps": [
+    86,
+    103,
+    107,
+    113,
+    121
+   ],
+   "reproduced": false,
+   "log": [
+    {
+     "kind": "fire",
+     "step": 0,
+     "ego_speed": 0.0,
+     "follower_gap": null,
+     "follower_speed": null
+    },
+    {
+     "kind": "contact",
+     "step": 86,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 4.899223652133724,
+     "other_speed": 4.025941456597409,
+     "closing_speed": 0.8732821955363148
+    },
+    {
+     "kind": "contact",
+     "step": 103,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.07057392203981387,
+     "other_speed": 0.059562519991445136,
+     "closing_speed": 0.011011402048368736
+    },
+    {
+     "kind": "contact",
+     "step": 107,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.08041531547572273,
+     "other_speed": 0.023057216728635532,
+     "closing_speed": 0.057358098747087194
+    },
+    {
+     "kind": "contact",
+     "step": 113,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.054603934310352424,
+     "other_speed": 0.03538391767502037,
+     "closing_speed": 0.019220016635332057
+    },
+    {
+     "kind": "contact",
+     "step": 121,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.0878723144686697,
+     "other_speed": 0.04063633029568901,
+     "closing_speed": 0.04723598417298068
+    }
+   ]
+  },
+  {
+   "seed": 2088,
+   "fire_step": 0,
+   "stored_steps": [
+    72
+   ],
+   "rerun_steps": [
+    72
+   ],
+   "reproduced": true,
+   "log": [
+    {
+     "kind": "fire",
+     "step": 0,
+     "ego_speed": 0.09579389910197815,
+     "follower_gap": 4.8894080101058846,
+     "follower_speed": 0.0
+    },
+    {
+     "kind": "contact",
+     "step": 72,
+     "type": "active_lateral",
+     "at_fault": false,
+     "ego_speed": 0.15323673297163035,
+     "other_speed": 0.4461357584149431,
+     "closing_speed": 0.2928990254433127
+    }
+   ]
+  },
+  {
+   "seed": 2141,
+   "fire_step": 0,
+   "stored_steps": [
+    91
+   ],
+   "rerun_steps": [
+    91
+   ],
+   "reproduced": true,
+   "log": [
+    {
+     "kind": "fire",
+     "step": 0,
+     "ego_speed": 1.8294461247723162e-07,
+     "follower_gap": 3.6800191767773436,
+     "follower_speed": 1.5500732151869861e-16
+    },
+    {
+     "kind": "contact",
+     "step": 91,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 1.192477489536641,
+     "other_speed": 3.580197978981929,
+     "closing_speed": 2.3877204894452877
+    }
+   ]
+  },
+  {
+   "seed": 2150,
+   "fire_step": 0,
+   "stored_steps": [
+    105,
+    113
+   ],
+   "rerun_steps": [
+    105,
+    113
+   ],
+   "reproduced": true,
+   "log": [
+    {
+     "kind": "fire",
+     "step": 0,
+     "ego_speed": 0.00031629725053180943,
+     "follower_gap": 3.6873077144965722,
+     "follower_speed": 0.0
+    },
+    {
+     "kind": "contact",
+     "step": 105,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.6022515452106111,
+     "other_speed": 2.258220209214426,
+     "closing_speed": 1.6559686640038147
+    },
+    {
+     "kind": "contact",
+     "step": 113,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.05782979483862004,
+     "other_speed": 0.15233013178044344,
+     "closing_speed": 0.0945003369418234
+    }
+   ]
+  },
+  {
+   "seed": 2349,
+   "fire_step": 0,
+   "stored_steps": [
+    69,
+    80,
+    86
+   ],
+   "rerun_steps": [
+    69
+   ],
+   "reproduced": false,
+   "log": [
+    {
+     "kind": "fire",
+     "step": 0,
+     "ego_speed": 0.5053113818875122,
+     "follower_gap": 5.870565066241397,
+     "follower_speed": 6.443242635193668
+    },
+    {
+     "kind": "contact",
+     "step": 69,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.36427163222737907,
+     "other_speed": 0.037756202160400675,
+     "closing_speed": 0.3265154300669784
+    }
+   ]
+  },
+  {
+   "seed": 2361,
+   "fire_step": 0,
+   "stored_steps": [
+    91
+   ],
+   "rerun_steps": [
+    91
+   ],
+   "reproduced": true,
+   "log": [
+    {
+     "kind": "fire",
+     "step": 0,
+     "ego_speed": 0.015135197270271367,
+     "follower_gap": null,
+     "follower_speed": null
+    },
+    {
+     "kind": "contact",
+     "step": 91,
+     "type": "active_lateral",
+     "at_fault": false,
+     "ego_speed": 3.224702136654918,
+     "other_speed": 15.021233329218408,
+     "closing_speed": 11.79653119256349
+    }
+   ]
+  },
+  {
+   "seed": 2365,
+   "fire_step": 5,
+   "stored_steps": [
+    44,
+    46
+   ],
+   "rerun_steps": [
+    44,
+    46
+   ],
+   "reproduced": true,
+   "log": [
+    {
+     "kind": "fire",
+     "step": 5,
+     "ego_speed": 1.6403655853712162,
+     "follower_gap": 27.677982696089575,
+     "follower_speed": 0.16932404008212826
+    },
+    {
+     "kind": "contact",
+     "step": 44,
+     "type": "active_lateral",
+     "at_fault": false,
+     "ego_speed": 1.2557894424047567,
+     "other_speed": 4.5641538476250805,
+     "closing_speed": 3.308364405220324
+    },
+    {
+     "kind": "contact",
+     "step": 46,
+     "type": "active_lateral",
+     "at_fault": false,
+     "ego_speed": 2.070663307796055,
+     "other_speed": 5.297269728075693,
+     "closing_speed": 3.226606420279638
+    }
+   ]
+  },
+  {
+   "seed": 2447,
+   "fire_step": 5,
+   "stored_steps": [
+    108
+   ],
+   "rerun_steps": [
+    108
+   ],
+   "reproduced": true,
+   "log": [
+    {
+     "kind": "fire",
+     "step": 5,
+     "ego_speed": 0.030868417555139922,
+     "follower_gap": 9.890963742025951,
+     "follower_speed": 1.6569057144716057
+    },
+    {
+     "kind": "contact",
+     "step": 108,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.6482948757809401,
+     "other_speed": 2.6379866623644643,
+     "closing_speed": 1.9896917865835242
+    }
+   ]
+  },
+  {
+   "seed": 2492,
+   "fire_step": 25,
+   "stored_steps": [
+    98
+   ],
+   "rerun_steps": [
+    98
+   ],
+   "reproduced": true,
+   "log": [
+    {
+     "kind": "fire",
+     "step": 25,
+     "ego_speed": 9.506230927252314,
+     "follower_gap": 19.180575143778988,
+     "follower_speed": 4.598585374400404
+    },
+    {
+     "kind": "contact",
+     "step": 98,
+     "type": "active_lateral",
+     "at_fault": false,
+     "ego_speed": 0.08275650228396972,
+     "other_speed": 1.28123815863093,
+     "closing_speed": 1.1984816563469602
+    }
+   ]
+  },
+  {
+   "seed": 2513,
+   "fire_step": 15,
+   "stored_steps": [
+    88
+   ],
+   "rerun_steps": [
+    88
+   ],
+   "reproduced": true,
+   "log": [
+    {
+     "kind": "fire",
+     "step": 15,
+     "ego_speed": 9.477508658541304,
+     "follower_gap": 39.4552168810381,
+     "follower_speed": 4.555231759610946
+    },
+    {
+     "kind": "contact",
+     "step": 88,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.016326984834126246,
+     "other_speed": 3.445808961451558,
+     "closing_speed": 3.429481976617432
+    }
+   ]
+  },
+  {
+   "seed": 2572,
+   "fire_step": 0,
+   "stored_steps": [
+    85,
+    94,
+    96,
+    98,
+    100,
+    103,
+    106,
+    113,
+    120,
+    123,
+    128
+   ],
+   "rerun_steps": [
+    85,
+    94,
+    96,
+    102,
+    108,
+    111,
+    120,
+    123,
+    126
+   ],
+   "reproduced": false,
+   "log": [
+    {
+     "kind": "fire",
+     "step": 0,
+     "ego_speed": 2.1560102695920545e-06,
+     "follower_gap": 4.37207715511312,
+     "follower_speed": 0.0
+    },
+    {
+     "kind": "contact",
+     "step": 82,
+     "type": "stopped_track",
+     "at_fault": true,
+     "ego_speed": 0.057059245349110874,
+     "other_speed": 2.5532864932811504e-13,
+     "closing_speed": 0.05705924534885554
+    },
+    {
+     "kind": "contact",
+     "step": 85,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.9255293329650325,
+     "other_speed": 1.497540610703371,
+     "closing_speed": 0.5720112777383386
+    },
+    {
+     "kind": "contact",
+     "step": 94,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.07180164688712946,
+     "other_speed": 0.18305795360042304,
+     "closing_speed": 0.11125630671329358
+    },
+    {
+     "kind": "contact",
+     "step": 96,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.06430214191380541,
+     "other_speed": 0.12087025290844015,
+     "closing_speed": 0.05656811099463474
+    },
+    {
+     "kind": "contact",
+     "step": 102,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.06156227649237883,
+     "other_speed": 0.15104938495979717,
+     "closing_speed": 0.08948710846741834
+    },
+    {
+     "kind": "contact",
+     "step": 108,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.05961696129269277,
+     "other_speed": 0.16634647131663907,
+     "closing_speed": 0.1067295100239463
+    },
+    {
+     "kind": "contact",
+     "step": 111,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.07274372324592468,
+     "other_speed": 0.20348893699326306,
+     "closing_speed": 0.13074521374733838
+    },
+    {
+     "kind": "contact",
+     "step": 120,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.07000842055001817,
+     "other_speed": 0.15794541586179905,
+     "closing_speed": 0.08793699531178088
+    },
+    {
+     "kind": "contact",
+     "step": 123,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.06236239575968357,
+     "other_speed": 0.1850697868876562,
+     "closing_speed": 0.12270739112797265
+    },
+    {
+     "kind": "contact",
+     "step": 126,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.0692442332375252,
+     "other_speed": 0.13425046893786768,
+     "closing_speed": 0.06500623570034249
+    }
+   ]
+  },
+  {
+   "seed": 2586,
+   "fire_step": 0,
+   "stored_steps": [
+    46
+   ],
+   "rerun_steps": [
+    46
+   ],
+   "reproduced": true,
+   "log": [
+    {
+     "kind": "fire",
+     "step": 0,
+     "ego_speed": 0.000574719896760826,
+     "follower_gap": 6.556374031764723,
+     "follower_speed": 0.0
+    },
+    {
+     "kind": "contact",
+     "step": 46,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.18882990427721394,
+     "other_speed": 3.3910823968619113,
+     "closing_speed": 3.202252492584697
+    }
+   ]
+  },
+  {
+   "seed": 2802,
+   "fire_step": 50,
+   "stored_steps": [
+    107
+   ],
+   "rerun_steps": [
+    107
+   ],
+   "reproduced": true,
+   "log": [
+    {
+     "kind": "fire",
+     "step": 50,
+     "ego_speed": 11.111060876285459,
+     "follower_gap": 59.67778389614652,
+     "follower_speed": 10.727822351761162
+    },
+    {
+     "kind": "contact",
+     "step": 107,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.09524016843656315,
+     "other_speed": 11.047169755187474,
+     "closing_speed": 10.95192958675091
+    }
+   ]
+  },
+  {
+   "seed": 2814,
+   "fire_step": 25,
+   "stored_steps": [
+    43
+   ],
+   "rerun_steps": [
+    43
+   ],
+   "reproduced": true,
+   "log": [
+    {
+     "kind": "fire",
+     "step": 25,
+     "ego_speed": 5.9515073632480275,
+     "follower_gap": 10.328778552793892,
+     "follower_speed": 5.921399452724709e-16
+    },
+    {
+     "kind": "contact",
+     "step": 43,
+     "type": "active_lateral",
+     "at_fault": false,
+     "ego_speed": 1.9967325557327313,
+     "other_speed": 5.957609908686842,
+     "closing_speed": 3.9608773529541104
+    }
+   ]
+  },
+  {
+   "seed": 2859,
+   "fire_step": 0,
+   "stored_steps": [
+    97
+   ],
+   "rerun_steps": [
+    97
+   ],
+   "reproduced": true,
+   "log": [
+    {
+     "kind": "fire",
+     "step": 0,
+     "ego_speed": 0.0,
+     "follower_gap": 4.971400564687614,
+     "follower_speed": 0.4063242123683622
+    },
+    {
+     "kind": "contact",
+     "step": 97,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 1.853765227150308,
+     "other_speed": 4.205921338948688,
+     "closing_speed": 2.35215611179838
+    }
+   ]
+  },
+  {
+   "seed": 2927,
+   "fire_step": 0,
+   "stored_steps": [
+    104,
+    113,
+    118,
+    125,
+    127
+   ],
+   "rerun_steps": [
+    104,
+    113,
+    115
+   ],
+   "reproduced": false,
+   "log": [
+    {
+     "kind": "fire",
+     "step": 0,
+     "ego_speed": 2.7687968881075518e-08,
+     "follower_gap": 9.15807562548704,
+     "follower_speed": 0.0
+    },
+    {
+     "kind": "contact",
+     "step": 104,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 3.0925783680196024,
+     "other_speed": 2.6018583639142725,
+     "closing_speed": 0.4907200041053299
+    },
+    {
+     "kind": "contact",
+     "step": 113,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.03768299586606559,
+     "other_speed": 0.03921140427128124,
+     "closing_speed": 0.0015284084052156477
+    },
+    {
+     "kind": "contact",
+     "step": 115,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.02200169297118164,
+     "other_speed": 0.05902430403051084,
+     "closing_speed": 0.0370226110593292
+    }
+   ]
+  },
+  {
+   "seed": 2973,
+   "fire_step": 35,
+   "stored_steps": [
+    103
+   ],
+   "rerun_steps": [
+    103
+   ],
+   "reproduced": true,
+   "log": [
+    {
+     "kind": "fire",
+     "step": 35,
+     "ego_speed": 1.062793003733251,
+     "follower_gap": 3.70818711919798,
+     "follower_speed": 0.0
+    },
+    {
+     "kind": "contact",
+     "step": 103,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.07842656620491481,
+     "other_speed": 6.666641909855346,
+     "closing_speed": 6.588215343650432
+    }
+   ]
+  },
+  {
+   "seed": 2990,
+   "fire_step": 10,
+   "stored_steps": [
+    95
+   ],
+   "rerun_steps": [
+    95
+   ],
+   "reproduced": true,
+   "log": [
+    {
+     "kind": "fire",
+     "step": 10,
+     "ego_speed": 4.128810605937631,
+     "follower_gap": null,
+     "follower_speed": null
+    },
+    {
+     "kind": "contact",
+     "step": 95,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.06528285103087733,
+     "other_speed": 7.475910309563178,
+     "closing_speed": 7.4106274585323
+    }
+   ]
+  },
+  {
+   "seed": 3057,
+   "fire_step": 75,
+   "stored_steps": [
+    88,
+    91,
+    99,
+    107,
+    109,
+    117,
+    124,
+    126
+   ],
+   "rerun_steps": [
+    88,
+    91,
+    99,
+    109,
+    112,
+    117,
+    121,
+    124
+   ],
+   "reproduced": false,
+   "log": [
+    {
+     "kind": "fire",
+     "step": 75,
+     "ego_speed": 2.9637265493589724,
+     "follower_gap": 13.714244168155608,
+     "follower_speed": 11.05770257998495
+    },
+    {
+     "kind": "contact",
+     "step": 88,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 5.186539184301795,
+     "other_speed": 3.7872748001504144,
+     "closing_speed": 1.3992643841513805
+    },
+    {
+     "kind": "contact",
+     "step": 91,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 2.445330919420748,
+     "other_speed": 4.050819189624665,
+     "closing_speed": 1.6054882702039168
+    },
+    {
+     "kind": "contact",
+     "step": 99,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.32271876394250154,
+     "other_speed": 0.49154426698609405,
+     "closing_speed": 0.1688255030435925
+    },
+    {
+     "kind": "contact",
+     "step": 109,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.05375757407269736,
+     "other_speed": 0.06504738489714523,
+     "closing_speed": 0.011289810824447875
+    },
+    {
+     "kind": "contact",
+     "step": 112,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.022121579260809484,
+     "other_speed": 0.05190362329177948,
+     "closing_speed": 0.029782044030969995
+    },
+    {
+     "kind": "contact",
+     "step": 117,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.025412385081599854,
+     "other_speed": 0.05352853460334554,
+     "closing_speed": 0.02811614952174569
+    },
+    {
+     "kind": "contact",
+     "step": 121,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.02722557024149132,
+     "other_speed": 0.057244552270140324,
+     "closing_speed": 0.030018982028649003
+    },
+    {
+     "kind": "contact",
+     "step": 124,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.030265893195886143,
+     "other_speed": 0.05841605935046949,
+     "closing_speed": 0.02815016615458335
+    }
+   ]
+  },
+  {
+   "seed": 3098,
+   "fire_step": 5,
+   "stored_steps": [
+    65
+   ],
+   "rerun_steps": [
+    65
+   ],
+   "reproduced": true,
+   "log": [
+    {
+     "kind": "fire",
+     "step": 5,
+     "ego_speed": 3.9770325824856143,
+     "follower_gap": 101.5585013057909,
+     "follower_speed": 0.1755394619143431
+    },
+    {
+     "kind": "contact",
+     "step": 65,
+     "type": "active_lateral",
+     "at_fault": false,
+     "ego_speed": 0.11367803183918583,
+     "other_speed": 6.048650901973305,
+     "closing_speed": 5.93497287013412
+    }
+   ]
+  },
+  {
+   "seed": 3106,
+   "fire_step": 45,
+   "stored_steps": [
+    86,
+    92
+   ],
+   "rerun_steps": [
+    86,
+    92,
+    109
+   ],
+   "reproduced": false,
+   "log": [
+    {
+     "kind": "fire",
+     "step": 45,
+     "ego_speed": 0.10279217694059029,
+     "follower_gap": 3.5944548419669786,
+     "follower_speed": 1.7011807595518707e-16
+    },
+    {
+     "kind": "contact",
+     "step": 86,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.10279535349043134,
+     "other_speed": 4.689468143336052,
+     "closing_speed": 4.586672789845621
+    },
+    {
+     "kind": "contact",
+     "step": 92,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 1.8152563042347778,
+     "other_speed": 3.503077116484752,
+     "closing_speed": 1.687820812249974
+    },
+    {
+     "kind": "contact",
+     "step": 109,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 1.6952866399807884,
+     "other_speed": 5.371246992768305,
+     "closing_speed": 3.6759603527875164
+    }
+   ]
+  },
+  {
+   "seed": 3107,
+   "fire_step": 0,
+   "stored_steps": [
+    48
+   ],
+   "rerun_steps": [
+    48
+   ],
+   "reproduced": true,
+   "log": [
+    {
+     "kind": "fire",
+     "step": 0,
+     "ego_speed": 0.04826159956490045,
+     "follower_gap": null,
+     "follower_speed": null
+    },
+    {
+     "kind": "contact",
+     "step": 48,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 4.009152235982146,
+     "other_speed": 9.689596585183091,
+     "closing_speed": 5.680444349200945
+    },
+    {
+     "kind": "contact",
+     "step": 55,
+     "type": "active_lateral",
+     "at_fault": true,
+     "ego_speed": 5.882411920949996,
+     "other_speed": 10.097142142544154,
+     "closing_speed": 4.214730221594158
+    }
+   ]
+  },
+  {
+   "seed": 3113,
+   "fire_step": 45,
+   "stored_steps": [
+    82
+   ],
+   "rerun_steps": [
+    82
+   ],
+   "reproduced": true,
+   "log": [
+    {
+     "kind": "fire",
+     "step": 45,
+     "ego_speed": 10.508194199475541,
+     "follower_gap": null,
+     "follower_speed": null
+    },
+    {
+     "kind": "contact",
+     "step": 82,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 4.577650889119279,
+     "other_speed": 4.251038019950209,
+     "closing_speed": 0.32661286916906995
+    },
+    {
+     "kind": "contact",
+     "step": 108,
+     "type": "stopped_track",
+     "at_fault": true,
+     "ego_speed": 0.03046272378612328,
+     "other_speed": 4.419922509134459e-13,
+     "closing_speed": 0.030462723785681288
+    }
+   ]
+  },
+  {
+   "seed": 3257,
+   "fire_step": 15,
+   "stored_steps": [
+    80,
+    96,
+    100,
+    102,
+    114,
+    116,
+    120,
+    122,
+    124,
+    128
+   ],
+   "rerun_steps": [
+    80,
+    97,
+    100,
+    104,
+    106
+   ],
+   "reproduced": false,
+   "log": [
+    {
+     "kind": "fire",
+     "step": 15,
+     "ego_speed": 4.095568378539859,
+     "follower_gap": 9.09863173503099,
+     "follower_speed": 0.7608206315291699
+    },
+    {
+     "kind": "contact",
+     "step": 45,
+     "type": "active_front",
+     "at_fault": true,
+     "ego_speed": 2.3183414046439776,
+     "other_speed": 6.723534023482814,
+     "closing_speed": 4.405192618838836
+    },
+    {
+     "kind": "contact",
+     "step": 62,
+     "type": "active_front",
+     "at_fault": true,
+     "ego_speed": 0.055610570742901724,
+     "other_speed": 6.238315091720744,
+     "closing_speed": 6.182704520977842
+    },
+    {
+     "kind": "contact",
+     "step": 80,
+     "type": "active_lateral",
+     "at_fault": false,
+     "ego_speed": 1.900744542329994,
+     "other_speed": 2.516865597114642,
+     "closing_speed": 0.6161210547846478
+    },
+    {
+     "kind": "contact",
+     "step": 97,
+     "type": "active_lateral",
+     "at_fault": false,
+     "ego_speed": 0.0680182994892779,
+     "other_speed": 0.18093974672602608,
+     "closing_speed": 0.11292144723674818
+    },
+    {
+     "kind": "contact",
+     "step": 100,
+     "type": "active_lateral",
+     "at_fault": false,
+     "ego_speed": 0.05511778382298432,
+     "other_speed": 0.11350385688926705,
+     "closing_speed": 0.058386073066282726
+    },
+    {
+     "kind": "contact",
+     "step": 104,
+     "type": "active_lateral",
+     "at_fault": false,
+     "ego_speed": 0.05011903001919038,
+     "other_speed": 0.12299401395359655,
+     "closing_speed": 0.07287498393440617
+    },
+    {
+     "kind": "contact",
+     "step": 106,
+     "type": "active_lateral",
+     "at_fault": false,
+     "ego_speed": 0.05615945087502781,
+     "other_speed": 0.13484061201953554,
+     "closing_speed": 0.07868116114450774
+    }
+   ]
+  },
+  {
+   "seed": 3296,
+   "fire_step": 0,
+   "stored_steps": [
+    85
+   ],
+   "rerun_steps": [
+    86
+   ],
+   "reproduced": false,
+   "log": [
+    {
+     "kind": "fire",
+     "step": 0,
+     "ego_speed": 0.0,
+     "follower_gap": 4.123989850490783,
+     "follower_speed": 0.0
+    },
+    {
+     "kind": "contact",
+     "step": 86,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 0.07866960219527154,
+     "other_speed": 6.202973247240428,
+     "closing_speed": 6.124303645045156
+    }
+   ]
+  },
+  {
+   "seed": 3396,
+   "fire_step": 65,
+   "stored_steps": [
+    90
+   ],
+   "rerun_steps": [
+    90
+   ],
+   "reproduced": true,
+   "log": [
+    {
+     "kind": "fire",
+     "step": 65,
+     "ego_speed": 11.110856064493154,
+     "follower_gap": null,
+     "follower_speed": null
+    },
+    {
+     "kind": "contact",
+     "step": 90,
+     "type": "active_lateral",
+     "at_fault": false,
+     "ego_speed": 1.0885522879936045,
+     "other_speed": 4.570400780670365,
+     "closing_speed": 3.4818484926767606
+    }
+   ]
+  },
+  {
+   "seed": 3429,
+   "fire_step": 5,
+   "stored_steps": [
+    93,
+    95
+   ],
+   "rerun_steps": [
+    93,
+    95
+   ],
+   "reproduced": true,
+   "log": [
+    {
+     "kind": "fire",
+     "step": 5,
+     "ego_speed": 5.3758654801282475,
+     "follower_gap": 8.287689943209852,
+     "follower_speed": 0.015869882857118964
+    },
+    {
+     "kind": "contact",
+     "step": 93,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 1.9107996614150733,
+     "other_speed": 4.2774042961868535,
+     "closing_speed": 2.36660463477178
+    },
+    {
+     "kind": "contact",
+     "step": 95,
+     "type": "active_rear",
+     "at_fault": false,
+     "ego_speed": 2.023865859572757,
+     "other_speed": 3.86224710455807,
+     "closing_speed": 1.838381244985313
+    }
+   ]
+  }
+ ]
+}

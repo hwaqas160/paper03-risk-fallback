@@ -497,7 +497,7 @@ def rollout(env, seed: int, lam: float, predictor, decide_every: int = 1,
             latency_steps: int = 0, max_steps: int = 1000,
             score_trace: list | None = None, ref_ego: list | None = None,
             score_key: str = "geom", fire_step: int | None = None,
-            record_all: bool = False) -> RolloutResult:
+            record_all: bool = False, contact_log: list | None = None) -> RolloutResult:
     """
     One closed-loop episode. The fallback engages the first time the score exceeds lam
     (after `latency_steps` of actuation delay) and stays engaged. lam = inf disables it,
@@ -567,6 +567,15 @@ def rollout(env, seed: int, lam: float, predictor, decide_every: int = 1,
         if fire_at is not None and step >= fire_at and not r.triggered:
             r.triggered, r.trigger_step = True, step
             pol.fallback_engaged = True
+            if contact_log is not None:       # descriptive snapshot at the firing step (Amendment 9, C1)
+                _ag, _eg = _agents(env), _ego(env)
+                _fx, _fy = nm.ego_frame(_eg, _ag) if len(_ag) else (np.array([]), np.array([]))
+                _behind = [i for i in range(len(_ag)) if _fx[i] < 0 and abs(_fy[i]) < 0.5 * (_eg["W"] + _ag[i, 5])]
+                _gap = nm.box_gap(_eg, _ag) if len(_ag) else np.array([])
+                _nb = min(_behind, key=lambda i: _gap[i]) if _behind else None
+                contact_log.append(dict(kind="fire", step=step, ego_speed=float(_eg["v"]),
+                                        follower_gap=None if _nb is None else float(_gap[_nb]),
+                                        follower_speed=None if _nb is None else float(_ag[_nb, 3])))
 
         _, _, tm, tc, info = env.step([0.0, 0.0])
         r.steps = step + 1
@@ -588,6 +597,12 @@ def rollout(env, seed: int, lam: float, predictor, decide_every: int = 1,
         if contact and not in_contact:                 # rising edge = a new contact event
             ctype, at_fault, _ = nm.classify_collision(ego, agents, env.agent.navigation.current_lateral)
             r.collisions.append(dict(step=step, type=ctype, at_fault=at_fault))
+            if contact_log is not None:
+                _, _, _k = nm.classify_collision(ego, agents, env.agent.navigation.current_lateral)
+                _sp = float(agents[_k, 3]) if _k >= 0 else None
+                contact_log.append(dict(kind="contact", step=step, type=ctype, at_fault=bool(at_fault),
+                                        ego_speed=float(ego["v"]), other_speed=_sp,
+                                        closing_speed=None if _sp is None else float(abs(_sp - ego["v"]))))
             r.collision = True
             if r.collision_step is None:
                 r.collision_step = step
