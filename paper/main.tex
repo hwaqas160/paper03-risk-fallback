@@ -98,73 +98,61 @@ hides this trade-off.
 We ask a narrower question than ``which trigger is best'':
 \emph{how reliable is a statistically certified fallback trigger when it
 is judged through the interventions it actually causes, and what happens
-to it when the deployment data differ from the calibration data?} We
-treat the trigger as a decision problem with a formal guarantee attached
-to the decision itself, and evaluate it where that guarantee has to hold:
-in closed loop, on real driving scenarios, with a threshold whose
-consequences change what the vehicle does next. Certifying a threshold on
-a risk score against missed events is not new. Luo~\emph{et al.}~\cite{luo2022}
-do so with conformal prediction, and Conformal Decision
-Theory~\cite{cdt2024} calibrates decisions rather than predictions
-through a long-run \emph{average} guarantee. We build on these and do not
-claim the certification step as ours. An MRM trigger nevertheless differs
-in kind from the settings they study. It is an irreversible, one-shot
-decision to abandon the task, its errors are paid in two currencies
+to it when the deployment data differ from the calibration data?}
+Certifying a threshold on a risk score against missed events is not new.
+Luo~\emph{et al.}~\cite{luo2022} do so with conformal prediction, and
+Conformal Decision Theory~\cite{cdt2024} calibrates decisions through a
+long-run \emph{average} guarantee. We build on these and do not claim the
+certification step. An MRM trigger nevertheless differs in kind: it is an
+irreversible, one-shot decision, its errors are paid in two currencies
 (missed interventions, and the harm of stopping itself), and a deployed
 vehicle needs its guarantee before the first mile. To our knowledge, no
 prior work certifies a fallback trigger and then measures, in closed
 loop, what the executed fallback does.
 
 We organize the study around four research questions, each tied to a
-hypothesis fixed before data collection (Section~\ref{sec:prereg}):
-\begin{itemize}
-\item \textbf{RQ1 (H2).} Does a certificate keep its promise when
-measured on the closed-loop outcome, and what does keeping it cost in
-unnecessary stops and fallback-induced collisions?
-\item \textbf{RQ2 (H1).} Do open-loop failure-detection metrics choose
-the same trigger that closed-loop safety does?
-\item \textbf{RQ3 (H3, H3-W).} What happens to a certificate under a
-real cross-dataset shift, and how much can be repaired with unlabeled or
-with a few labeled target scenarios?
-\item \textbf{RQ4.} How sensitive is the certificate to the timing of
-the intervention?
-\end{itemize}
+hypothesis fixed before data collection (Section~\ref{sec:prereg}).
+\textbf{RQ1 (H2):} does a certificate keep its promise on the
+closed-loop outcome, and what does it cost in unnecessary stops and
+induced collisions? \textbf{RQ2 (H1):} do open-loop metrics choose the
+trigger that closed-loop safety does? \textbf{RQ3 (H3, H3-W):} what
+happens to a certificate under cross-dataset shift, and how much can
+unlabeled or a few labeled target scenarios repair? \textbf{RQ4:} how
+sensitive is it to the timing of the intervention?
 
 We make four contributions.
 \begin{enumerate}
 \item \textbf{A lookup evaluation protocol for executed fallbacks.}
 Under a determinism assumption whose violation we measure, a rollout's
 outcome depends only on \emph{when} the fallback fires
-(Observation~\ref{prop:exact}, Fig.~\ref{fig:protocol}). One reference run that records every
-trigger score, plus one rollout forced to fire at each decision tick
-(about 17 per scenario), evaluates every trigger, threshold, online
-method and latency on identical physics, where direct execution would
-need over 7{,}000 rollouts per scenario here. We check the lookup against
-direct execution (Section~\ref{sec:exact-eval}). The forced rollouts also
-expose the consequences of the fallback itself: induced collisions, route
-completion, and harm that persists or arises after it fires.
+(Observation~\ref{prop:exact}, Fig.~\ref{fig:protocol}). One reference run
+plus one rollout forced to fire at each decision tick (about 17 per
+scenario) evaluates every trigger, threshold, online method and latency
+on identical physics, where direct execution would need over 7{,}000
+rollouts per scenario here. We check the lookup against direct execution
+(Section~\ref{sec:exact-eval}). The forced rollouts also expose induced
+collisions, route completion, and harm that persists or arises after the
+fallback fires.
 \item \textbf{What certification buys and what it costs.} Certification
 is the only design that keeps its target across resplits at a useful
-operating point, at a measured cost in stops. It does not win the safety--conservatism
-trade-off against a tuned threshold, a hypothesis we pre-registered and
-report as refuted. The certified quantity is the alert, not the outcome:
-residual harm after the fallback is larger than the certified miss rate,
-part of it created by the intervention, and certifying residual harm
-directly was not achievable at a useful operating point. Confidence and
-ensemble triggers,
-the deployed practice, need several times more unnecessary stops than a
-geometric score.
+operating point, at a measured cost in stops, and it does not win the
+safety--conservatism trade-off against a tuned threshold (a
+pre-registered hypothesis, refuted). The certified quantity is the alert,
+not the outcome: residual harm is larger than the certified miss rate,
+part of it created by the intervention, and certifying it directly was
+not achievable at a useful operating point. Confidence and ensemble
+triggers, the deployed practice, need several times more unnecessary
+stops than a geometric score.
 \item \textbf{The certificate under real dataset shift.} An Argoverse~2
-certificate fails on nuScenes but holds, conservatively, on Waymo: the
-failure is dataset-dependent, not universal. The nuScenes data also
-expose a floor, harm present at the first decision tick, which no
-trigger can prevent and which can make a target unreachable. A
+certificate fails on nuScenes but holds, conservatively, on Waymo, so
+failure is dataset-dependent. The nuScenes data also expose a floor,
+harm present at the first decision tick, which no trigger can prevent. A
 density-ratio-weighted certificate that reports its effective sample
 size repairs part of the gap.
 \item \textbf{Operating-point findings for practitioners.} One decision
-tick of actuation latency breaks the target, so latency must be part of
-the certified quantity, and open-loop AUROC ranks triggers only
-approximately as closed-loop stops do.
+tick of actuation latency breaks the target, and calibrating under the
+latency restores it only approximately. Open-loop AUROC ranks triggers
+only approximately as closed-loop stops do.
 \end{enumerate}
 Refuted hypotheses are reported as such, and analyses run after the
 pre-registered verdicts are labeled exploratory.
@@ -230,27 +218,24 @@ outcome after it.
 Farid~\emph{et al.}~\cite{taskrelevant2022} propose a
 \emph{task-relevant} monitor that flags a misprediction only when the
 resulting planning cost is anomalous, with false-positive and
-false-negative bounds, evaluated open-loop and semi-reactively without
-an actuated fallback. Their insight, that a task-irrelevant
-misprediction should not count against a detector, is reflected in our
-labeling: a collision suffered while stopped or struck from behind is an
+false-negative bounds, evaluated open-loop and semi-reactively without an
+actuated fallback. Their insight is reflected in our labeling: a
+collision suffered while stopped or struck from behind is an
 \emph{induced-collision} cost of the fallback, never a missed
 intervention.
 
-Closest to our certification step, Luo~\emph{et al.}~\cite{luo2022}
-tune the threshold of a warning system with Mondrian conformal
-prediction so that, among situations that are unsafe in the true future
-\emph{in the absence of corrective action}, fewer than $\epsilon$ raise
-no alert, using as few as $1/\epsilon$ unsafe examples. Their unsafe
-label is a threshold on a safety score of the logged future, their
-predictor is Trajectron++, and their driving experiments (nuScenes and
-Lyft) score alerts against the logged data. The alert triggers nothing.
-We adopt the same principle and do not claim it as new.
-The differences that matter are the guarantee (class-conditional there,
-marginal over scenarios here), the consequence of an alert (none there, an
-executed maneuver here), and dataset shift and latency, which they do not
-study (Supplementary Table~S1). We implement their certificate inside our
-framework as a baseline (Supplementary Section~S1).
+Closest to our certification step, Luo~\emph{et al.}~\cite{luo2022} tune
+the threshold of a warning system with Mondrian conformal prediction so
+that, among situations that are unsafe in the true future \emph{in the
+absence of corrective action}, fewer than $\epsilon$ raise no alert. Their
+unsafe label is a threshold on a safety score of the logged future, their
+predictor is Trajectron++, and their alerts are scored against logged
+data, so the alert triggers nothing. We adopt the same principle and do
+not claim it as new. The differences that matter are the guarantee
+(class-conditional there, marginal over scenarios here), the consequence
+of an alert (none there, an executed maneuver here), and dataset shift
+and latency, which they do not study (Supplementary Table~S1). We
+implement their certificate as a baseline (Supplementary Section~S1).
 
 Sinha~\emph{et al.}~\cite{sinha2023} close the loop differently: a
 conformal runtime monitor detects when perception leaves the tolerance of
@@ -266,6 +251,22 @@ estimates~\cite{zhao2025stat}, and risk-based filtering can select
 informative scenarios from large logs~\cite{puphal2025risk}. We replay real
 logs with reactive traffic and report every rate with a confidence
 interval.
+
+Fallback triggering also sits within established safety frameworks.
+Runtime monitors that switch to a trusted fallback, as
+in~\cite{sinha2023,atoui2025mrm}, follow the runtime-assurance idea of a
+monitored learned component with a trusted backup.
+Responsibility-Sensitive Safety~\cite{rss2017} gives model-based rules for
+when a vehicle is at fault, whereas our trigger is a learned score whose
+threshold is certified from data. SOTIF~\cite{iso21448} and
+UL~4600~\cite{ul4600} frame assurance at the system level, but do not
+specify how to certify a trigger threshold. Selective
+prediction~\cite{geifman2017} studies when a model should abstain at a
+controlled risk, the same reject-option structure as a trigger, except
+that here abstention is an executed maneuver with its own cost, and the
+guarantee is checked under dataset shift. We do not claim priority in
+any of these areas, and our relation to Luo~\emph{et al.}~\cite{luo2022}
+is stated above.
 
 \subsection{Risk-sensitive analysis and closed-loop infrastructure}
 Chapman~\emph{et al.}~\cite{cvar2022} use Conditional Value-at-Risk to
@@ -588,7 +589,8 @@ calibrator.
 \item \textbf{CDT}~\cite{cdt2024} and \textbf{ACI}~\cite{aci2021}: online
 decision- and prediction-level adaptation, updated after every
 scenario. Each uses the step size that performs best on test, which
-favors the baselines.
+favors the baselines. Choosing it on calibration data instead gives CDT
+4.6\,\% missed and 25.1\,\% stops, and ACI the same result.
 \item \textbf{Oracle}: the best threshold in hindsight on test data.
 It is not deployable and is reported as an upper bound.
 \end{itemize}
@@ -603,13 +605,11 @@ calibration and test scenarios. A valid certificate keeps the frequency
 of test miss rate above $\alpha$ at or below $\delta$. The resplits
 overlap, so they are not independent draws: the frequency estimates the
 violation probability for this pool, with Monte Carlo error (Wilson
-95\,\% interval [6.2, 14.4] for 9.5\,\%, [36.8, 50.4] for 43.5\,\%), and
-the test half's own miss rate has a standard error of about 0.5 points.
-Scenarios from one recording may be dependent. Only the nuScenes
-identifiers expose a grouping (Section~\ref{sec:res-shift}).
-Harm is scored with the single nuPlan definition above.
-Section~\ref{sec:res-robust} repeats the key comparison under three
-alternative harm definitions.
+95\,\% interval [6.2, 14.4] for 9.5\,\%, [36.8, 50.4] for 43.5\,\%).
+Scenarios from one recording may be dependent, and only the nuScenes
+identifiers expose a grouping (Section~\ref{sec:res-shift}). Harm uses
+the nuPlan definition above, and Section~\ref{sec:res-robust} repeats the
+key comparison under three alternatives.
 
 \subsection{Pre-registration and reproducibility}
 \label{sec:prereg}
@@ -934,10 +934,6 @@ nuScenes & Always fire & 5.0 & 1.6 & 16.2 & 3.8 & 9.7 / 6.4 \\
 \end{tabular}
 \end{table}
 
-\emph{Reading a 5\,\% marginal target.} As noted in
-Section~\ref{sec:formulation}, 24\,\% of harmful scenarios go unalerted
-(58\,\% on nuScenes).
-
 \emph{Class-conditional certification and reverse shift.} A Luo-style
 class-conditional certificate at $\epsilon=0.05$ selects a threshold
 equivalent to always firing (84.9\,\% unnecessary stops). At the
@@ -1043,16 +1039,15 @@ stop less often and the pre-registered hypothesis that said otherwise is
 refuted, and we do not claim a guarantee on the outcome.
 
 \emph{Alert versus outcome.} The certificate bounds the probability, over
-scenarios, that harm is not pre-empted by an alert. That is the quantity
-a deployment authority can audit, but it is weaker than a bound among
-harmful scenarios, and it bounds the alert, not the outcome: harm still
-occurs after some alerts and is sometimes created by the intervention.
-Certifying residual harm directly was not achievable with this score and
-maneuver at a useful operating point (Supplementary Section~S5), so it
+scenarios, that harm is not pre-empted by an alert. A deployment
+authority can audit it, but it is weaker than a bound among harmful
+scenarios (24\,\% go unalerted, 58\,\% on nuScenes) and it bounds the
+alert, not the outcome. Certifying residual harm directly was not
+achievable with this score and maneuver (Supplementary Section~S5), so it
 calls for a different maneuver or score rather than a different
-calibrator. The 5.0\,\% first-tick floor on nuScenes likewise shows that
-a miss metric on harm anywhere in a replayed snippet mixes preventable
-events with events already under way. We propose the avoidable-only
+calibrator. The 5.0\,\% first-tick floor on nuScenes also shows that a
+miss metric on harm anywhere in a replayed snippet mixes preventable
+events with events already under way, and we propose an avoidable-only
 variant for future benchmarks.
 
 \emph{Simulator, predictor and perception.} All results use MetaDrive
@@ -1327,6 +1322,24 @@ Art.~no.~106003, 2021.
 D.~Xie \emph{et al.}, ``A survey on scenario-based test and evaluation
 methods for autonomous vehicles,'' \emph{Proc. Inst. Mech. Eng. D, J.
 Automobile Eng.}, 2025.
+
+\bibitem{rss2017}
+S.~Shalev-Shwartz, S.~Shammah, and A.~Shashua, ``On a formal model of safe
+and scalable self-driving cars,'' arXiv preprint arXiv:1708.06374, 2017,
+doi:~10.48550/arXiv.1708.06374.
+
+\bibitem{iso21448}
+International Organization for Standardization, ``ISO 21448:2022, Road
+vehicles---Safety of the intended functionality (SOTIF),'' ISO, 2022.
+
+\bibitem{ul4600}
+UL Standards \& Engagement, ``UL 4600, Standard for safety for the
+evaluation of autonomous products,'' 3rd ed., Mar. 2023.
+
+\bibitem{geifman2017}
+Y.~Geifman and R.~El-Yaniv, ``Selective classification for deep neural
+networks,'' in \emph{Adv. Neural Inf. Process. Syst. (NeurIPS)}, vol.~30,
+2017, pp.~4878--4887.
 
 \end{thebibliography}
 

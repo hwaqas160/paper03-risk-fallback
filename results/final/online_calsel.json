@@ -1,0 +1,158 @@
+{
+  "CDT": {
+    "step_selected_on_calibration": 0.01,
+    "step_selected_on_test": 0.1,
+    "deployed_calsel": {
+      "miss": 0.04564128256513026,
+      "unnecessary_stop": 0.2509018036072144,
+      "induced": 0.022469939879759523,
+      "autonomy": 0.624749498997996,
+      "route_completion": 0.776724905069023
+    },
+    "deployed_testsel": {
+      "miss": 0.049724448897795585,
+      "unnecessary_stop": 0.2397545090180361,
+      "induced": 0.02146793587174349,
+      "autonomy": 0.6402555110220441,
+      "route_completion": 0.7835846396505479
+    },
+    "calibration_curve": {
+      "0.01": {
+        "miss": 0.049172517552657974,
+        "unnecessary_stop": 0.25664493480441325,
+        "induced": 0.02409729187562688,
+        "autonomy": 0.608826479438315,
+        "route_completion": 0.7763708360141219
+      },
+      "0.05": {
+        "miss": 0.05002507522567703,
+        "unnecessary_stop": 0.25112838515546637,
+        "induced": 0.02286860581745236,
+        "autonomy": 0.6156469408224674,
+        "route_completion": 0.7794427042063885
+      },
+      "0.1": {
+        "miss": 0.05017552657973921,
+        "unnecessary_stop": 0.25060180541624877,
+        "induced": 0.02244232698094283,
+        "autonomy": 0.617026078234704,
+        "route_completion": 0.7786381446864161
+      },
+      "0.5": {
+        "miss": 0.05027582748244734,
+        "unnecessary_stop": 0.2633149448345035,
+        "induced": 0.023495486459378136,
+        "autonomy": 0.6070962888665998,
+        "route_completion": 0.76616613353683
+      }
+    },
+    "test_curve": {
+      "0.01": {
+        "miss": 0.04564128256513026,
+        "unnecessary_stop": 0.2509018036072144,
+        "induced": 0.022469939879759523,
+        "autonomy": 0.624749498997996,
+        "route_completion": 0.776724905069023
+      },
+      "0.05": {
+        "miss": 0.04907314629258517,
+        "unnecessary_stop": 0.24015531062124248,
+        "induced": 0.021943887775551105,
+        "autonomy": 0.6391282565130262,
+        "route_completion": 0.7834362625593752
+      },
+      "0.1": {
+        "miss": 0.049724448897795585,
+        "unnecessary_stop": 0.2397545090180361,
+        "induced": 0.02146793587174349,
+        "autonomy": 0.6402555110220441,
+        "route_completion": 0.7835846396505479
+      },
+      "0.5": {
+        "miss": 0.05007515030060121,
+        "unnecessary_stop": 0.2560871743486974,
+        "induced": 0.0218687374749499,
+        "autonomy": 0.6261523046092184,
+        "route_completion": 0.7681068217708409
+      }
+    }
+  },
+  "ACI": {
+    "step_selected_on_calibration": 0.5,
+    "step_selected_on_test": 0.5,
+    "deployed_calsel": {
+      "miss": 0.012900801603206414,
+      "unnecessary_stop": 0.45037575150300607,
+      "induced": 0.03519539078156312,
+      "autonomy": 0.40232965931863723,
+      "route_completion": 0.6223840068310799
+    },
+    "deployed_testsel": {
+      "miss": 0.012900801603206414,
+      "unnecessary_stop": 0.45037575150300607,
+      "induced": 0.03519539078156312,
+      "autonomy": 0.40232965931863723,
+      "route_completion": 0.6223840068310799
+    },
+    "calibration_curve": {
+      "0.01": {
+        "miss": 0.007021063189568705,
+        "unnecessary_stop": 0.5477181544633901,
+        "induced": 0.04182547642928786,
+        "autonomy": 0.29430792377131393,
+        "route_completion": 0.5180347757589666
+      },
+      "0.05": {
+        "miss": 0.011835506519558678,
+        "unnecessary_stop": 0.45641925777332004,
+        "induced": 0.037637913741223675,
+        "autonomy": 0.3875626880641926,
+        "route_completion": 0.612289619336343
+      },
+      "0.1": {
+        "miss": 0.012236710130391173,
+        "unnecessary_stop": 0.44455867602808424,
+        "induced": 0.03698595787362086,
+        "autonomy": 0.3994984954864593,
+        "route_completion": 0.6242044980128141
+      },
+      "0.5": {
+        "miss": 0.012913741223671013,
+        "unnecessary_stop": 0.43462888665997995,
+        "induced": 0.03635907723169508,
+        "autonomy": 0.4098545636910732,
+        "route_completion": 0.6347439333907974
+      }
+    },
+    "test_curve": {
+      "0.01": {
+        "miss": 0.0066132264529058125,
+        "unnecessary_stop": 0.5626753507014028,
+        "induced": 0.045090180360721446,
+        "autonomy": 0.288376753507014,
+        "route_completion": 0.5049188208248336
+      },
+      "0.05": {
+        "miss": 0.011873747494989983,
+        "unnecessary_stop": 0.47156813627254507,
+        "induced": 0.03677354709418837,
+        "autonomy": 0.38096192384769545,
+        "route_completion": 0.6001724225412263
+      },
+      "0.1": {
+        "miss": 0.012399799599198399,
+        "unnecessary_stop": 0.4593436873747495,
+        "induced": 0.03587174348697395,
+        "autonomy": 0.39328657314629256,
+        "route_completion": 0.6124885454060699
+      },
+      "0.5": {
+        "miss": 0.012900801603206414,
+        "unnecessary_stop": 0.45037575150300607,
+        "induced": 0.03519539078156312,
+        "autonomy": 0.40232965931863723,
+        "route_completion": 0.6223840068310799
+      }
+    }
+  }
+}

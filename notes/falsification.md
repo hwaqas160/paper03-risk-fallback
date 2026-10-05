@@ -731,3 +731,15 @@ contact: median 8.3 s, 3.9 % within 2 s, 78 % after 5 s. 67 % of events are in s
 standstill. Reading: not a follower surprised by hard braking; consistent with replay traffic not yielding to a
 long-stationary ego, so the induced rate is an upper bound on the cost of stopping in this simulator. Paper text
 corrected accordingly (it previously said the dangerous case was early stopping with traffic close behind).
+
+### Amendment 8, item C1 (2026-10-05, before running): step sizes for the online baselines chosen on calibration data
+The headline table picks the CDT step size and the ACI step size by their test-set performance (stated in the paper
+as favouring the baselines). C1 repeats both with the step size chosen ONLY on the calibration scenarios: for each
+eta/gamma in {0.01, 0.05, 0.1, 0.5}, run the online rule over 20 random orders of the calibration scenarios with the
+same selection criteria as the headline, then deploy the selected value on the test scenarios (20 orders, mean).
+Reading rule: if the calibration-selected variant changes either method's miss rate by more than 1 point or its
+stop rate by more than 3 points, the main table's online rows are replaced by it in the paper; otherwise the
+difference is reported in one sentence. (`src/online_calsel.py`)
+C1 outcome (2026-10-05): CDT with the step chosen on calibration (0.01): miss 4.6 %, stops 25.1 % versus test-selected (0.1)
+5.0 % / 24.0 %; ACI selects 0.5 either way, identical. Both differences are inside the stated thresholds (1 point miss,
+3 points stops), so the main-table rows are kept and the difference is reported in one sentence.
