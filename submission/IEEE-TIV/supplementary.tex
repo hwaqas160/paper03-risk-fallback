@@ -277,9 +277,20 @@ initial ego speed (the lowest starts at standstill, the middle one below
 and 3.5\,\% [2.3, 5.1], against 0.6\,\% [0.2, 1.5] in the upper tercile, and
 scenarios in which the fallback fires at or before the median firing tick
 (tick 5, 2.5\,s) have 9.2\,\% [6.8, 12.4] against 3.0\,\% [1.7, 5.1]
-for later firing. A vehicle that stops in a live lane very early, while
-traffic is still close behind it, is the dangerous case. The fallback
-also costs progress: where it fires, the vehicle stops for 7.4\,s on
+for later firing. These contacts do not look like a follower caught off
+guard by hard braking. Of the 129, only 3.9\,\% occur within 2\,s of the
+fallback firing, the median is 8.3\,s after it, and 78\,\% come more than
+5\,s after it, by which time a vehicle braking at 4\,m/s$^2$ from city speed
+has long been stationary. The 129 contacts come from only 51 scenarios,
+and 67\,\% of them are in scenarios where the ego starts at standstill, so
+the fallback there changes little about what the ego does. We therefore
+cannot attribute this cost to the act of stopping. It may instead come
+from simulated traffic, driven along logged paths with a car-following
+model, that does not yield to a vehicle which stays stationary in its path
+for many seconds, which a real driver would also be expected to avoid
+(released with the code). The 2.6\,\%
+induced rate should be read as an upper bound on the cost that stopping
+itself causes in this simulator. The fallback also costs progress: where it fires, the vehicle stops for 7.4\,s on
 average and completes 49\,\% of the route, against 94\,\% where it does not.
 Collision severity (closing speed) was not recorded in the stored rollouts, so
 we cannot grade these collisions, and the rates count scenarios, not
@@ -375,5 +386,53 @@ T1 confidence & 4.8 & 50.0 & 4.6 & 46.0 \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+\section{Certifying Under the Deployed Latency}
+\label{sec:s-latency}
+The main paper shows that a certificate calibrated at zero latency fails
+when the actuation chain is slower. Because the loss at latency $\ell$
+decision ticks is the stored miss indicator at tick $\tau(X)+\ell$, LTT can
+be run directly on that loss without new simulation (Amendment~8,
+pre-registered before the run). We certify on the Argoverse~2 calibration
+set at $\ell \in \{0,1,2\}$ ticks (0, 0.5, 1.0\,s), deploy at the same
+latency on the test set, and repeat over the same 200 half-and-half
+resplits as the main paper.
+
+\begin{table}[h]
+\caption{LTT calibrated at the deployed latency (``aware'') versus the
+zero-latency certificate deployed at latency $\ell$ (``naive''),
+Argoverse~2 test. Miss and stops on the test set, rates in \%.
+Viol.: fraction of 200 resplits with test miss above 5\,\%, with Wilson
+95\,\% intervals.}
+\label{tab:latency}
+\centering
+\scriptsize\setlength{\tabcolsep}{2.5pt}
+\begin{tabular}{cccccc}
+\toprule
+$\ell$ & Naive miss & Naive viol. & Aware miss & Aware stops & Aware viol. \\
+\midrule
+0 & 3.7 & 9.5 [6.2, 14.4] & 3.7 & 28.5 & 9.5 [6.2, 14.4] \\
+1 & 5.3 & 92.0 [87.4, 95.0] & 3.6 & 34.4 & 12.0 [8.2, 17.2] \\
+2 & 9.1 & 100 [98.1, 100] & 4.1 & 42.5 & 11.5 [7.8, 16.7] \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The zero-latency certificate is not valid under latency, as claimed.
+The latency-aware certificate brings the miss rate back below 5\,\% on the
+test set, at a cost of 6 and 14 points of unnecessary stops. Its
+violation frequency, however, is 12.0\,\% and 11.5\,\% at one and two ticks,
+above the $\delta = 0.10$ we pre-registered, so by our own rule the claim
+that latency-aware certification restores validity is refuted. Three
+readings are possible and we cannot separate them. The Wilson intervals
+include 0.10. The statistic counts resplits whose finite test half
+exceeds 5\,\%, not resplits whose population risk does, and the
+zero-latency case is already 9.5\,\%. And the loss at a positive latency
+is less smooth in $\lambda$, which may weaken the fixed-sequence test in
+practice. The guarantee itself is unchanged, since the loss is still a
+fixed function of the scenario and the threshold, but we report the
+frequency as measured. Across resplits the mean unnecessary-stop rate of
+the latency-aware certificate is 27.6, 31.8 and 57.0\,\%, so at two ticks
+the cost depends strongly on the calibration draw.
 
 \end{document}

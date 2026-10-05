@@ -1,0 +1,23 @@
+{
+  "lam": 1.4701,
+  "n_events": 129,
+  "n_scenarios": 51,
+  "types": {
+    "active_rear": 99,
+    "active_lateral": 30
+  },
+  "dt_after_fire_quantiles": {
+    "min": 0.5,
+    "q10": 3.7,
+    "q25": 5.4,
+    "median": 8.3,
+    "q75": 10.100000000000001,
+    "q90": 11.3,
+    "max": 12.9
+  },
+  "share_within_1s": 0.015503875968992248,
+  "share_within_2s": 0.03875968992248062,
+  "share_after_5s": 0.7829457364341085,
+  "share_fired_at_standstill": 0.6744186046511628,
+  "median_speed0": 0.0027037145586171043
+}

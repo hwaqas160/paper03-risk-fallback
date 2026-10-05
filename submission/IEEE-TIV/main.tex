@@ -41,16 +41,16 @@ Road, Karachi 74000, Pakistan (e-mail: hina.maryam@sbp.org.pk).}}
 %=======================================================================
 \begin{abstract}
 A fallback trigger decides when an automated vehicle should abandon
-its task for a minimum-risk maneuver. In practice it is a hand-tuned
-threshold with no stated guarantee, and statistical certification of
+its task for a minimum-risk maneuver. It is usually a hand-tuned
+threshold without a guarantee, and statistical certification of
 alert thresholds rarely prices what the fallback then does. We ask how
 reliable a certified trigger is when the fallback is executed, and what
 happens under dataset shift. Because a rollout depends only on the tick
 at which the fallback fires, one reference run plus one forced rollout
 per decision tick evaluates every trigger, threshold, online method and
-latency by lookup, which we check against direct execution. On replayed Argoverse~2, nuScenes and Waymo logs with
-reactive traffic, a regulation-compliant in-lane stop and nuPlan harm
-labels, we compare a Learn-then-Test-certified geometric trigger with
+latency by lookup, checked against direct execution. On replayed Argoverse~2, nuScenes and Waymo logs with
+reactive traffic, an in-lane stop, and harm defined as an at-fault
+collision or time-to-collision below 0.95\,s, we compare a Learn-then-Test-certified geometric trigger with
 seven baselines. At a 5\,\% target, the certified trigger misses
 3.7\,\% of scenarios and exceeds the target in 9.5\,\% of 200 resplits,
 against 43.5\,\% for the same score tuned without a certificate, which
@@ -58,9 +58,11 @@ stops less often. Certification buys reliability, not fewer stops. It
 also controls the alert, not the outcome: harm in the intervened run is
 6.5\,\%, and 24\,\% of harmful scenarios go unalerted. Confidence and
 ensemble triggers need 68--71\,\% unnecessary stops. The certificate
-fails on nuScenes (13.2\,\% missed) but holds on Waymo (2.7\,\%), so
-failure under shift is dataset-dependent. One decision tick (0.5\,s)
-of latency already breaks the target.
+fails on nuScenes (13.2\,\% missed, with wide scene-level uncertainty)
+but holds on Waymo (2.7\,\%), so failure is
+dataset-dependent. One decision tick (0.5\,s) of latency already breaks
+the target, and calibrating under that latency restores it only
+approximately.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -142,8 +144,8 @@ direct execution (Section~\ref{sec:exact-eval}). The forced rollouts also
 expose the consequences of the fallback itself: induced collisions, route
 completion, and harm that persists or arises after it fires.
 \item \textbf{What certification buys and what it costs.} Certification
-is the only design that reliably keeps its target across resplits, at a
-measured cost in stops. It does not win the safety--conservatism
+is the only design that keeps its target across resplits at a useful
+operating point, at a measured cost in stops. It does not win the safety--conservatism
 trade-off against a tuned threshold, a hypothesis we pre-registered and
 report as refuted. The certified quantity is the alert, not the outcome:
 residual harm after the fallback is larger than the certified miss rate,
@@ -250,23 +252,20 @@ executed maneuver here), and dataset shift and latency, which they do not
 study (Supplementary Table~S1). We implement their certificate inside our
 framework as a baseline (Supplementary Section~S1).
 
-Sinha~\emph{et al.}~\cite{sinha2023} close the loop differently: a runtime
-monitor calibrated with conformal prediction detects when perception
-leaves the tolerance of a robust MPC controller that keeps a
-perception-free fallback plan feasible, demonstrated on aircraft taxiing.
-Their fallback is part of the controller design, whereas ours is an
-irreversible maneuver whose trigger is the object of study.
-
-Atoui and Resende~\cite{atoui2025mrm} design and experimentally
-validate an MRM fallback controller for sensor failure on highways,
-taking the decision to engage it as given; we study that decision.
-Scenario-based simulation is a standard route to evaluating automated
-vehicle safety~\cite{sohrabi2021,xie2025}. Its conclusions need a
-statistical foundation for stopping rules and risk
+Sinha~\emph{et al.}~\cite{sinha2023} close the loop differently: a
+conformal runtime monitor detects when perception leaves the tolerance of
+a robust MPC controller that keeps a perception-free fallback plan
+feasible, demonstrated on aircraft taxiing. Their fallback is part of the
+controller design, whereas ours is an irreversible maneuver whose trigger
+is the object of study. Atoui and Resende~\cite{atoui2025mrm} design and
+validate an MRM controller for sensor failure on highways, taking the
+decision to engage it as given. Scenario-based simulation is a standard
+route to evaluating automated vehicle safety~\cite{sohrabi2021,xie2025}
+and needs a statistical foundation for stopping rules and risk
 estimates~\cite{zhao2025stat}, and risk-based filtering can select
-informative scenarios from large driving logs~\cite{puphal2025risk}. We
-use replay of real logs with reactive traffic rather than synthetic
-scenarios, and report every rate with a confidence interval.
+informative scenarios from large logs~\cite{puphal2025risk}. We replay real
+logs with reactive traffic and report every rate with a confidence
+interval.
 
 \subsection{Risk-sensitive analysis and closed-loop infrastructure}
 Chapman~\emph{et al.}~\cite{cvar2022} use Conditional Value-at-Risk to
@@ -477,13 +476,11 @@ for any score, threshold, online update rule and actuation latency
 $\ell$ (for which the run is $F(X,\tau(X)+\ell)$).
 \end{observation}
 \begin{IEEEproof}
-By induction over steps. Until $\tau$ the trigger has not fired, so by
-(A3) the control is that of $R(X)$ and by (A1) the states equal those of
-$R(X)$; by (A2) the trigger's decision at each such tick is a function of
-these states, hence the same in every run sharing them, so $\tau$ is
-determined by $R(X)$ alone. At $\tau$ the fallback engages with a control
-that depends only on the state at $\tau$ (A3), which is the control of
-$F(X,\tau)$. Both runs then have equal states by (A1).
+Until $\tau$ the control is that of $R(X)$ by (A3) and the states equal
+those of $R(X)$ by (A1), so by (A2) the trigger's decisions, and hence
+$\tau$, are determined by $R(X)$ alone. At $\tau$ the control depends
+only on the state at $\tau$ (A3), as in $F(X,\tau)$, and both runs have
+equal states afterwards by (A1).
 \end{IEEEproof}
 Two corollaries follow. First, alert-level indicators need no forced run:
 $L$ and $S$ are functions of $R(X)$ and $\tau$ alone. Second, the
@@ -657,8 +654,9 @@ Supplementary Material.
 \subsection{Does a certificate keep its promise, and what does it cost? (RQ1)}
 \label{sec:res-main}
 Table~\ref{tab:main} gives every method at its operating point on the
-Argoverse~2 test set. The certified trigger (LTT) misses 3.7\,\% of
-harmful events [95\,\% CI 2.9--4.6], below the 5\,\% target, with
+Argoverse~2 test set. The certified trigger (LTT) fails to pre-empt harm in 3.7\,\% of
+all scenarios [95\,\% CI 2.9--4.6], below the 5\,\% target, which is 24\,\%
+of the scenarios that are harmful, with
 28.5\,\% unnecessary stops and 2.6\,\% fallback-induced collisions.
 The last column repeats the calibration on 200 random resplits and
 reports how often the realized test miss rate exceeds $\alpha$. A valid
@@ -667,7 +665,8 @@ The same geometric score with a threshold tuned empirically, and its
 Conformal Risk Control (CRC) counterpart, which guarantees only an
 expectation, exceed the target in 43.5\,\% and 41.0\,\% of resplits, and
 the tuned confidence trigger in 50.5\,\%. Certification is therefore the
-only design here that keeps its target reliably.
+only design here that keeps its target reliably at a useful operating
+point.
 Fig.~\ref{fig:operating-points} plots every method against the
 geometric score's own curve as its threshold varies, and
 Fig.~\ref{fig:validity} shows the resplit distributions behind the
@@ -722,8 +721,10 @@ The tuned geometric threshold and CDT both stop less often than LTT
 (Table~\ref{tab:main}; paired bootstrap difference $-2.5$ points, 95\,\%
 CI $[-3.2,-1.8]$ against tuned). Hypothesis H2 required no baseline to
 be within 3 points of the certified trigger. It is \textbf{refuted}. The
-supportable claim is narrower: among the designs whose promise can be
-checked, the certified one is the only one that reliably meets it.
+supportable claim is narrower: among the designs that keep their promise at a
+useful operating point, the certified one is the only one that reliably
+meets it. Open-loop conformal never violates, but fires in 73.8\,\% of
+scenarios.
 
 \begin{figure}[t]
 \centering
@@ -815,8 +816,13 @@ isotropic radius performs the same (27.5\,\% versus 28.5\,\%). Delaying
 the intervention by one decision tick (0.5\,s) already lifts the miss
 rate above the target (5.3\,\%) and two ticks give 9.1\,\%, while
 stops fall (Fig.~\ref{fig:shift-latency}b), so a certificate calibrated
-at zero latency is not valid for a slower actuation chain and latency
-belongs in the certified quantity.
+at zero latency violates the target in 92\,\% and 100\,\% of resplits.
+Calibrating under the deployed latency, which the lookup supports without
+new simulation, brings the miss rate back to 3.6--4.1\,\% at 34.4\,\% and
+42.5\,\% stops, but its violation frequency, 12.0\,\% and 11.5\,\%
+(Wilson intervals [8.2, 17.2] and [7.8, 16.7]), is above $\delta$ as
+pre-registered, so we do not claim validity there
+(Supplementary Section~S9).
 
 \subsection{Dataset shift (RQ3)}
 \label{sec:res-shift}
@@ -899,9 +905,10 @@ certified miss rate. On the fresh replication split it is 5.0\,\% [3.7,
 6.6] against 3.4\,\% missed. A trigger that always fires creates harm in
 3.1\,\% of scenarios. On nuScenes the same threshold leaves 15.6\,\%
 residual harm. Induced collisions are other vehicles striking the stopped
-ego, and concentrate where the fallback fires early: 9.2\,\% at or before
-the median firing tick against 3.0\,\% later (Supplementary
-Section~S6). The fallback removes a large share of harm, but the
+ego, but typically long after it has stopped (median 8.3\,s after firing)
+and often where the ego starts at standstill, so this cost may partly
+reflect simulated traffic that does not yield to a stationary vehicle
+(Supplementary Section~S6). The fallback removes a large share of harm, but the
 certificate does not speak to what remains, and certifying residual harm
 directly at 5\,\% required firing in nearly every scenario and still
 failed validity (Supplementary Section~S5).
@@ -971,12 +978,11 @@ source certificate already holds on Waymo, so there was nothing to
 repair. Few labeled target scenes are therefore dangerous without a
 certificate even when the source certificate transfers.
 
-\emph{Sensitivity.} Non-reactive log-replay traffic, a 2.0\,m/s$^2$
-comfort deceleration and 10\,Hz decisions, each paired by scenario seed
-against the main run, leave every conclusion above unchanged. The
-certified miss rate stays below the target in all three, and only log
-replay raises unnecessary stops, by 7.9 points, through a higher harm
-base rate (Supplementary Section~S4).
+\emph{Sensitivity.} Non-reactive replay traffic, a 2.0\,m/s$^2$ comfort
+deceleration and 10\,Hz decisions leave the certified miss rate below the
+target and every conclusion above unchanged. Only replay raises
+unnecessary stops, by 7.9 points, through a higher harm base rate
+(Supplementary Section~S4).
 
 \subsection{Robustness checks (post hoc)}
 \label{sec:res-robust}
@@ -1051,7 +1057,9 @@ variant for future benchmarks.
 
 \emph{Simulator, predictor and perception.} All results use MetaDrive
 with rule-based (IDM) agents, and whether the ordering of triggers
-survives learned agent behavior is open. LTT's validity replicates with a
+survives learned agent behavior is open. The induced-collision rate in
+particular depends on how that traffic reacts to a stationary ego and is
+best read as an upper bound. LTT's validity replicates with a
 second predictor (Section~\ref{sec:res-robust}), and so does the gap to
 the tuned confidence trigger (30.6\,\% against 68.3\,\% stops). Only the
 ensemble and open-loop comparisons, which need dropout passes and error
@@ -1060,12 +1068,11 @@ predictor receives agent states, which isolates the triggering decision
 from perception error. Composing the certificate with a calibrated
 perception module is future work.
 
-\emph{Shift and dependence.} The weighted certificate covers shift in
-observable scenario covariates, and its effective sample size (68 in our
-nuScenes subset) shows when it becomes unreliable. Every guarantee also
-treats scenarios as exchangeable, which scenarios from one recording may
-violate. Our nuScenes samples span only 37 and 23 scenes, and group-level
-resplits were not possible for the other datasets.
+\emph{Shift and dependence.} The weighted certificate reports when it
+becomes unreliable through its effective sample size (68 in our nuScenes
+subset). All guarantees treat scenarios as exchangeable, which scenarios
+from one recording may violate: our nuScenes samples span only 37 and 23
+scenes, and group-level resplits were not possible elsewhere.
 
 \emph{Harm definition and fallback family.} The geometric score's
 advantage holds under three time-to-collision thresholds and a

@@ -689,3 +689,45 @@ traffic only; 61 scenarios. Files: `results/final/direct_validation.json`, `dire
 Descriptive additions: nuScenes failure under scene-level clustering is [6.1, 21.0] (37 scenes) and 9.5 %
 [3.9, 16.5] on a disjoint 23-scene sample; domain AUROC 0.97 (nuScenes) vs 0.91 (Waymo); induced collisions
 concentrate at early firing (9.2 % vs 3.0 %). See `results/final/shift_and_cost.json`.
+
+
+## Amendment 8 — 2026-10-05, BEFORE any latency-aware certification exists (second external review)
+
+A strict-referee review noted that the paper shows a certificate calibrated at zero latency breaking at one or two
+ticks of latency, but never shows the remedy. The lookup supports the remedy without new simulation: the loss is
+`miss[tick + latency]`, so LTT can be run on the latency-ell loss directly. No earlier hypothesis changes.
+
+### L1 Certifying under the deployed latency restores validity
+**Data:** `av2_cal` -> `av2_test` (primary predictor, n = 1994 / 1996), alpha = 0.05, delta = 0.10, geometric score.
+**Method:** for ell in {0, 1, 2} decision ticks (0, 0.5, 1.0 s), run LTT on calibration scenarios with the loss
+evaluated at latency ell, deploy at latency ell on test. 200 half/half resplits of the pooled scenarios
+(seed 0, same protocol as `evaluate.validity`) give the violation frequency for the latency-ell certificate and,
+for comparison, for the zero-latency certificate deployed at latency ell.
+**Claim:** the latency-ell certificate has violation frequency <= delta at every ell (or refuses to certify,
+which is reported), and the zero-latency certificate deployed at ell >= 1 does not.
+**Refuted if:** the latency-ell certificate exceeds delta at any ell for which it certifies a threshold, or the
+zero-latency certificate deployed at ell = 1 is itself valid.
+Reported either way, with unnecessary-stop cost per ell.
+
+### Amendment 8 outcome (2026-10-05), read against the rule fixed above
+L1 (`results/final/latency_cert.json`, 200 resplits): violation frequency of the latency-aware certificate is 9.5 %
+(ell = 0), 12.0 % (ell = 1) and 11.5 % (ell = 2); the zero-latency certificate deployed at ell = 1 and 2 violates
+in 92.0 % and 100 %. No resplit refused to certify. Unnecessary stops of the latency-aware certificate rise from
+28.5 % to 34.4 % to 42.5 %. **Verdict by the rule as written: REFUTED for the first half of the claim**
+(the latency-aware certificate exceeds delta at ell = 1 and ell = 2); the second half (the zero-latency certificate is
+not valid under latency) HOLDS. Reading: the violation frequencies' Wilson intervals include delta (see paper), the
+metric counts finite-test-half exceedances rather than the population risk the guarantee bounds, and ell = 0 is
+itself 9.5 %. The refutation is reported as such; no rule was changed after reading.
+
+
+### Amendment 8, item I1 (descriptive, no hypothesis; 2026-10-05, before looking at the numbers)
+Because every induced collision in the stored `av2_test` rows is a vehicle striking the stopped or braking ego, the
+paper's "triggering is not free" claim rests on IDM follower behavior. I1 characterizes the 129 induced contacts at
+the certified threshold by (a) time between the fallback's firing and the contact, (b) whether the ego had
+already been stationary (stopped_steps) when it was struck, and (c) contact type. Reported as descriptive statistics.
+No threshold or rule is derived from it. (`src/induced_check.py`)
+I1 outcome (2026-10-05): 129 induced contacts from 51 scenarios; 99 active_rear, 30 active_lateral. Time from firing to
+contact: median 8.3 s, 3.9 % within 2 s, 78 % after 5 s. 67 % of events are in scenarios whose ego starts at
+standstill. Reading: not a follower surprised by hard braking; consistent with replay traffic not yielding to a
+long-stationary ego, so the induced rate is an upper bound on the cost of stopping in this simulator. Paper text
+corrected accordingly (it previously said the dangerous case was early stopping with traffic close behind).
