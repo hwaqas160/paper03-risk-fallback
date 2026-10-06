@@ -832,3 +832,30 @@ miss <= alpha") excludes it and the comparison is not evaluable as written; repo
 than T2 by 33.2 points (paired 95 % CI [-37.5, -29.0]) and than T1 by 39.8 [-43.7, -35.8], with a lower miss rate than both.
 The reading-rule's literal verdict flag is False only because T2 fails the target. The geometric advantage over the
 ensemble trigger therefore holds with the second predictor, with the caveat that T2 is not a valid comparator at 5 %.
+
+
+## Amendment 10 — 2026-10-06, BEFORE any Wayformer rollout or spatial-group analysis exists
+
+Motivated by two remaining reviewer risks: (i) every result uses AutoBot, and (ii) scenarios from one place or drive are
+not independent. A stronger AutoBot cannot be trained on this machine (Paper 01's GPU is contended; its best AutoBot,
+minADE6 0.854, is already the second predictor), so the generalization test uses a different ARCHITECTURE instead.
+
+### W1 Second architecture (Wayformer)
+**Predictor:** `av2_wayformer/epoch19-minADE0.967.ckpt` (Paper 01 artifact, a partly trained checkpoint, a fixed file;
+UniTraj Wayformer, same 2.1 s history / 6 s horizon, 6 modes). **Data:** the same seeds as `av2_cal5` / `av2_test5`
+(904 / 904, mc = 0, decide every 5 steps, MRM 4.0 m/s^2, reactive IDM traffic), full tick-sweep campaign as in the main
+study. T2 and T3 are not repeated. **Before the campaign:** a sanity check that the Wayformer wrapper reproduces
+plausible forecasts (median 3 s endpoint disagreement with AutoBot on identical simulator states below 5 m).
+**Claim (both parts):** (a) LTT with the Wayformer geometric score is valid: violation frequency over 200 resplits
+<= 0.10 and test miss <= 0.05; (b) the geometric certified trigger stops less than tuned T1 (Wayformer confidence)
+among triggers meeting the target, paired bootstrap 95 % CI excluding 0. **Refuted if** (a) or (b) fails, reported either
+way. Scenarios whose reference run errors are dropped and counted.
+
+### G1 Spatial-group dependence (Argoverse 2 and Waymo)
+Scenarios are grouped by the ego's initial position: connected components of scenarios whose ego start points are within
+150 m of each other (single linkage), computed separately per dataset (and per city for Argoverse 2). This is a proxy for
+"same place or drive"; no recording identifier exists in the converted data. **Group-level validity:** 200 resplits of the
+pooled Argoverse 2 calibration + test scenarios in which whole groups are assigned to calibration or test (about half the
+scenarios each). **Claim:** LTT's violation frequency under group-level resplits is <= 0.10. **Refuted if** it exceeds 0.10
+(point estimate). Also reported: a group-bootstrap 95 % CI (10,000 draws) of the miss rate of the certified threshold on
+Argoverse 2 test and on Waymo, compared with the Wilson interval, and the group count and sizes. Descriptive.
