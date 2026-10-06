@@ -814,3 +814,21 @@ dynamics after a first impact are not run-to-run reproducible). At the first ind
 max 11.8), 19 lateral and 32 rear contacts; time after firing median 6.5 s. At firing an agent was in the ego's lane
 behind it in 39/51, at median gap 8.3 m and median speed 0 m/s. Reading: low- to moderate-speed contacts with a slow
 or stationary ego by traffic proceeding along logged paths; not hard-braking surprises.
+
+### Amendment 9 outcome D1 (2026-10-06) (`results/final/direct_validation.json`)
+Merged draws: 252 distinct av2_test scenarios x 4 triggers = 1,008 pairs, 0 direct-run errors. Disagreement with the lookup:
+firing step 0, miss 0, unnecessary stop 0, induced collision 0 (each 0/1008, Wilson 95 % upper bound 0.38 %), harm anywhere in
+the run 1/1008 (seed 1934 again, certified threshold; lookup has post-fire harm the direct run lacks). Route completion
+identical in 454/1008 pairs, mean absolute difference 0.00015, max 0.036. Aggregates identical per trigger (e.g. LTT
+miss 3.6 %, stops 27.8 %; one-tick latency miss 4.8 %). No quantity reaches the 5 % rule: lookup NOT refuted as a
+substitute for direct execution. The 61-scenario snapshot in earlier text is superseded.
+
+### Amendment 9 outcome E1 (2026-10-06) (`results/final/ens_gpu.json`)
+Second predictor (minADE6 0.854), reference runs re-run with 5 MC-dropout passes: 865/904 calibration and 867/904 test
+scenarios reproduce the stored reference (tick count and geometric trace); 39 and 37 are dropped (4.3 %, 4.1 %). On the
+reproduced scenarios: LTT-geometric miss 3.2 % [2.2, 4.6], stops 26.4 %; tuned T1 5.0 % [3.7, 6.6], 66.2 %; tuned T2 ensemble
+5.7 % [4.3, 7.4], 59.6 %. T2 does NOT meet the 5 % target on test, so the rule's condition ("among triggers meeting
+miss <= alpha") excludes it and the comparison is not evaluable as written; reported unconditionally: LTT stops fewer
+than T2 by 33.2 points (paired 95 % CI [-37.5, -29.0]) and than T1 by 39.8 [-43.7, -35.8], with a lower miss rate than both.
+The reading-rule's literal verdict flag is False only because T2 fails the target. The geometric advantage over the
+ensemble trigger therefore holds with the second predictor, with the caveat that T2 is not a valid comparator at 5 %.

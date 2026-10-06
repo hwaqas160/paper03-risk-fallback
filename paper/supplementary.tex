@@ -318,21 +318,23 @@ The main paper evaluates every trigger by lookup in a table of forced-fire
 rollouts, which is exact when a run under the trigger coincides with the
 reference run until it fires (Observation~1). The assumption is
 measured in the forced runs but was not tested by executing a trigger.
-This check, pre-registered as Amendment~7 before any run, does so. It draws
-61 test scenarios at random from the 2{,}000 stored Argoverse~2 test
-rows (the job was stopped at 60 complete scenarios for compute reasons,
-independently of any outcome), and runs four geometric triggers live
-with the predictor scoring at every decision tick and no score replay or
-forced-fire table: the certified LTT threshold with zero and with one
-decision tick of latency, and the thresholds at the 25th and 75th
-percentile of the calibration peak scores (about 75\,\% and 25\,\% of
-scenarios fire). Each run is scored with the same nuPlan harm definition
-and compared, scenario by scenario, with the lookup at the same threshold
-and latency. No direct run failed.
+This check, pre-registered as Amendment~7 and extended in Amendment~9,
+does so. It draws two independent random samples of stored Argoverse~2
+test scenarios (120 and 140 scenarios, 252 distinct after merging by
+seed) and runs four geometric triggers live, with the predictor scoring at
+every decision tick and no score replay or forced-fire table: the
+certified LTT threshold with zero and with one decision tick of latency,
+and the thresholds at the 25th and 75th percentile of the calibration peak
+scores (about 75\,\% and 25\,\% of scenarios fire). Each run is scored with
+the same nuPlan harm definition and compared, scenario by scenario, with
+the lookup at the same threshold and latency. No direct run failed.
+(The first draw was first analyzed as a snapshot of 61 scenarios, because
+the stop signal described in Amendment~7 did not take effect and the job
+ran to completion. The figures here supersede that snapshot.)
 
 \begin{table}[h]
-\caption{Direct execution versus lookup, 61 scenarios $\times$ 4
-triggers = 244 pairs. Disagreement: pairs in which the two differ.}
+\caption{Direct execution versus lookup, 252 scenarios $\times$ 4
+triggers = 1{,}008 pairs. Disagreement: pairs in which the two differ.}
 \label{tab:direct}
 \centering
 \scriptsize\setlength{\tabcolsep}{3pt}
@@ -340,34 +342,34 @@ triggers = 244 pairs. Disagreement: pairs in which the two differ.}
 \toprule
 Quantity & Disagree & Wilson 95\,\% upper bound \\
 \midrule
-Firing step (or no firing) & 0 / 244 & 1.5\,\% \\
-Missed intervention & 0 / 244 & 1.5\,\% \\
-Unnecessary stop & 0 / 244 & 1.5\,\% \\
-Induced collision & 0 / 244 & 1.5\,\% \\
-Harm anywhere in the run & 1 / 244 & 2.3\,\% \\
+Firing step (or no firing) & 0 / 1{,}008 & 0.4\,\% \\
+Missed intervention & 0 / 1{,}008 & 0.4\,\% \\
+Unnecessary stop & 0 / 1{,}008 & 0.4\,\% \\
+Induced collision & 0 / 1{,}008 & 0.4\,\% \\
+Harm anywhere in the run & 1 / 1{,}008 & 0.6\,\% \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 Table~\ref{tab:direct} shows no disagreement in any alert-level quantity
 or in the induced collisions. The aggregate rates are identical for every
-trigger (for example 6.6\,\% missed and 18.0\,\% unnecessary stops for the
-certified threshold, 8.2\,\% missed with one tick of latency). One pair
-differs in harm anywhere in the run (seed 1934, certified threshold):
-the lookup records harm after the fallback and the direct run does not. We
-did not trace its cause, but a rare pre-fire difference of this kind is
-what the drift measurement in Section~III-E of the main paper reports (the
-pre-fire time-to-collision trace differed in 1.2\,\% of forced runs). Route
-completion is identical in 120 of the 244 pairs and differs by 0.0001 on
-average and 0.018 at most. The pre-registered rule, that the lookup is
+trigger (for example 3.6\,\% missed and 27.8\,\% unnecessary stops for the
+certified threshold, and 4.8\,\% missed with one tick of latency). One pair
+differs in harm anywhere in the run (seed 1934, certified threshold): the
+lookup records harm after the fallback and the direct run does not. We did
+not trace its cause. The re-run of induced collisions in
+Section~S6 shows that contact events after a first impact are not always
+reproducible from run to run, which is a plausible source. Route
+completion is identical in 454 of the 1{,}008 pairs and differs by 0.0002
+on average and 0.036 at most. The pre-registered rule, that the lookup is
 refuted as a substitute if any quantity disagrees in more than 5\,\% of
-pairs, is therefore not triggered. The sample is small, with a 95\,\%
-upper bound on the disagreement rate of about 1.5\,\% for the alert-level
-quantities, covers one dataset, one predictor and one maneuver, and does
-not test stochastic traffic, for which assumption (A1) would not hold and
-the lookup would estimate the outcome under a different random draw
-than the one the trigger would have met. The magnitudes of the pre-fire
-deviations in the forced runs were not stored, only whether they exceeded 1\,cm.
+pairs, is therefore not triggered, and the upper bound on the disagreement
+rate of the alert-level quantities is 0.4\,\%. The check covers one
+dataset, one predictor and one maneuver, and does not test stochastic
+traffic, for which assumption (A1) would not hold and the lookup would
+estimate the outcome under a different random draw than the one the
+trigger would have met. The magnitudes of the pre-fire deviations in the
+forced runs were not stored, only whether they exceeded 1\,cm.
 
 \section{Replication on Fresh Data and a Second Predictor}
 \label{sec:s-replicate}
@@ -402,6 +404,27 @@ T1 confidence & 4.8 & 50.0 & 4.6 & 46.0 \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+\emph{Ensemble baseline with the second predictor.} The replication above
+lacked the Monte Carlo dropout trigger. We re-ran only the reference run
+of every fresh calibration and test scenario with five dropout passes
+(Amendment~9), reusing the forced-fire outcomes, which do not depend on
+any score. The re-run reproduced the stored reference (tick count and
+geometric trace) in 865 of 904 calibration and 867 of 904 test scenarios,
+and we dropped the others (4.3\,\% and 4.1\,\%), so these figures use 865
+and 867 scenarios. On the test scenarios the certified geometric trigger
+misses 3.2\,\% [2.2, 4.6] with 26.4\,\% unnecessary stops, the tuned
+confidence trigger 5.0\,\% [3.7, 6.6] with 66.2\,\%, and the tuned ensemble
+trigger 5.7\,\% [4.3, 7.4] with 59.6\,\%. The tuned ensemble trigger
+therefore misses the 5\,\% target, which the pre-registered comparison
+``among triggers that meet the target'' did not anticipate, so the rule
+as written cannot be evaluated for it. Unconditionally, the certified
+trigger stops 33.2 points less than the ensemble trigger (paired 95\,\%
+CI $[-37.5, -29.0]$) and 39.8 points less than the confidence trigger
+($[-43.7, -35.8]$), with a lower miss rate than both. The
+geometric-versus-ensemble gap is thus reproduced with a second predictor,
+and the open-loop conformal comparison alone remains untested there.
+
 
 \section{Certifying Under the Deployed Latency}
 \label{sec:s-latency}

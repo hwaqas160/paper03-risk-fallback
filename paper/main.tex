@@ -497,11 +497,11 @@ the reference run to within 1\,cm before firing, the pre-fire
 time-to-collision trace differed in 1.2\,\%, and the pre-fire harm status
 in one rollout (0.003\,\%). We report every analysis on all scenarios and
 after dropping the 3.6\,\% with any flagged drift. We also executed four
-triggers directly, live and without replay, on 61 random test scenarios
-(244 scenario--trigger pairs, one trigger with a one-tick latency).
+triggers directly, live and without replay, on 252 random test scenarios
+(1{,}008 scenario--trigger pairs, one trigger with a one-tick latency).
 Firing step, miss, unnecessary stop and induced collision agreed with the
-lookup in all 244 pairs, and harm anywhere in the run in all but one
-(0.4\,\%, [0.1, 2.3]); route completion differed by at most 0.018
+lookup in all 1{,}008 pairs (upper bound 0.4\,\%), and harm anywhere in
+the run in all but one; route completion differed by at most 0.036
 (Supplementary Section~S7). The lookup is exact only under (A1), but it
 matched direct execution within this tolerance.
 
@@ -986,9 +986,10 @@ TTC $<$ 1.5\,s & 34.0 & 68.3 & T2 & $-34.4$ [$-36.8,-31.9$] \\
 We recalibrate LTT on 904 fresh Argoverse~2 scenarios, disjoint from
 every split above, and test on a further 904, then repeat this with a
 second, independently trained predictor (minADE$_6 = 0.854$, versus 1.09
-for the predictor used everywhere else). T2, T3 and ACI are not available
-on this data (no Monte Carlo dropout passes or open-loop error files) and
-are omitted rather than approximated. LTT's validity replicates in both
+for the predictor used everywhere else). T3 and ACI are not available
+on this data (no open-loop error files) and are omitted rather than
+approximated, and T2 is added by re-running the reference runs with
+dropout. LTT's validity replicates in both
 settings (7.5\,\% and 9.0\,\% violations, against 46--51\,\% for the
 uncertified baselines), and its miss rate stays below $\alpha$
 (Supplementary Section~S8).
@@ -1020,9 +1021,9 @@ survives learned agent behavior is open. The induced-collision rate in
 particular depends on how that traffic reacts to a stationary ego and is
 best read as an upper bound. LTT's validity replicates with a
 second predictor (Section~\ref{sec:res-robust}), and so does the gap to
-the tuned confidence trigger (30.6\,\% against 68.3\,\% stops). Only the
-ensemble and open-loop comparisons, which need dropout passes and error
-files this arm lacks, were not repeated. The
+the tuned confidence trigger (30.6\,\% against 68.3\,\% stops) and the
+tuned ensemble trigger (59.6\,\% stops at a 5.7\,\% miss rate against 26.4\,\%
+at 3.2\,\%). Only the open-loop comparison was not repeated. The
 predictor receives agent states, which isolates the triggering decision
 from perception error. Composing the certificate with a calibrated
 perception module is future work.
