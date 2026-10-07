@@ -859,3 +859,9 @@ pooled Argoverse 2 calibration + test scenarios in which whole groups are assign
 scenarios each). **Claim:** LTT's violation frequency under group-level resplits is <= 0.10. **Refuted if** it exceeds 0.10
 (point estimate). Also reported: a group-bootstrap 95 % CI (10,000 draws) of the miss rate of the certified threshold on
 Argoverse 2 test and on Waymo, compared with the Wilson interval, and the group count and sizes. Descriptive.
+
+### Amendment 10 status (2026-10-07): PAUSED at the author's request
+The Wayformer campaign (`results/campaign/av2_cal5_way`, `av2_test5_way`) and the spatial-group job were stopped by hand after
+a partial run. Collected rows are kept and the collection is resumable (re-run `run_way_cal.sh` / `run_way_test.sh`; finished
+seeds are skipped). No Wayformer or spatial-group outcome has been read, so the pre-registered rules above stand unchanged.
+The spatial-group analysis (`src/spatial_groups.py`) restarts from scratch (about 15 min of file reading plus 200 resplits).
