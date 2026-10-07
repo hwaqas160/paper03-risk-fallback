@@ -876,3 +876,11 @@ calibration share about 53 % because whole groups are assigned). Post hoc sensit
 Waymo 2.7 % Wilson [1.9, 3.9] vs groups [1.7, 3.8] (664 groups). Reading: place-level dependence does not widen the miss
 intervals, but leaves LTT's high-probability guarantee above delta under group-wise splitting; the violation estimates carry
 Monte Carlo error (17 % has Wilson interval [12.4, 22.8] over 200 resplits).
+
+### Amendment 10 outcome W1 (2026-10-07) (`results/final/way_eval.json`; campaigns `av2_cal5_way`, `av2_test5_way`, 904 / 904)
+Wayformer (UniTraj, `epoch19-minADE0.967`) full tick-sweep campaign, 4.8 h per arm. Test: LTT-geometric miss 3.1 % [2.2, 4.4],
+unnecessary stops 41.8 % [38.6, 45.1]; tuned geometric 3.8 % / 36.7 %; tuned T1 confidence 4.2 % [3.1, 5.7] / 67.8 %. Validity over
+200 resplits: LTT 7.0 % violations (Wilson [4.2, 11.4]), tuned geometric 48 %, CRC 44 %, T1 53 %. Paired stop difference LTT minus
+T1 -26.0 points [-29.8, -22.1]. Both parts of the claim hold (a: violation <= 0.10 and miss <= 0.05; b: T1 meets the target and LTT
+stops less with a CI excluding 0): **W1 NOT refuted**. The certified trigger needs more stops with this predictor (41.8 % against
+26-29 % with AutoBot), so the cost of certification depends on the predictor.

@@ -573,6 +573,48 @@ test scenarios (360 groups; Wilson [2.9, 4.6]) and [1.7, 3.8]\,\% on Waymo
 change the point conclusions about the miss rate, including the
 conservative result on Waymo.
 
+\section{A Second Architecture: Wayformer}
+\label{sec:s-wayformer}
+Every main result uses AutoBot, and the second predictor of
+Section~S8 is also an AutoBot. To test whether the findings are specific
+to the architecture, we repeated the full closed-loop campaign
+(Amendment~10, pre-registered) on the same 904 calibration and 904 test
+scenarios with a Wayformer forecaster from the same framework (minADE$_6 =
+0.967$, a partly trained checkpoint, the same 2.1\,s history and 6\,s
+horizon). A check on identical simulator states found a median 3\,s
+endpoint disagreement of 1.6\,m with AutoBot, so the wrapper produces
+comparable forecasts. T2 and T3 are not repeated.
+
+\begin{table}[h]
+\caption{Wayformer arm, Argoverse~2 fresh test scenarios ($n = 904$). Viol.:
+fraction of 200 resplits with test miss above 5\,\%. Rates in \%.}
+\label{tab:way}
+\centering
+\scriptsize\setlength{\tabcolsep}{3pt}
+\begin{tabular}{lccc}
+\toprule
+Method & Miss [95\,\% CI] & Unnec. stops & Viol. \\
+\midrule
+LTT (geometric) & 3.1 [2.2, 4.4] & 41.8 & 7.0 \\
+Tuned geometric & 3.8 [2.7, 5.2] & 36.7 & 48.0 \\
+CRC (geometric) & -- & -- & 44.0 \\
+Tuned T1 confidence & 4.2 [3.1, 5.7] & 67.8 & 53.0 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Both parts of the pre-registered claim hold. LTT is valid (7.0\,\%
+violations, Wilson interval [4.2, 11.4], and a test miss of 3.1\,\%), and
+the certified geometric trigger stops 26.0 points less than the tuned
+confidence trigger (paired 95\,\% CI $[-29.8, -22.1]$), which meets the
+target with 4.2\,\% missed. The uncertified geometric threshold and CRC
+violate the target in 48\,\% and 44\,\% of resplits, as with AutoBot. The
+certificate itself and the geometric advantage therefore do not depend on
+the architecture. The price does depend on the predictor: with Wayformer
+the certified trigger stops 41.8\,\% of scenarios, against 26 to 29\,\% with
+the two AutoBot models, which is consistent with a less accurate forecaster
+needing a more conservative threshold to meet the same target.
+
 \section{Outcome Partition of the Fallback}
 \label{sec:s-partition}
 The table partitions every scenario by what happens after the fallback fires, as described in the main paper.

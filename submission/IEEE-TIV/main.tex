@@ -888,7 +888,7 @@ it reaches 2.2\,\%, below the target, but its effective sample size is only
 
 \subsection{What the intervention does, and a class-conditional certificate (post hoc)}
 \label{sec:res-cost}
-The certified quantity is the alert. Supplementary Section~S13 partitions every
+The certified quantity is the alert. Supplementary Section~S14 partitions every
 scenario by what happens after the fallback fires. At the certified
 threshold on Argoverse~2, 3.7\,\% of scenarios are missed, in a further
 1.7\,\% the fallback fires before harm but harm still occurs, and in
@@ -904,15 +904,7 @@ certificate does not speak to what remains, and certifying residual harm
 directly at 5\,\% required firing in nearly every scenario and still
 failed validity (Supplementary Section~S5).
 
-\emph{Class-conditional certification and reverse shift.} A Luo-style
-class-conditional certificate at $\epsilon=0.05$ selects a threshold
-equivalent to always firing (84.9\,\% unnecessary stops). At the
-marginal-matched $\epsilon=0.32$ its conditional miss rate on nuScenes is
-66\,\% against its 32\,\% target, so it does not survive the shift either
-(Supplementary Material, Section~S1 and Table~S1). Certifying on
-nuScenes and deploying on Argoverse~2 transfers safely but
-conservatively (miss 1.9--2.0\,\%, Section~S2), a single-pair
-observation.
+\emph{Class-conditional certification and reverse shift.} A Luo-style class-conditional certificate at $\epsilon=0.05$ is equivalent to always firing (84.9\,\% stops), and at the marginal-matched $\epsilon=0.32$ its conditional miss rate on nuScenes is 66\,\% against its 32\,\% target (Supplementary Section~S1). Certifying on nuScenes and deploying on Argoverse~2 transfers safely but conservatively (miss 1.9--2.0\,\%, Section~S2), a single-pair observation.
 
 \subsection{Second shifted dataset and recalibration}
 \label{sec:res-waymo}
@@ -1018,33 +1010,11 @@ miss metric on harm anywhere in a replayed snippet mixes preventable
 events with events already under way, and we propose an avoidable-only
 variant for future benchmarks.
 
-\emph{Simulator, predictor and perception.} All results use MetaDrive
-with rule-based (IDM) agents, and whether the ordering of triggers
-survives learned agent behavior is open. The induced-collision rate in
-particular depends on how that traffic reacts to a stationary ego and is
-best read as an upper bound. LTT's validity replicates with a
-second predictor (Section~\ref{sec:res-robust}), and so does the gap to
-the tuned confidence trigger (30.6\,\% against 68.3\,\% stops) and the
-tuned ensemble trigger (59.6\,\% stops at a 5.7\,\% miss rate against 26.4\,\%
-at 3.2\,\%). Only the open-loop comparison was not repeated. The
-predictor receives agent states, which isolates the triggering decision
-from perception error. Composing the certificate with a calibrated
-perception module is future work.
+\emph{Simulator, predictor and perception.} All results use MetaDrive with rule-based (IDM) agents, so whether the ordering of triggers survives learned agent behavior is open, and the induced-collision rate, which depends on how that traffic reacts to a stationary ego, is best read as an upper bound. LTT's validity and the gap to the confidence and ensemble triggers replicate with a second AutoBot predictor (Section~\ref{sec:res-robust}), and validity and the confidence gap also hold with a different architecture, Wayformer (7.0\,\% violations, 41.8\,\% against 67.8\,\% stops), at a higher stop rate (Supplementary Section~S13). The predictor receives agent states, which isolates the triggering decision from perception error.
 
-\emph{Shift and dependence.} The weighted certificate reports when it
-becomes unreliable through its effective sample size (68 in our nuScenes
-subset). All guarantees treat scenarios as exchangeable, which nearby
-scenarios may violate: our nuScenes samples span only 37 and 23 scenes,
-and spatial-group resplits (a proxy) push the violation frequency above
-$\delta$, so the high-probability statement is weaker in practice.
+\emph{Shift and dependence.} The weighted certificate reports when it becomes unreliable through its effective sample size (68 in our nuScenes subset). All guarantees treat scenarios as exchangeable, which nearby scenarios may violate: our nuScenes samples span only 37 and 23 scenes, and spatial-group resplits (a proxy) push the violation frequency above $\delta$, so the high-probability statement is weaker in practice.
 
-\emph{Harm definition and fallback family.} The geometric score's
-advantage holds under three time-to-collision thresholds and a
-collision-only definition (Section~\ref{sec:res-robust}). Fault
-attribution is not varied, and a severity-weighted or tail (CVaR)
-certificate~\cite{cvar2022} requires only a change of loss. We evaluate
-in-lane stops at the UN~R157 deceleration limit. Other fallbacks, such as
-a lateral pull-over, change the quantities priced but not the method.
+\emph{Harm definition and fallback family.} The geometric score's advantage holds under three time-to-collision thresholds and a collision-only definition (Section~\ref{sec:res-robust}). Fault attribution is not varied, and a severity-weighted or tail certificate~\cite{cvar2022} requires only a change of loss. We evaluate in-lane stops at the UN~R157 deceleration limit, and other fallbacks change the quantities priced but not the method.
 
 %=======================================================================
 \section{Conclusion}
