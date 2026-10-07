@@ -541,6 +541,38 @@ trigger (paired difference $-36.2$ points, 95\,\% CI $[-41.8, -30.7]$). The
 stop-rate advantage therefore persists under a second traffic model, although
 both are rule-based and neither is a learned agent model.
 
+\section{Spatial-Group Dependence}
+\label{sec:s-spatial}
+Scenarios from the same place or drive may be dependent, which would
+weaken the exchangeability that the guarantee needs. The converted data
+carry no recording identifier for Argoverse~2 and Waymo, so
+(Amendment~10, pre-registered) we group scenarios by the ego's initial
+position: single-linkage components of scenarios whose ego start points lie
+within 150\,m of each other, formed separately for each Argoverse~2 city.
+This is a proxy, not a recording identifier. It gives 547 groups over the
+3{,}990 pooled Argoverse~2 scenarios (the largest has 649, 16\,\% of them, the
+median group is a single scenario) and 664 groups over the 1{,}000 Waymo
+scenarios (the largest has 13).
+
+We repeat the main validity analysis with whole groups assigned to
+calibration or test (200 resplits, calibration share about 53\,\%). The
+violation frequency of LTT is 17.0\,\% (Wilson 95\,\% interval [12.4, 22.8])
+against 9.5\,\% for random resplits, and the mean test miss rate is 4.2\,\%.
+The pre-registered claim that it stays at or below $\delta = 0.10$ is
+therefore refuted. A post hoc sensitivity at 50\,m, which gives 1{,}796
+groups with the largest at 79 scenarios, yields 14.0\,\% [9.9, 19.5].
+Dependence between nearby scenarios is thus one more reason the
+high-probability statement is weaker in practice than in theory, although
+random and group-wise splits differ by less than the Monte Carlo error of
+either would suggest at 200 resplits.
+
+The miss-rate intervals are far less sensitive. A group bootstrap of the
+certified threshold's miss rate gives [3.0, 4.5]\,\% on the Argoverse~2
+test scenarios (360 groups; Wilson [2.9, 4.6]) and [1.7, 3.8]\,\% on Waymo
+(664 groups; Wilson [1.9, 3.9]). Place-level dependence therefore does not
+change the point conclusions about the miss rate, including the
+conservative result on Waymo.
+
 \section{Outcome Partition of the Fallback}
 \label{sec:s-partition}
 The table partitions every scenario by what happens after the fallback fires, as described in the main paper.

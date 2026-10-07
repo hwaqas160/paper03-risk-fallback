@@ -865,3 +865,14 @@ The Wayformer campaign (`results/campaign/av2_cal5_way`, `av2_test5_way`) and th
 a partial run. Collected rows are kept and the collection is resumable (re-run `run_way_cal.sh` / `run_way_test.sh`; finished
 seeds are skipped). No Wayformer or spatial-group outcome has been read, so the pre-registered rules above stand unchanged.
 The spatial-group analysis (`src/spatial_groups.py`) restarts from scratch (about 15 min of file reading plus 200 resplits).
+Amendment 10 RESUMED 2026-10-07 at the author's request (same commands, detached processes).
+
+### Amendment 10 outcome G1 (2026-10-07) (`results/final/spatial_groups.json`)
+Groups = ego start points within 150 m (single linkage, per city for AV2): 547 groups over the 3,990 pooled AV2 scenarios
+(largest 649 = 16.3 %, median 1, 303 singletons); Waymo 664 groups over 1,000 scenarios (largest 13). **Group-level resplits
+(200): LTT violation frequency 17.0 % > 10 %, so the pre-registered claim is REFUTED** (mean group-resplit test miss 4.2 %;
+calibration share about 53 % because whole groups are assigned). Post hoc sensitivity at 50 m (1,796 groups, largest 79):
+14.0 %. Group-bootstrap 95 % intervals barely widen: AV2 test miss 3.7 % Wilson [2.9, 4.6] vs groups [3.0, 4.5] (360 groups);
+Waymo 2.7 % Wilson [1.9, 3.9] vs groups [1.7, 3.8] (664 groups). Reading: place-level dependence does not widen the miss
+intervals, but leaves LTT's high-probability guarantee above delta under group-wise splitting; the violation estimates carry
+Monte Carlo error (17 % has Wilson interval [12.4, 22.8] over 200 resplits).

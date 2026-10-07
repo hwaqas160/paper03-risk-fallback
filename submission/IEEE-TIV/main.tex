@@ -606,10 +606,13 @@ of test miss rate above $\alpha$ at or below $\delta$. The resplits
 overlap, so they are not independent draws: the frequency estimates the
 violation probability for this pool, with Monte Carlo error (Wilson
 95\,\% interval [6.2, 14.4] for 9.5\,\%, [36.8, 50.4] for 43.5\,\%).
-Scenarios from one recording may be dependent, and only the nuScenes
-identifiers expose a grouping (Section~\ref{sec:res-shift}). Harm uses
-the nuPlan definition above, and Section~\ref{sec:res-robust} repeats the
-key comparison under three alternatives.
+Scenarios from one place may be dependent. Resplitting whole spatial
+groups (ego starts within 150\,m, a proxy) raises LTT's violation
+frequency to 17.0\,\% [12.4, 22.8], above $\delta$, although group
+bootstrap intervals for the miss rates barely widen (Supplementary
+Section~S12). Harm uses the nuPlan definition above, and
+Section~\ref{sec:res-robust} repeats the key comparison under three
+alternatives.
 
 \subsection{Pre-registration and reproducibility}
 \label{sec:prereg}
@@ -885,7 +888,7 @@ it reaches 2.2\,\%, below the target, but its effective sample size is only
 
 \subsection{What the intervention does, and a class-conditional certificate (post hoc)}
 \label{sec:res-cost}
-The certified quantity is the alert. Supplementary Section~S12 partitions every
+The certified quantity is the alert. Supplementary Section~S13 partitions every
 scenario by what happens after the fallback fires. At the certified
 threshold on Argoverse~2, 3.7\,\% of scenarios are missed, in a further
 1.7\,\% the fallback fires before harm but harm still occurs, and in
@@ -1030,9 +1033,10 @@ perception module is future work.
 
 \emph{Shift and dependence.} The weighted certificate reports when it
 becomes unreliable through its effective sample size (68 in our nuScenes
-subset). All guarantees treat scenarios as exchangeable, which scenarios
-from one recording may violate: our nuScenes samples span only 37 and 23
-scenes, and group-level resplits were not possible elsewhere.
+subset). All guarantees treat scenarios as exchangeable, which nearby
+scenarios may violate: our nuScenes samples span only 37 and 23 scenes,
+and spatial-group resplits (a proxy) push the violation frequency above
+$\delta$, so the high-probability statement is weaker in practice.
 
 \emph{Harm definition and fallback family.} The geometric score's
 advantage holds under three time-to-collision thresholds and a
