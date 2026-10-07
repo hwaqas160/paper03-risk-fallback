@@ -111,7 +111,7 @@ def _worker(job):
     skip_f = out_dir / f"skip_{job['wid']:02d}.jsonl"
     done = _done(rows_f) | _done(skip_f)
     have = len(_done(rows_f))
-    predictor = AutoBotPredictor(threads=1, mc=job["mc"], ckpt=job["ckpt"])
+    predictor = AutoBotPredictor(threads=1, mc=job["mc"], ckpt=job["ckpt"], method=job.get("method", "autobot"))
     policy = make_fallback_policy_cls(job["mrm_decel"])
     env = se.make_env(job["db"], job["start"], job["count"], policy=policy,
                       reactive_traffic=not job["replay"])
@@ -154,6 +154,7 @@ def main():
     ap.add_argument("--mrm_decel", type=float, default=4.0)
     ap.add_argument("--replay", action="store_true", help="non-reactive log-replay traffic (ablation)")
     ap.add_argument("--ckpt", default=None, help="AutoBot checkpoint (default: autobot_predictor.DEFAULT_CKPT)")
+    ap.add_argument("--method", default="autobot", choices=["autobot", "wayformer"], help="UniTraj model family of --ckpt")
     ap.add_argument("--rescore", action="store_true",
                     help="re-run only the reference run for stored rows lacking per-agent tables")
     ap.add_argument("--out", required=True)
@@ -178,7 +179,7 @@ def main():
     per = math.ceil(a.n / a.workers)
     jobs = [dict(wid=i, db=a.db, start=a.start + i * size, count=size, want=per, out=str(out),
                  decide_every=a.decide_every, mc=a.mc, mrm_decel=a.mrm_decel, replay=a.replay,
-                 ckpt=str(a.ckpt or DEFAULT_CKPT)) for i in range(a.workers)]
+                 ckpt=str(a.ckpt or DEFAULT_CKPT), method=a.method) for i in range(a.workers)]
     (out / "config.json").write_text(json.dumps(dict(vars(a), ckpt=str(a.ckpt or DEFAULT_CKPT),
                                                      total_in_db=total, span=span), indent=2))
     t0 = time.time()

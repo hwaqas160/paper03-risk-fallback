@@ -49,11 +49,12 @@ def _import_bridge():
 
 class AutoBotPredictor:
     def __init__(self, ckpt: str | Path = DEFAULT_CKPT, device: str = "cpu",
-                 threads: int = 1, horizon: int = 30, mc: int = 5):
+                 threads: int = 1, horizon: int = 30, mc: int = 5, method: str = "autobot"):
         import torch
         torch.set_num_threads(threads)
         bridge = _import_bridge()
-        self.model, self.cfg = bridge.build_model("autobot", str(ckpt), device)
+        self.method = method           # "autobot" (all main results) or "wayformer" (Amendment 10, W1)
+        self.model, self.cfg = bridge.build_model(method, str(ckpt), device)
         self.device = device
         self.horizon = horizon
         self.mc = mc                       # MC-dropout passes for T2 (0 = off)
@@ -64,7 +65,10 @@ class AutoBotPredictor:
         cwd = os.getcwd()
         os.chdir(bridge.UNITRAJ_PKG)
         try:
-            from unitraj.datasets.autobot_dataset import AutoBotDataset
+            import importlib
+            mod, cls = {"autobot": ("autobot_dataset", "AutoBotDataset"),
+                        "wayformer": ("wayformer_dataset", "WayformerDataset")}[method]
+            AutoBotDataset = getattr(importlib.import_module(f"unitraj.datasets.{mod}"), cls)
         finally:
             os.chdir(cwd)
         ds = AutoBotDataset.__new__(AutoBotDataset)   # skip load_data(): we feed samples ourselves
