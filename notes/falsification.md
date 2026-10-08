@@ -1067,3 +1067,12 @@ and out-of-fold ordering of Amendment 11/11a), run the ordered fixed-sequence LT
 calibrate `av2_cal5`, test `av2_test` + `av2_test5`. **Claim:** at both l = 1 and l = 2 (a) CSWC's realized test O_res <= 0.075, (b) its violation frequency
 over 200 resplits is not *violated* (corrected count <= delta), and (c) it stops fewer scenarios than BOTH the TTC and the geometric score among scores
 meeting the target (paired bootstrap 95 % CI excluding 0). **Refuted if** any of (a)-(c) fails at either latency. Reported either way.
+
+### Amendment 11b outcome (2026-10-08) (`results/final/r11_latency_outcome.json`)
+Outcome-level certification (O_res <= 0.075, risk-ordered LTT, calibrate `av2_cal5`, test 2,900) under actuation latency, latency-shifted labels
+for the learned trigger. l = 1 tick (0.5 s): CSWC realized O_res 4.9 %, stops 25.5 %, violations 6.5 % uncorrected / 0 % corrected (valid);
+geometric 6.1 % / 37.5 % (valid); TTC 3.6 % / 84.9 %. CSWC stops 12.0 points fewer than geometric (paired CI [-14.0, -10.0]) and 59.4 fewer
+than TTC ([-61.2, -57.6]). l = 2 ticks (1.0 s): CSWC 4.7 % / 34.2 % (violations 3.5 % / 0.5 %, valid); geometric and TTC both need 84.9 %
+(always firing); CSWC stops 50.7 points fewer than each ([-52.5, -48.8]). **Claim 11b HOLDS** at both latencies: (a) realized O_res <= 0.075,
+(b) not violated, (c) fewer stops than both. Together with the zero-latency result (TTC 10.2 % vs CSWC 13.6 %), no trigger dominates: TTC is cheapest
+at zero latency and the learned counterfactual trigger is cheapest once latency is 0.5 s or more.

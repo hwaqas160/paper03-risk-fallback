@@ -1,0 +1,18 @@
+{
+  "CDT": {
+    "mean_test_miss": 0.05016240601503759,
+    "uncorrected": 0.59,
+    "corrected": 0.0,
+    "n_resplits": 100,
+    "refused": 0,
+    "verdict": "indeterminate"
+  },
+  "ACI": {
+    "mean_test_miss": 0.012640601503759398,
+    "uncorrected": 0.0,
+    "corrected": 0.0,
+    "n_resplits": 100,
+    "refused": 0,
+    "verdict": "valid"
+  }
+}
