@@ -884,3 +884,94 @@ unnecessary stops 41.8 % [38.6, 45.1]; tuned geometric 3.8 % / 36.7 %; tuned T1 
 T1 -26.0 points [-29.8, -22.1]. Both parts of the claim hold (a: violation <= 0.10 and miss <= 0.05; b: T1 meets the target and LTT
 stops less with a CI excluding 0): **W1 NOT refuted**. The certified trigger needs more stops with this predictor (41.8 % against
 26-29 % with AutoBot), so the cost of certification depends on the predictor.
+
+
+## Amendment 11 — 2026-10-08, BEFORE any analysis below is run (strict-review fixes and a new method)
+
+Written before running anything in this amendment. Everything uses stored rollouts; nothing is re-simulated. alpha = 0.05
+and delta = 0.10 unless stated. Every claim is evaluated once; refutations are reported. Phase numbers refer to
+`notes/REVISION_PLAN_v3.md`. Items that read test outcomes read each test set once.
+
+### P1 Physics baselines (review C3)
+Two non-learned triggers by lookup, certified (LTT) and tuned on `av2_cal`, evaluated on `av2_test`:
+(T0a) time-to-collision: u_t = max(0, 3 - TTC_t) from the stored per-step nuPlan TTC trace sampled at decision ticks;
+(T0b) headway distance: u_t = -(smallest current distance to an agent ahead, from the stored agent tables).
+**Claim:** the learned-predictor geometric trigger (LTT) stops fewer scenarios than the better of T0a/T0b among triggers
+meeting miss <= alpha on test (paired bootstrap 95 % CI excluding 0). **Refuted if** it does not; then the paper says the
+predictor adds nothing over physics at this target.
+
+### P2 Noise-corrected validity (review C1)
+The reported violation frequency counts resplits whose test-half miss exceeds alpha, which also counts test-sample noise.
+For every certified/uncertified method already reported (LTT, CRC, tuned geometric, tuned T1; latency-aware LTT at 1 and 2
+ticks; group-wise resplits at 150 m; Wayformer arm; second-predictor arm) two counts are reported over the same resplits:
+**uncorrected** (test miss > alpha, an upper bound) and **corrected** (the one-sided 95 % Wilson LOWER bound of the test miss
+exceeds alpha, a lower bound). Tri-state verdict: *valid* if uncorrected <= delta; *indeterminate* if corrected <= delta <
+uncorrected; *violated* if corrected > delta. Resplit seeds as before.
+
+### P3 Online baselines' validity (review M3)
+CDT and ACI over 100 half/half resplits of the pooled 3,990 Argoverse 2 scenarios, 5 random orderings each, step size chosen
+on the calibration half (as in the calibration-selected variant), test miss averaged over orderings. Violation frequency
+reported with the tri-state rule of P2. Descriptive; no claim.
+
+### P4 Confidence-trigger check (review M2)
+(a) The nearest-ahead confidence variant (already stored) is added to Table I. (b) Reliability of the predictor's mode
+probabilities on the held-out open-loop file `results/preds/av2cal_from_av2_cpu_v2.npz`: expected calibration error of the
+top-mode probability against "top mode within 2 m of ground truth at 3 s", and AUROC of 1 - top probability for predicting a
+3 s endpoint error above 2 m (best mode). Descriptive; no claim.
+
+### N-A Prevalence-corrected certificate (new)
+Marginal miss = prevalence x P(no alert | harm). **Method.** (1) Pilot threshold = the source LTT threshold. (2) Estimate the
+target harm prevalence from UNLABELED target reference-run scores only, by black-box shift estimation: with the pilot alert
+as the classifier, pi_T_hat = (mu_T - FPR_S) / (TPR_S - FPR_S), where mu_T is the target alert rate and TPR_S, FPR_S come from
+the source. Upper bound pi_T_up = the 95th percentile of 1,000 bootstrap draws (source confusion and target alert rate
+resampled). (3) Final threshold = class-conditional LTT (Mondrian on harmful source scenarios, miss among harmful <= eps,
+delta = 0.10) with eps = min(1, alpha / pi_T_up). **Targets (8):** each of the six Argoverse 2 cities held out in turn
+(source = all other pooled Argoverse 2 rows), nuScenes and Waymo (source = pooled Argoverse 2 `av2_cal` + `av2_cal5`).
+Compared with unweighted marginal LTT on the same sources. **Claim:** the prevalence-corrected certificate meets the
+marginal target (target miss <= alpha, point estimate) on at least 7 of the 8 targets AND on more targets than unweighted
+LTT. **Refuted if** either part fails. Stop cost reported per target.
+
+### N-B Latency-robust certificate, re-read (new)
+Certification on the latency-shifted loss (stored miss at tick tau + l, l in {0,1,2}) is a valid LTT application because the
+loss is still a fixed function of the scenario and threshold. Reported under the P2 tri-state rule using the existing
+resplits. **Claim:** latency-aware LTT is not *violated* at l = 1 and l = 2 (corrected count <= delta). **Refuted if** the
+corrected count exceeds delta at either.
+
+### N-C Outcome audit with an upper confidence bound (new)
+The threshold is chosen by alert-level LTT on `av2_cal` (as in the main paper). On a SEPARATE fresh split (`av2_cal5`) the
+outcome harm of the run actually driven (harm anywhere in the run, residual harm) and the total harm (residual or induced
+collision) are estimated and a one-sided (1 - delta) Clopper-Pearson upper bound is reported. Valid by sample splitting, no
+monotonicity needed. Evaluated at the in-distribution test (`av2_test5`) and on every shift target of N-A. **Claim:** the
+upper bound computed on the fresh split covers the realized outcome harm on the test split (realized <= bound) in at least
+90 % of the 8 + 1 evaluated targets. **Refuted if** coverage < 90 %.
+
+### CSWC Counterfactual Safe-Window Certification (new method)
+**Object.** For scenario X with n decision ticks, firing outcomes are indexed 0..n-1 plus "never" (index n). Safe window
+W(X) = { j : no harm in the executed run when firing at j } (harm_run false). Outcome loss
+O(X, tau) = 1[ harm_run or induced collision in the run with firing tick tau (+ latency) ] ("total harm"), and
+O_res = 1[harm_run] ("residual harm"). Unavoidable: W(X) empty.
+**Learned trigger.** One row per (scenario, decision tick t). Label y = 1 iff the scenario's no-fallback run is harmful AND
+t >= F(X), where F(X) is the first tick of the safe window (firing is both necessary and not too early); y = 0 otherwise
+(includes harmless references and too-early ticks). Features at tick t: the stored scores at t (geometric, nearest-ahead and
+most-conflicting confidence), running maxima of the geometric score, TTC_t, smallest current distance ahead, number of
+agents within 30 m, smallest predicted gap, tick index t, and the 7 scenario covariates. No ensemble feature (absent in
+the fresh arms). Model: scikit-learn HistGradientBoostingClassifier, max_iter 200, learning_rate 0.05, max_depth 4,
+l2_regularization 1.0, random_state 0, no early stopping, fixed before running. **Splits (fixed):** train = `av2_cal`
+(1,994 scenarios); calibrate = `av2_cal5` (904); test = `av2_test` (1,996) and `av2_test5` (904). Learned score u_t = predicted
+probability; trigger fires when its running maximum exceeds lambda; lambda grid = 400 quantiles of calibration scores.
+**Certification.** Thresholds are ordered by the TRAIN-split estimated outcome risk (ascending, ties by larger lambda); on
+the calibration split, fixed-sequence testing with the Hoeffding-Bentkus p-value (delta = 0.10) walks that order and stops at
+the first non-rejection; among the certified thresholds the one with the lowest calibration unnecessary-stop rate is chosen.
+Valid for any pre-specified order, so no monotonicity is required.
+**Targets.** Primary: O_res <= 0.075 (the no-fallback run has 15 % residual harm, the always-fire run 4.1 %, the alert-level
+LTT trigger 6.5 %). Secondary: O_total <= 0.12.
+**Claims (each judged separately on `av2_test` + `av2_test5`):**
+(i) the CSWC threshold's realized O_res on test is <= 0.075 and its violation frequency over 200 resplits of the pooled
+    calibrate+test scenarios is <= delta (P2 tri-state, corrected count);
+(ii) at that certified outcome target CSWC stops fewer scenarios than the alert-level LTT threshold chosen to reach the same
+    realized O_res (paired bootstrap 95 % CI of the stop difference excludes 0);
+(iii) with the prevalence correction of N-A applied to the avoidable-harm rate, CSWC's realized O_res meets its target on more
+    of the 8 shift targets than the same procedure without it.
+Each refuted independently and reported either way. Unavoidable-harm share and the safe-window shape (contiguous or not) are
+reported descriptively. Replication with the second predictor and Wayformer arms uses half the calibration arm to train and
+half to calibrate.
