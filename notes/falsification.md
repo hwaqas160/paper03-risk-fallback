@@ -1076,3 +1076,31 @@ than TTC ([-61.2, -57.6]). l = 2 ticks (1.0 s): CSWC 4.7 % / 34.2 % (violations 
 (always firing); CSWC stops 50.7 points fewer than each ([-52.5, -48.8]). **Claim 11b HOLDS** at both latencies: (a) realized O_res <= 0.075,
 (b) not violated, (c) fewer stops than both. Together with the zero-latency result (TTC 10.2 % vs CSWC 13.6 %), no trigger dominates: TTC is cheapest
 at zero latency and the learned counterfactual trigger is cheapest once latency is 0.5 s or more.
+
+
+## Amendment 11c — 2026-10-08/09, BEFORE these analyses are run (testing the counterfactual trigger's mechanism and generality)
+
+Written before running anything below. Same loss, target (O_res <= 0.075), ordered fixed-sequence procedure, hyper-parameters and
+out-of-fold ordering as Amendments 11 and 11a. Stored rollouts only.
+
+### M1 Mechanism: does the predictor add lead time? (feature-group ablation at 0.5 s latency)
+Three learned triggers with delay-shifted labels (l = 1 tick), trained on `av2_cal`, calibrated on `av2_cal5`, tested on `av2_test` + `av2_test5`:
+(full) all features of Amendment 11; (physics-only) time-to-collision, its running maximum, headway distance and its running maximum, agent
+count within 30 m, tick index and the 7 scenario covariates, no predictor-derived feature; (predictor-only) geometric score and its running
+maximum, both confidence scores, smallest predicted gap, tick index and the covariates, no time-to-collision or headway feature.
+**Claim:** at l = 1 the full trigger stops fewer scenarios than the physics-only trigger (paired bootstrap 95 % CI excluding 0) among triggers
+meeting realized O_res <= 0.075. **Refuted if** it does not (then the paper must say the predictor adds no lead time that physics features
+lack). Predictor-only is reported descriptively.
+
+### R1 Replication with the second predictor and Wayformer
+For each arm (`av2_cal5_gpu` / `av2_test5_gpu`, `av2_cal5_way` / `av2_test5_way`; 904 / 904 scenarios): the calibration arm is split at random
+(seed 0) into 50 % training and 50 % calibration, the model is trained on the training half, certification is on the calibration half, the
+test arm is the test set. Latencies 0 and 1 tick. Features exclude the ensemble score (absent in these arms). **Claim:** at l = 1, on both
+arms, (a) realized test O_res <= 0.075, and (b) the learned trigger stops fewer scenarios than BOTH the geometric and the TTC score (all
+certified with the same halves and procedure; paired bootstrap 95 % CI excluding 0). **Refuted if** (a) or (b) fails on either arm. Refusals
+to certify are reported (an arm with 452 calibration scenarios may not certify).
+
+### S1 Outcome certificates under shift for every score (descriptive)
+The eight shift targets of N-A (six cities, nuScenes, Waymo) with the sources and splits of Amendment 11a: for each target the number of
+targets on which the realized residual harm of the certified threshold is <= 0.075, and the stops, for the learned trigger, the geometric
+score and the TTC score at latency 0. No claim.
