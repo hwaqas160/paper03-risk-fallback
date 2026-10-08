@@ -975,3 +975,36 @@ LTT trigger 6.5 %). Secondary: O_total <= 0.12.
 Each refuted independently and reported either way. Unavoidable-harm share and the safe-window shape (contiguous or not) are
 reported descriptively. Replication with the second predictor and Wayformer arms uses half the calibration arm to train and
 half to calibrate.
+
+### Amendment 11 outcome P1 (2026-10-08) (`results/final/r11_p1_physics.json`)
+Argoverse 2 test, headline harm (at-fault collision or TTC < 0.95 s), alpha = 0.05. LTT-certified physics triggers meet the
+target: T0a time-to-collision 3.1 % missed [2.4, 4.0] at **7.1 %** unnecessary stops; T0b headway distance 3.2 % at 70.0 %.
+The learned-predictor geometric trigger (LTT) has 3.7 % missed at 28.5 %. Paired stop difference geometric minus best physics
+trigger (T0a): +21.3 points [+19.4, +23.3]. **P1 REFUTED**: the predictor-based geometric trigger does not stop less than the
+physics baseline; a plain TTC threshold needs far fewer stops. Reading: the harm label is itself TTC-based, so a TTC trigger
+is close to the label (the circularity named in review M1); the claim "geometric beats deployed practice" must be restricted to
+predictor-based triggers, and the paper must say that a physics TTC trigger dominates under this label. Post hoc check under
+alternative harm definitions: see P1b below.
+### Amendment 11 outcome P4 (2026-10-08) (`results/final/r11_p4_confidence.json`, descriptive)
+Held-out open-loop file (4,576 samples): the predictor's top-mode probability has mean 0.28 while the top mode is within 2 m at 3 s
+in 52.8 % of samples, ECE 0.248 (underconfident); AUROC of 1 - top probability for predicting a best-mode endpoint error above 2 m
+is 0.63 (6.0 % of samples). The confidence trigger is therefore weak because this predictor's mode probabilities are weakly
+informative and miscalibrated, not because T1 is mis-specified.
+### Amendment 11 outcome P1b (2026-10-08) (`results/final/r11_p1b_physics_altharm.json`, POST HOC, descriptive; not pre-registered)
+Certified (LTT) physics trigger T0a (TTC) versus LTT-geometric, Argoverse 2 test, miss / unnecessary stops: collision-only
+(alpha = 0.01): TTC 0.3 % / 18.8 %, geometric 0.3 % / 45.1 %; TTC < 0.5 s: 3.2 % / 1.6 % vs 3.8 % / 15.8 %; TTC < 0.95 s
+(headline): 3.1 % / 7.1 % vs 3.7 % / 28.5 %; TTC < 1.5 s: 0.1 % / 77.5 % vs 4.5 % / 34.0 % (here the certified TTC threshold is
+very conservative). So a physics TTC trigger needs fewer stops than the predictor-based geometric trigger under three of the four
+harm definitions, including collision-only. The headway-distance trigger (T0b) is worse than geometric under all four.
+
+### Amendment 11a — clarifications fixed 2026-10-08 BEFORE any N-A / N-C / CSWC result is read (P1, P4 results already known)
+1. CSWC ordering uses 5-fold OUT-OF-FOLD train-split predictions (not in-sample ones), so the order is not optimistic; the order affects power only.
+2. CSWC claim (ii) is evaluated against the SAME procedure applied to other scores: outcome-ordered LTT certifying O_res <= 0.075 on
+   (a) the predictor-based geometric score and (b) the TTC score, with identical calibration split and ordering rule; "stops fewer"
+   = paired bootstrap 95 % CI of the stop difference excludes 0, among scores whose realized test O_res <= 0.075. (This replaces the
+   ambiguous "threshold chosen to reach the same realized O_res", which would use test outcomes.)
+3. Scenarios whose safe window is empty (unavoidable) get label y = 0 at every tick.
+4. CSWC shift correction (claim iii): the calibration target is tightened to alpha_O' = alpha_O x min(1, pi_S / pi_T_up), with pi_S the
+   source harm prevalence and pi_T_up the black-box-shift-estimation upper bound of N-A computed from unlabeled target scores.
+5. Held-out shift targets for CSWC use sources that exclude the target: for city c, train + calibrate on all other Argoverse 2 rows
+   (random 60/40 split by scenario); for nuScenes and Waymo, train on `av2_cal`, calibrate on `av2_cal5`.
