@@ -144,6 +144,48 @@ def p1b(a):
     Path(a.out).write_text(json.dumps(out, indent=2, default=float))
 
 
+def p5(a):
+    """TTC trigger (T0a) in the main-paper format: Table-I row, validity, latency, and shift targets (descriptive, post hoc)."""
+    cal, test = load("results/campaign/av2_cal"), load("results/campaign/av2_test")
+    out = {}
+    for name, key, fn in (("T0a TTC, LTT", "ttc", lambda c: ltt(c, "ttc", ALPHA, DELTA)), ("T0a TTC, tuned", "ttc", lambda c: tuned(c, "ttc", ALPHA))):
+        lam = fn(cal)
+        out[name] = dict(lam=lam, **summarize(test, key, lam))
+        out[name]["latency"] = {str(l): summarize(test, key, lam, l) for l in (1, 2)}
+    # validity over the same resplits as the other methods
+    pool = cal + test
+    rng = np.random.default_rng(0)
+    n = len(pool)
+    m = {"T0a TTC, LTT": [], "T0a TTC, tuned": []}
+    for _ in range(a.reps):
+        p_ = rng.permutation(n)
+        c_ = [pool[i] for i in p_[: n // 2]]; t_ = [pool[i] for i in p_[n // 2:]]
+        for k, f in (("T0a TTC, LTT", lambda c: ltt(c, "ttc", ALPHA, DELTA)), ("T0a TTC, tuned", lambda c: tuned(c, "ttc", ALPHA))):
+            lam = f(c_)
+            m[k].append(summarize(t_, "ttc", lam)["miss"] if np.isfinite(lam) else np.nan)
+    for k in m:
+        out[k]["validity"] = tri(m[k], n - n // 2)
+    # shift targets
+    lab = json.loads(Path("results/final/av2_city_labels.json").read_text())
+    cal5, test5 = load("results/campaign/av2_cal5"), load("results/campaign/av2_test5")
+    rows = [(s_, lab["av2_cal"][str(s_.seed)]) for s_ in cal + cal5] + [(s_, lab["av2_test"][str(s_.seed)]) for s_ in test + test5]
+    shift = {}
+    for c in sorted({k for _, k in rows}):
+        src = [s_ for s_, k in rows if k != c]; tgt = [s_ for s_, k in rows if k == c]
+        lam = ltt(src, "ttc", ALPHA, DELTA)
+        shift[c] = summarize(tgt, "ttc", lam)
+    lam = ltt(cal + cal5, "ttc", ALPHA, DELTA)
+    for name, arm in (("nuscenes", "results/campaign/ns_val"), ("waymo", "results/campaign/waymo_val")):
+        shift[name] = summarize(load(arm), "ttc", lam)
+    out["shift"] = shift
+    Path(a.out).write_text(json.dumps(out, indent=2, default=float))
+    for k in ("T0a TTC, LTT", "T0a TTC, tuned"):
+        v = out[k]
+        print(f"{k:16s} miss {v['miss']:.3f} stop {v['unnecessary_stop']:.3f} [{v['stop_ci'][0]:.3f},{v['stop_ci'][1]:.3f}] induced {v['induced']:.3f} auton {v['autonomy']:.3f} "
+              f"valid unc {v['validity']['uncorrected']:.3f} cor {v['validity']['corrected']:.3f} {v['validity']['verdict']} | lat1 miss {v['latency']['1']['miss']:.3f} lat2 {v['latency']['2']['miss']:.3f}")
+    print({c: (round(v["miss"], 3), round(v["unnecessary_stop"], 3)) for c, v in shift.items()})
+
+
 # ------------------------------------------------------------------------------------------------ P2
 def resplit_methods(pool, reps, seed=0, extra=None):
     """Same protocol as evaluate.validity (one permutation per repetition), returning per-resplit test miss."""
@@ -306,14 +348,14 @@ def p4(a):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("what", choices=["p1", "p1b", "p2", "p3", "p4"])
+    ap.add_argument("what", choices=["p1", "p1b", "p2", "p3", "p4", "p5"])
     ap.add_argument("--out", required=True)
     ap.add_argument("--reps", type=int, default=200)
     ap.add_argument("--orders", type=int, default=5)
     a = ap.parse_args()
     if a.what == "p3" and a.reps == 200:
         a.reps = 100
-    {"p1": p1, "p1b": p1b, "p2": p2, "p3": p3, "p4": p4}[a.what](a)
+    {"p1": p1, "p1b": p1b, "p2": p2, "p3": p3, "p4": p4, "p5": p5}[a.what](a)
 
 
 if __name__ == "__main__":

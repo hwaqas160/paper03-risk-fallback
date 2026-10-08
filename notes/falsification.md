@@ -1051,3 +1051,19 @@ resplits at 150 m: LTT 17.0 / 1.0 indeterminate. **N-B HOLDS** (corrected count 
 metric overstated the violations of near-boundary methods (latency-aware, group-wise) but the separation of LTT from the uncertified
 methods survives the correction (corrected 12-17 % for tuned, CRC, T1). Earlier text that called the latency-aware and group-wise
 results "above delta" must say "indeterminate under the corrected measure".
+
+### Amendment 11 post hoc finding (2026-10-08, before 11b): latency-aware alert-level certification of the TTC trigger
+(`results/final/r11_p5_ttc.json`, `r11_p5_latency_aware.json`; descriptive, not pre-registered). The certified TTC trigger (miss 3.1 %, stops 7.1 %,
+induced collisions 1.0 %, valid) collapses under actuation latency: its zero-latency certificate misses 11.7 % and 14.3 % at one and two ticks,
+and latency-aware certification (loss shifted by the latency) needs 84.9 % stops at both (essentially always firing), against 34.4 % and 42.5 %
+for the predictor-based geometric trigger. A TTC trigger fires just before harm, so any delay is fatal; the predictor adds lead time. Under shift
+the TTC certificate misses: nuScenes 7.3 %, Waymo 3.4 %, Miami 6.7 %, other cities 1.8-4.8 %.
+
+### Amendment 11b — 2026-10-08, BEFORE the latency outcome analysis is run (the TTC/predictor crossover)
+**Question.** Does a learned counterfactual trigger (CSWC) beat both the TTC trigger and the predictor-based geometric trigger once actuation latency
+is realistic, at the OUTCOME level? **Method.** For l in {1, 2} decision ticks (0.5 s, 1.0 s): for each score (geometric, TTC, CSWC with the labels
+shifted by l, i.e. y_t = 1 iff the no-fallback run is harmful and t + l >= F(X), with a model retrained per l under the identical hyper-parameters, splits
+and out-of-fold ordering of Amendment 11/11a), run the ordered fixed-sequence LTT on the latency-l outcome loss O_res(X, tau + l) at target 0.075,
+calibrate `av2_cal5`, test `av2_test` + `av2_test5`. **Claim:** at both l = 1 and l = 2 (a) CSWC's realized test O_res <= 0.075, (b) its violation frequency
+over 200 resplits is not *violated* (corrected count <= delta), and (c) it stops fewer scenarios than BOTH the TTC and the geometric score among scores
+meeting the target (paired bootstrap 95 % CI excluding 0). **Refuted if** any of (a)-(c) fails at either latency. Reported either way.

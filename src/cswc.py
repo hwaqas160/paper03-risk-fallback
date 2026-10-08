@@ -63,29 +63,29 @@ def feature_matrix(s):
     return np.hstack([X, np.repeat(np.asarray(s.feats, float)[None, :], n, 0)])
 
 
-def labels(s):
+def labels(s, lat=0):
     n = s.n_ticks
     F = window_first(s)
     y = np.zeros(n)
     if s.ref_harmful and F is not None:
-        y[F:] = 1.0
+        y[max(0, F - lat):] = 1.0              # firing decided at t acts at t + lat
     return y
 
 
-def fit(train):
+def fit(train, lat=0):
     from sklearn.ensemble import HistGradientBoostingClassifier
     X = np.vstack([feature_matrix(s) for s in train])
-    y = np.concatenate([labels(s) for s in train])
+    y = np.concatenate([labels(s, lat) for s in train])
     return HistGradientBoostingClassifier(**HGB).fit(X, y)
 
 
-def oof_traces(train, key="cswc_oof", folds=5, seed=0):
+def oof_traces(train, key="cswc_oof", folds=5, seed=0, lat=0):
     from sklearn.ensemble import HistGradientBoostingClassifier
     rng = np.random.default_rng(seed)
     fold = rng.integers(0, folds, size=len(train))
     for f in range(folds):
         tr = [s for s, k in zip(train, fold) if k != f]
-        m = fit(tr)
+        m = fit(tr, lat)
         for s, k in zip(train, fold):
             if k == f:
                 set_trace(s, key, m.predict_proba(feature_matrix(s))[:, 1])
@@ -368,13 +368,65 @@ def nc(a):
     Path(a.out).write_text(json.dumps(dict(rows=rows, verdict_NC=verdict), indent=2, default=float))
 
 
+def latency_outcome(a):
+    from review_fixes import wilson_lower
+    cal, cal5, test, test5, pool = get_targets()
+    train = cal
+    ev = test + test5
+    pool2 = cal5 + test + test5
+    out = {}
+    for lat in (1, 2):
+        oof_traces(train, lat=lat)
+        model = fit(train, lat)
+        for g_ in (cal5, test, test5):
+            score(model, g_)
+        res = {}
+        for name, key, okey in (("CSWC", "cswc", "cswc_oof"), ("geometric", "geom", None), ("TTC (T0a)", "ttc", None)):
+            grid = lam_grid(cal5, key)
+            lam, det = certify_ordered(cal5, key, grid, T_RES, train, order_key=okey, lat=lat)
+            e = dict(lam=lam, **det)
+            if lam is not None:
+                e["test"] = evaluate_at(ev, key, lam, lat)
+            # violation over resplits (outcome loss at latency lat)
+            rng = np.random.default_rng(0)
+            n = len(pool2)
+            mm = []
+            for _ in range(a.reps):
+                p = rng.permutation(n)
+                c_ = [pool2[i] for i in p[: n // 2]]; t_ = [pool2[i] for i in p[n // 2:]]
+                g = lam_grid(c_, key)
+                l_, _ = certify_ordered(c_, key, g, T_RES, train, order_key=okey, lat=lat)
+                mm.append(evaluate_at(t_, key, l_, lat)["o_res"] if l_ is not None else np.nan)
+            m = np.array(mm); nt = n - n // 2
+            ok = ~np.isnan(m)
+            unc = float(np.mean(m[ok] > T_RES)); cor = float(np.mean([wilson_lower(x, nt) > T_RES for x in m[ok]]))
+            e["validity"] = dict(uncorrected=unc, corrected=cor, refused=int((~ok).sum()), verdict="valid" if unc <= DELTA else ("indeterminate" if cor <= DELTA else "violated"))
+            res[name] = e
+            t = e.get("test")
+            print(f"lat {lat} {name:10s} " + (f"O_res {t['o_res']:.3f} stop {t['stop']:.3f} | viol unc {unc:.3f} cor {cor:.3f} {e['validity']['verdict']}" if t else "refused"), flush=True)
+        meeting = [k for k, v in res.items() if v.get("test") and v["test"]["o_res"] <= T_RES]
+        comp = {}
+        if "CSWC" in meeting:
+            _, Sc = outcome_mat(ev, "cswc", np.array([res["CSWC"]["lam"]]), "res", lat)
+            for k in meeting:
+                if k == "CSWC":
+                    continue
+                key = "geom" if k == "geometric" else "ttc"
+                _, Sk = outcome_mat(ev, key, np.array([res[k]["lam"]]), "res", lat)
+                comp[k] = paired(Sc[:, 0], Sk[:, 0])
+        out[str(lat)] = dict(methods=res, meeting=meeting, stop_diff_cswc_minus=comp,
+                             cswc_fewer_than_all=bool("CSWC" in meeting and len(meeting) == 3 and all(v["ci"][1] < 0 for v in comp.values())))
+        print(f"lat {lat}", out[str(lat)]["stop_diff_cswc_minus"], out[str(lat)]["cswc_fewer_than_all"], flush=True)
+    Path(a.out).write_text(json.dumps(out, indent=2, default=float))
+
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("what", choices=["indist", "na", "shift", "nc"])
+    ap.add_argument("what", choices=["indist", "na", "shift", "nc", "latency"])
     ap.add_argument("--out", required=True)
     ap.add_argument("--reps", type=int, default=200)
     a = ap.parse_args()
-    {"indist": indist, "na": na, "shift": shift, "nc": nc}[a.what](a)
+    {"indist": indist, "na": na, "shift": shift, "nc": nc, "latency": latency_outcome}[a.what](a)
 
 
 if __name__ == "__main__":
