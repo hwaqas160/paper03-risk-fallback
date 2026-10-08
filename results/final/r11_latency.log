@@ -1,0 +1,8 @@
+lat 1 CSWC       O_res 0.049 stop 0.255 | viol unc 0.065 cor 0.000 valid
+lat 1 geometric  O_res 0.061 stop 0.375 | viol unc 0.080 cor 0.005 valid
+lat 1 TTC (T0a)  O_res 0.036 stop 0.849 | viol unc 0.075 cor 0.000 valid
+lat 1 {'geometric': {'diff': -0.12, 'ci': [-0.14, -0.1003448275862069]}, 'TTC (T0a)': {'diff': -0.5937931034482758, 'ci': [-0.6120689655172413, -0.5762068965517242]}} True
+lat 2 CSWC       O_res 0.047 stop 0.342 | viol unc 0.035 cor 0.005 valid
+lat 2 geometric  O_res 0.039 stop 0.849 | viol unc 0.000 cor 0.000 valid
+lat 2 TTC (T0a)  O_res 0.039 stop 0.849 | viol unc 0.000 cor 0.000 valid
+lat 2 {'geometric': {'diff': -0.506551724137931, 'ci': [-0.5248275862068965, -0.4882758620689655]}, 'TTC (T0a)': {'diff': -0.506551724137931, 'ci': [-0.5248275862068965, -0.4882758620689655]}} True

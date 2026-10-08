@@ -1,0 +1,25 @@
+== random_resplits_av2_pool
+  tuned geometric                                      uncorrected 0.435  corrected 0.150  -> violated
+  LTT                                                  uncorrected 0.095  corrected 0.000  -> valid
+  CRC                                                  uncorrected 0.410  corrected 0.120  -> violated
+  T1 tuned confidence                                  uncorrected 0.505  corrected 0.140  -> violated
+  LTT latency-aware, 1 tick                            uncorrected 0.120  corrected 0.015  -> indeterminate
+  LTT latency-aware, 2 ticks                           uncorrected 0.115  corrected 0.005  -> indeterminate
+  LTT zero-latency certificate deployed at 1 tick      uncorrected 0.920  corrected 0.530  -> violated
+  LTT zero-latency certificate deployed at 2 ticks     uncorrected 1.000  corrected 1.000  -> violated
+== fresh held-out (AutoBot)
+  tuned geometric                                      uncorrected 0.515  corrected 0.110  -> violated
+  LTT                                                  uncorrected 0.075  corrected 0.005  -> valid
+  CRC                                                  uncorrected 0.460  corrected 0.105  -> violated
+  T1 tuned confidence                                  uncorrected 0.500  corrected 0.150  -> violated
+== second predictor (AutoBot 0.854)
+  tuned geometric                                      uncorrected 0.510  corrected 0.130  -> violated
+  LTT                                                  uncorrected 0.090  corrected 0.000  -> valid
+  CRC                                                  uncorrected 0.475  corrected 0.120  -> violated
+  T1 tuned confidence                                  uncorrected 0.460  corrected 0.145  -> violated
+== Wayformer
+  tuned geometric                                      uncorrected 0.480  corrected 0.165  -> violated
+  LTT                                                  uncorrected 0.070  corrected 0.000  -> valid
+  CRC                                                  uncorrected 0.440  corrected 0.125  -> violated
+  T1 tuned confidence                                  uncorrected 0.530  corrected 0.165  -> violated
+== group_resplits_150m (LTT)

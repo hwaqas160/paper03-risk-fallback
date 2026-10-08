@@ -1,0 +1,22 @@
+{
+ "geometric|res": {
+  "uncorrected": 0.075,
+  "corrected": 0.0,
+  "refused": 0
+ },
+ "geometric|tot": {
+  "uncorrected": 0.05,
+  "corrected": 0.0,
+  "refused": 0
+ },
+ "TTC (T0a)|res": {
+  "uncorrected": 0.0,
+  "corrected": 0.0,
+  "refused": 0
+ },
+ "TTC (T0a)|tot": {
+  "uncorrected": 0.015,
+  "corrected": 0.0,
+  "refused": 0
+ }
+}

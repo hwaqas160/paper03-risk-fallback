@@ -9,8 +9,8 @@
 
 \begin{document}
 
-\title{Supplementary Material for\\ ``Statistical Certification of Autonomous
-Vehicle Fallback Triggers: Closed-Loop Evaluation Under Dataset Shift''}
+\title{Supplementary Material for\\ ``Certifying the Outcome of Autonomous
+Vehicle Fallback Triggers: Closed-Loop Evaluation Under Latency and Dataset Shift''}
 \author{Hassan~Waqas~Saleem, Rahat~Zeeshan~Saleem, and Hina~Maryam}
 \markboth{Supplementary Material}{Saleem \MakeLowercase{\textit{et al.}}:
 Certifying Fallback Triggers in Closed Loop}
@@ -161,6 +161,8 @@ interval widened by the smaller sample.
 
 \section{Certifying Residual Harm Directly (Post Hoc)}
 \label{sec:s-outcome}
+\emph{Update.} The attempt described here, with a threshold ordered by the monotone alert-level order and a 5\,\% target, failed. A later amendment (Amendment~11) certified the same quantity at a 7.5\,\% target with thresholds ordered by out-of-fold estimated risk, and succeeded (Section~V-D of the main paper). The failure below is therefore attributable to the target and the order, not to outcome-level certification as such.
+
 The certificate in the main paper bounds the alert indicator
 $L(X,\lambda)$, not harm in the run the vehicle then drives. We therefore
 tried to certify \emph{residual harm} $H(X,\lambda)$, the indicator that
@@ -462,7 +464,7 @@ The latency-aware certificate brings the miss rate back below 5\,\% on the
 test set, at a cost of 6 and 14 points of unnecessary stops. Its
 violation frequency, however, is 12.0\,\% and 11.5\,\% at one and two ticks,
 above the $\delta = 0.10$ we pre-registered, so by our own rule the claim
-that latency-aware certification restores validity is refuted. Three
+that latency-aware certification restores validity was refuted under the uncorrected count. Under the corrected count of Amendment~11 (Section~S17), 1.5\,\% and 0.5\,\%, the certificate is indeterminate, not violated, and the pre-registered re-reading holds. Three
 readings are possible and we cannot separate them. The Wilson intervals
 include 0.10. The statistic counts resplits whose finite test half
 exceeds 5\,\%, not resplits whose population risk does, and the
@@ -559,7 +561,7 @@ calibration or test (200 resplits, calibration share about 53\,\%). The
 violation frequency of LTT is 17.0\,\% (Wilson 95\,\% interval [12.4, 22.8])
 against 9.5\,\% for random resplits, and the mean test miss rate is 4.2\,\%.
 The pre-registered claim that it stays at or below $\delta = 0.10$ is
-therefore refuted. A post hoc sensitivity at 50\,m, which gives 1{,}796
+therefore refuted under the uncorrected count (it is indeterminate, at 1.0\,\%, under the corrected count of Section~S17). A post hoc sensitivity at 50\,m, which gives 1{,}796
 groups with the largest at 79 scenarios, yields 14.0\,\% [9.9, 19.5].
 Dependence between nearby scenarios is thus one more reason the
 high-probability statement is weaker in practice than in theory, although
@@ -614,6 +616,227 @@ the architecture. The price does depend on the predictor: with Wayformer
 the certified trigger stops 41.8\,\% of scenarios, against 26 to 29\,\% with
 the two AutoBot models, which is consistent with a less accurate forecaster
 needing a more conservative threshold to meet the same target.
+
+\section{Physics Baselines, Ablations and Open-Loop Ranking}
+\label{sec:s-physics}
+The main paper's Table~I adds a time-to-collision (TTC) trigger, certified with the same procedure. Because the harm label is itself defined by time-to-collision, the TTC trigger is close to the label, so we repeat the comparison under the alternative harm definitions of Section~V (post hoc, not pre-registered). The certified TTC trigger needs fewer unnecessary stops than the predictor-based geometric trigger under three of the four definitions: collision only ($\alpha = 0.01$) 18.8\,\% against 45.1\,\%, TTC $<0.5$\,s 1.6\,\% against 15.8\,\%, the headline TTC $<0.95$\,s 7.1\,\% against 28.5\,\%. Under TTC $<1.5$\,s the certified TTC threshold is very conservative (77.5\,\% against 34.0\,\%). A headway-distance trigger is worse than the geometric trigger under all four. The ablations below and the open-loop ranking behind Section~V-B follow.
+
+\begin{table}[h]
+\caption{Ablations on the Argoverse~2 test set, certified by LTT.}
+\label{tab:abl}
+\centering
+\footnotesize
+\begin{tabular}{lcc}
+\toprule
+Variant & Miss (\%) & Unnec. stops (\%) \\
+\midrule
+Full score, LTT, no latency & 3.7 & 28.5 \\
+Route-following ego corridor & 0.0 & 84.9 \\
+Width-only isotropic radius & 3.6 & 27.5 \\
+Confidence instead of geometry & 3.6 & 75.8 \\
+Ensemble spread instead of geometry & 3.6 & 72.3 \\
+CRC instead of LTT & 4.3 & 26.0 \\
+Empirical tuning instead of LTT & 4.3 & 26.0 \\
++1 decision tick latency (0.5\,s) & \textbf{5.3} & 26.3 \\
++2 decision ticks latency (1.0\,s) & \textbf{9.1} & 23.4 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\caption{Open-loop AUROC versus closed-loop unnecessary stops at the
+certified threshold, Argoverse~2 test.}
+\label{tab:h1}
+\centering
+\footnotesize
+\begin{tabular}{lcc}
+\toprule
+Score & AUROC & Unnec. stops (\%) \\
+\midrule
+Geometric, isotropic radius & 0.843 & 27.5 \\
+Geometric, length-aware box & 0.832 & 28.5 \\
+Predictor gap & 0.817 & 31.8 \\
+Geometric, route corridor & 0.577 & 84.9 \\
+Confidence & 0.448 & 75.8 \\
+Ensemble spread & 0.442 & 72.3 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\caption{LTT (geometric) versus the better of T1/T2 under alternative
+harm definitions, Argoverse~2 test. Unnecessary-stop rates in \%;
+``Best'' is the better of T1/T2 among those meeting the miss target, and
+the paired 95\,\% CI is of the stop-rate difference.}
+\label{tab:align}
+\centering
+\scriptsize\setlength{\tabcolsep}{2pt}
+\begin{tabular}{lcccc}
+\toprule
+Harm definition & LTT & Best & Which & Diff. [95\,\% CI] \\
+\midrule
+Collision only, $\alpha{=}0.01$ & 45.1 & 83.9 & T2 & $-38.8$ [$-41.4,-36.2$] \\
+TTC $<$ 0.5\,s & 15.8 & 38.6 & T1 & $-22.7$ [$-25.5,-20.1$] \\
+TTC $<$ 0.95\,s (headline) & 28.5 & 68.3 & T1 & $-39.8$ [$-42.4,-37.2$] \\
+TTC $<$ 1.5\,s & 34.0 & 68.3 & T2 & $-34.4$ [$-36.8,-31.9$] \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Counterfactual Trigger: Safe Windows, Shift and Prevalence Correction}
+\label{sec:s-cswc}
+\emph{Safe windows.} On the 1{,}994 training scenarios, 15.8\,\% have harm in the
+no-fallback run. Harm is unavoidable (empty safe window) in 0.35\,\% of
+scenarios, so almost all harm is preventable by some firing tick. In
+12.7\,\% of scenarios the window is not contiguous (a safe tick, an unsafe
+tick, then a safe tick again), which is why the outcome loss is certified
+directly instead of through a union bound on too-late and too-early
+firing.
+
+\emph{Prevalence-corrected certificate (refuted).} A marginal miss rate is the
+harm rate times the miss rate among harmful scenarios, and the held-out
+miss rate tracked the target's harm rate. We therefore estimated each
+target's harm rate from unlabeled data with black-box shift estimation (the
+pilot alert as classifier) and certified a class-conditional miss rate at
+$\alpha$ over the estimate's upper bound (Amendment~11, N-A). The estimate
+was unreliable (Table~\ref{tab:prev}): the alert rate shifts for reasons
+other than harm rate, so the label-shift assumption fails. The corrected
+certificate met the marginal target on 5 of 8 targets, against 6 of 8 for
+plain LTT, and the pre-registered claim (at least 7 of 8 and more than
+plain LTT) is refuted.
+
+\begin{table}[h]
+\caption{Black-box shift estimate of the target harm rate and marginal miss
+at the target, unweighted LTT versus the prevalence-corrected certificate
+(PC). Rates in \%.}
+\label{tab:prev}
+\centering
+\scriptsize\setlength{\tabcolsep}{2.5pt}
+\begin{tabular}{lccccc}
+\toprule
+Target & True harm & Estimate & Upper bound & LTT miss & PC miss \\
+\midrule
+Austin & 14.7 & 8.7 & 13.4 & 4.1 & 4.9 \\
+Dearborn & 8.4 & 0.0 & 0.0 & 2.2 & 8.4 \\
+Miami & 20.0 & 33.9 & 38.4 & 6.1 & 1.9 \\
+Palo Alto & 11.6 & 0.0 & 6.5 & 3.9 & 7.7 \\
+Pittsburgh & 15.5 & 25.1 & 29.5 & 4.6 & 2.0 \\
+Washington, DC & 17.6 & 21.8 & 28.1 & 4.2 & 2.1 \\
+nuScenes & 22.1 & 4.8 & 9.4 & 14.0 & 16.3 \\
+Waymo & 15.4 & 46.3 & 51.7 & 2.8 & 0.5 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\emph{Counterfactual trigger under shift (refuted).} Applying the same
+correction to the outcome target of the learned trigger (tightening
+7.5\,\% by the ratio of the source harm rate to the upper bound) made it
+meet the target on 4 of 8 targets and refuse to certify on 3, against 6 of 8
+without the correction (fails without it: Miami 10.8\,\%, nuScenes 8.2\,\%).
+The pre-registered claim that the correction helps is refuted, for the
+same reason.
+
+\section{Outcome Audit With an Upper Confidence Bound}
+\label{sec:s-audit}
+The alert-level threshold (Learn-then-Test on the Argoverse~2 calibration
+split, 5\,\% target) was applied to a fresh split of 904 scenarios, where
+its residual harm is 6.7\,\% and total harm (with induced collisions) 8.1\,\%.
+One-sided 90\,\% Clopper--Pearson upper bounds are 7.9\,\% and 9.4\,\%. The
+realized harm on each target is compared with the bound in
+Table~\ref{tab:audit}. The bound covers the realized residual harm on 7
+of 9 targets (78\,\%), below the 90\,\% we required, so the
+pre-registered claim is refuted. The two misses are nuScenes, a real
+shift, and Palo Alto, where 8.0\,\% against 7.9\,\% on 253 scenarios is within
+sampling noise. The audit is valid when the target resembles the audit
+split and must be recomputed on target-like labeled data otherwise.
+
+\begin{table}[h]
+\caption{Realized residual harm $O$ and total harm $O_{\mathrm{tot}}$
+against the audit upper bounds (7.9\,\% and 9.4\,\%). Rates in \%.}
+\label{tab:audit}
+\centering
+\scriptsize\setlength{\tabcolsep}{2.5pt}
+\begin{tabular}{lccc}
+\toprule
+Target & $O$ & $O_{\mathrm{tot}}$ & Covered \\
+\midrule
+Fresh test (in distribution) & 4.8 & 7.2 & yes \\
+Austin & 7.0 & 8.6 & yes \\
+Dearborn & 4.4 & 5.1 & yes \\
+Miami & 6.8 & 8.3 & yes \\
+Palo Alto & 8.0 & 10.0 & no \\
+Pittsburgh & 6.3 & 8.4 & yes \\
+Washington, DC & 6.7 & 8.1 & yes \\
+nuScenes & 15.6 & 16.4 & no \\
+Waymo & 4.3 & 8.3 & yes \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Corrected Validity and the Hypothesis Ledger}
+\label{sec:s-ledger}
+The violation frequency reported in the main paper counts resplits whose
+test-half miss exceeds $\alpha$, which also counts test-sample noise. We
+also report a corrected count that only counts resplits whose one-sided
+95\,\% Wilson lower bound exceeds $\alpha$, and call a method \emph{valid} if
+the uncorrected count is at most $\delta$, \emph{indeterminate} if only the
+corrected count is, and \emph{violated} otherwise (Amendment~11).
+Table~\ref{tab:valid} gives every method. The separation of Learn-then-Test
+from the uncertified methods survives the correction, whereas the
+near-boundary cases (latency-aware calibration, group-wise resplits)
+become indeterminate rather than violated.
+
+\begin{table}[h]
+\caption{Violation frequency over 200 resplits, uncorrected / corrected,
+and verdict. Rates in \%.}
+\label{tab:valid}
+\centering
+\scriptsize\setlength{\tabcolsep}{2.5pt}
+\begin{tabular}{lcc}
+\toprule
+Method & Unc. / corr. & Verdict \\
+\midrule
+LTT (geometric) & 9.5 / 0.0 & valid \\
+Tuned geometric & 43.5 / 15.0 & violated \\
+CRC & 41.0 / 12.0 & violated \\
+Tuned T1 confidence & 50.5 / 14.0 & violated \\
+LTT latency-aware, 0.5\,s & 12.0 / 1.5 & indeterminate \\
+LTT latency-aware, 1.0\,s & 11.5 / 0.5 & indeterminate \\
+Zero-latency LTT at 0.5\,s & 92.0 / 53.0 & violated \\
+Zero-latency LTT at 1.0\,s & 100 / 100 & violated \\
+LTT, fresh data & 7.5 / 0.5 & valid \\
+LTT, second predictor & 9.0 / 0.0 & valid \\
+LTT, Wayformer & 7.0 / 0.0 & valid \\
+LTT, spatial groups (150\,m) & 17.0 / 1.0 & indeterminate \\
+TTC, LTT & 1.0 / 1.0 & valid \\
+CDT (100 resplits) & 59.0 / 0.0 & indeterminate \\
+ACI (100 resplits) & 0.0 / 0.0 & valid \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Every claim of Amendment~11 and its addendum was fixed before it was run, and the ledger records each verdict.
+
+\begin{table}[h]
+\caption{Amendment~11 claims and verdicts.}
+\label{tab:ledger}
+\centering
+\scriptsize\setlength{\tabcolsep}{2.5pt}
+\begin{tabular}{p{5.2cm}c}
+\toprule
+Claim & Verdict \\
+\midrule
+P1: the predictor-based trigger stops less than a physics TTC trigger & refuted \\
+N-A: prevalence-corrected certificate meets the target on at least 7 of 8 shifts and beats plain LTT & refuted \\
+N-B: latency-aware LTT is not violated at 0.5 and 1.0\,s & holds \\
+N-C: the outcome audit bound covers at least 90\,\% of targets & refuted \\
+CSWC (i): outcome certificate valid at 7.5\,\% & holds \\
+CSWC (ii): learned trigger stops less than geometric and TTC at zero latency & refuted \\
+CSWC (iii): prevalence correction helps the learned trigger under shift & refuted \\
+11b: learned trigger valid and cheapest at 0.5 and 1.0\,s & holds \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \section{Outcome Partition of the Fallback}
 \label{sec:s-partition}
