@@ -67,3 +67,8 @@ numbers below against it before final submission, since anything fetched from th
       (`paper/hassan_photo.jpeg`). Rahat's and Hina's photos are still pending -- their
       biographies currently use `\IEEEbiographynophoto`; swap to `\IEEEbiography` with a photo
       once available.
+
+## Update 2026-10-08
+- [x] 2025-2026 references verified against arXiv / publisher pages (all matched).
+- [x] Paper reframed (new title); 10 pages; supplement has 18 sections (S1-S18).
+- [ ] Rahat's and Hina's photos; publish Zenodo (refresh archive: new scripts src/cswc.py, review_fixes.py, results/final/r11_*.json); final read.

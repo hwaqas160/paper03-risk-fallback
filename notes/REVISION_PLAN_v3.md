@@ -81,3 +81,8 @@ Learned traffic agents, second simulator, retraining a stronger predictor (machi
 re-simulation at scale.
 
 Estimated total: ~5-6 working days of my work, almost no new simulation; plus the author's checks.
+
+## Status 2026-10-08 (end of day)
+Phases 0-4 done (Amendments 11 and 11b; paper reframed, 10 pages). Phase 5: all eleven arXiv-ID references and the Phil. Trans. R. Soc. A, L4DC 2026, NeurIPS 2025,
+ITSC 2025 and Proc. IMechE D 2025 references checked against the arXiv, publisher or proceedings pages (titles and authors match). Headline numbers checked
+by src/audit_numbers.py (18 of 18 present in main.tex). Open (author): photos for Rahat and Hina, publish the Zenodo deposit (refresh the code archive first), final read of III-F, V-C, V-D.
