@@ -1,0 +1,77 @@
+{
+  "rows": {
+    "av2_test5 (in distribution)": {
+      "n": 904,
+      "o_res": 0.04756637168141593,
+      "o_tot": 0.07190265486725664,
+      "covered_res": true,
+      "covered_tot": true
+    },
+    "city austin (test rows)": {
+      "n": 489,
+      "o_res": 0.06952965235173825,
+      "o_tot": 0.08588957055214724,
+      "covered_res": true,
+      "covered_tot": true
+    },
+    "city dearborn (test rows)": {
+      "n": 273,
+      "o_res": 0.04395604395604396,
+      "o_tot": 0.05128205128205128,
+      "covered_res": true,
+      "covered_tot": true
+    },
+    "city miami (test rows)": {
+      "n": 484,
+      "o_res": 0.06818181818181818,
+      "o_tot": 0.08264462809917356,
+      "covered_res": true,
+      "covered_tot": true
+    },
+    "city palo-alto (test rows)": {
+      "n": 100,
+      "o_res": 0.08,
+      "o_tot": 0.1,
+      "covered_res": false,
+      "covered_tot": false
+    },
+    "city pittsburgh (test rows)": {
+      "n": 427,
+      "o_res": 0.06323185011709602,
+      "o_tot": 0.08430913348946135,
+      "covered_res": true,
+      "covered_tot": true
+    },
+    "city washington-dc (test rows)": {
+      "n": 223,
+      "o_res": 0.06726457399103139,
+      "o_tot": 0.08071748878923767,
+      "covered_res": true,
+      "covered_tot": true
+    },
+    "nuscenes": {
+      "n": 1504,
+      "o_res": 0.15558510638297873,
+      "o_tot": 0.16356382978723405,
+      "covered_res": false,
+      "covered_tot": false
+    },
+    "waymo": {
+      "n": 1000,
+      "o_res": 0.043,
+      "o_tot": 0.083,
+      "covered_res": true,
+      "covered_tot": true
+    }
+  },
+  "verdict_NC": {
+    "lam": 1.4701,
+    "cal5_res": 0.06747787610619468,
+    "ub_res": 0.07945167217355732,
+    "cal5_tot": 0.08075221238938053,
+    "ub_tot": 0.09361909333072689,
+    "n_targets": 9,
+    "coverage_res": 0.7777777777777778,
+    "claim_holds": false
+  }
+}

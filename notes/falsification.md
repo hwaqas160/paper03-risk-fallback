@@ -1008,3 +1008,46 @@ harm definitions, including collision-only. The headway-distance trigger (T0b) i
    source harm prevalence and pi_T_up the black-box-shift-estimation upper bound of N-A computed from unlabeled target scores.
 5. Held-out shift targets for CSWC use sources that exclude the target: for city c, train + calibrate on all other Argoverse 2 rows
    (random 60/40 split by scenario); for nuScenes and Waymo, train on `av2_cal`, calibrate on `av2_cal5`.
+
+### Amendment 11 outcome N-A (2026-10-08) (`results/final/r11_na_prevalence.json`)
+Prevalence-corrected certificate on 8 shift targets (6 held-out Argoverse 2 cities, nuScenes, Waymo): the unlabeled-score
+black-box shift estimate of the target harm prevalence is unreliable (estimate vs true: Austin 0.087/0.147, Dearborn 0.000/0.084,
+Miami 0.339/0.200, Palo Alto 0.000/0.116, Pittsburgh 0.251/0.155, Washington 0.218/0.176, nuScenes 0.048/0.221, Waymo 0.463/0.154).
+Marginal miss at target <= 5 %: unweighted LTT on 6 of 8 targets, prevalence-corrected on 5 of 8 (fails Dearborn 8.4 %, Palo Alto
+7.7 %, nuScenes 16.3 %). **N-A REFUTED** (needs >= 7 of 8 and more than unweighted LTT). Reading: the alert rate shifts for
+reasons other than harm prevalence (covariate shift changes P(alert | harm)), so the label-shift assumption behind the estimator
+fails. The "base rate" explanation of the failures is not identifiable from unlabeled alert rates with this classifier.
+
+### Amendment 11 outcome CSWC in distribution (2026-10-08) (`results/final/r11_cswc_indist.json`)
+Outcome target O_res <= 0.075 (residual harm in the run actually driven), ordered fixed-sequence LTT, calibrate `av2_cal5` (904), test
+`av2_test` + `av2_test5` (2,900). Realized test O_res / total harm / unnecessary stops / alert-level miss: CSWC 5.4 % / 6.3 % / 13.6 %
+/ 2.7 %; geometric score 5.3 % / 7.3 % / 32.8 % / 2.9 %; TTC (T0a) 5.5 % / 5.9 % / 10.2 % / 2.8 %. All three certify and meet the
+target. Claim (i) (realized O_res <= 0.075 and violation frequency over 200 resplits <= delta): **HOLDS**, uncorrected 4.5 %, corrected
+0.5 %, 0 refusals. Claim (ii) (CSWC stops fewer than the geometric AND the TTC score): **REFUTED**: CSWC stops 19.3 points fewer than
+the geometric score (paired CI [-21.1, -17.5]) but 3.3 points MORE than the TTC trigger ([+2.2, +4.4]). Reading: outcome-level
+certification IS achievable at this target with risk-ordered LTT (the earlier failure at 5 % used the monotone order and an
+unreachable target), but a plain TTC trigger certified the same way is at least as economical as the learned trigger.
+
+### Amendment 11 outcome CSWC under shift, claim (iii) (2026-10-08) (`results/final/r11_cswc_shift.json`)
+Eight targets (six held-out cities, nuScenes, Waymo). Uncorrected CSWC meets O_res <= 0.075 on 6 of 8 (fails Miami 10.8 %, nuScenes
+8.2 %). With the prevalence-corrected (tightened) target it meets it on 4 of 8 and REFUSES to certify on 3 (Miami, Washington, Waymo),
+because the estimated prevalence upper bounds (from N-A) are unreliable and shrink the target below what is certifiable. **Claim
+(iii) REFUTED** (needs more targets met with the correction than without).
+
+### Amendment 11 outcome N-C (2026-10-08) (`results/final/r11_nc_audit.json`)
+Threshold from alert-level LTT on `av2_cal`; outcome audit on `av2_cal5`: residual harm 6.7 % with one-sided 90 % Clopper-Pearson upper
+bound 7.9 %, total harm (with induced collisions) 8.1 %, upper bound 9.4 %. Realized residual harm is covered by the bound on 7 of 9 targets
+(in distribution 4.8 %, five of six cities, Waymo 4.3 %); not covered on nuScenes (15.6 %) and Palo Alto (8.0 % against 7.9 %, 253
+scenarios, a noise-level miss). Coverage 77.8 % < 90 %: **N-C REFUTED** by the rule as written. Reading: the audit bound is valid when
+the target resembles the audit split and fails under a real shift, so it must be recomputed on target-like labeled data.
+
+### Amendment 11 outcome P2 and N-B (2026-10-08) (`results/final/r11_p2_validity.json`, 200 resplits each)
+Uncorrected (test miss > 5 %) / corrected (one-sided 95 % Wilson lower bound > 5 %) violation frequency and tri-state verdict:
+pooled Argoverse 2: LTT 9.5 / 0.0 valid; tuned geometric 43.5 / 15.0 violated; CRC 41.0 / 12.0 violated; tuned T1 50.5 / 14.0 violated;
+latency-aware LTT 1 tick 12.0 / 1.5 indeterminate, 2 ticks 11.5 / 0.5 indeterminate; zero-latency certificate deployed at 1 tick
+92.0 / 53.0 violated, at 2 ticks 100 / 100 violated. Fresh held-out: LTT 7.5 / 0.5 valid; others violated (corrected 10.5-15 %).
+Second predictor: LTT 9.0 / 0.0 valid; others violated. Wayformer: LTT 7.0 / 0.0 valid; others violated (corrected 12.5-16.5 %). Group-wise
+resplits at 150 m: LTT 17.0 / 1.0 indeterminate. **N-B HOLDS** (corrected count <= delta at 1 and 2 ticks). Reading: the uncorrected
+metric overstated the violations of near-boundary methods (latency-aware, group-wise) but the separation of LTT from the uncertified
+methods survives the correction (corrected 12-17 % for tuned, CRC, T1). Earlier text that called the latency-aware and group-wise
+results "above delta" must say "indeterminate under the corrected measure".

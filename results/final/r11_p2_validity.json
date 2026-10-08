@@ -1,0 +1,157 @@
+{
+  "random_resplits_av2_pool": {
+    "tuned geometric": {
+      "uncorrected": 0.435,
+      "corrected": 0.15,
+      "n_resplits": 200,
+      "refused": 0,
+      "verdict": "violated"
+    },
+    "LTT": {
+      "uncorrected": 0.095,
+      "corrected": 0.0,
+      "n_resplits": 200,
+      "refused": 0,
+      "verdict": "valid"
+    },
+    "CRC": {
+      "uncorrected": 0.41,
+      "corrected": 0.12,
+      "n_resplits": 200,
+      "refused": 0,
+      "verdict": "violated"
+    },
+    "T1 tuned confidence": {
+      "uncorrected": 0.505,
+      "corrected": 0.14,
+      "n_resplits": 200,
+      "refused": 0,
+      "verdict": "violated"
+    },
+    "LTT latency-aware, 1 tick": {
+      "uncorrected": 0.12,
+      "corrected": 0.015,
+      "n_resplits": 200,
+      "refused": 0,
+      "verdict": "indeterminate"
+    },
+    "LTT latency-aware, 2 ticks": {
+      "uncorrected": 0.115,
+      "corrected": 0.005,
+      "n_resplits": 200,
+      "refused": 0,
+      "verdict": "indeterminate"
+    },
+    "LTT zero-latency certificate deployed at 1 tick": {
+      "uncorrected": 0.92,
+      "corrected": 0.53,
+      "n_resplits": 200,
+      "refused": 0,
+      "verdict": "violated"
+    },
+    "LTT zero-latency certificate deployed at 2 ticks": {
+      "uncorrected": 1.0,
+      "corrected": 1.0,
+      "n_resplits": 200,
+      "refused": 0,
+      "verdict": "violated"
+    }
+  },
+  "fresh held-out (AutoBot)": {
+    "tuned geometric": {
+      "uncorrected": 0.515,
+      "corrected": 0.11,
+      "n_resplits": 200,
+      "refused": 0,
+      "verdict": "violated"
+    },
+    "LTT": {
+      "uncorrected": 0.075,
+      "corrected": 0.005,
+      "n_resplits": 200,
+      "refused": 0,
+      "verdict": "valid"
+    },
+    "CRC": {
+      "uncorrected": 0.46,
+      "corrected": 0.105,
+      "n_resplits": 200,
+      "refused": 0,
+      "verdict": "violated"
+    },
+    "T1 tuned confidence": {
+      "uncorrected": 0.5,
+      "corrected": 0.15,
+      "n_resplits": 200,
+      "refused": 0,
+      "verdict": "violated"
+    }
+  },
+  "second predictor (AutoBot 0.854)": {
+    "tuned geometric": {
+      "uncorrected": 0.51,
+      "corrected": 0.13,
+      "n_resplits": 200,
+      "refused": 0,
+      "verdict": "violated"
+    },
+    "LTT": {
+      "uncorrected": 0.09,
+      "corrected": 0.0,
+      "n_resplits": 200,
+      "refused": 0,
+      "verdict": "valid"
+    },
+    "CRC": {
+      "uncorrected": 0.475,
+      "corrected": 0.12,
+      "n_resplits": 200,
+      "refused": 0,
+      "verdict": "violated"
+    },
+    "T1 tuned confidence": {
+      "uncorrected": 0.46,
+      "corrected": 0.145,
+      "n_resplits": 200,
+      "refused": 0,
+      "verdict": "violated"
+    }
+  },
+  "Wayformer": {
+    "tuned geometric": {
+      "uncorrected": 0.48,
+      "corrected": 0.165,
+      "n_resplits": 200,
+      "refused": 0,
+      "verdict": "violated"
+    },
+    "LTT": {
+      "uncorrected": 0.07,
+      "corrected": 0.0,
+      "n_resplits": 200,
+      "refused": 0,
+      "verdict": "valid"
+    },
+    "CRC": {
+      "uncorrected": 0.44,
+      "corrected": 0.125,
+      "n_resplits": 200,
+      "refused": 0,
+      "verdict": "violated"
+    },
+    "T1 tuned confidence": {
+      "uncorrected": 0.53,
+      "corrected": 0.165,
+      "n_resplits": 200,
+      "refused": 0,
+      "verdict": "violated"
+    }
+  },
+  "group_resplits_150m (LTT)": {
+    "uncorrected": 0.17,
+    "corrected": 0.01,
+    "n_resplits": 200,
+    "refused": 0,
+    "verdict": "indeterminate"
+  }
+}
