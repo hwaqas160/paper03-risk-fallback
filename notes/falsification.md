@@ -1120,3 +1120,46 @@ D1: at the outcome-certified threshold (O_res <= 0.075, zero latency) of the lea
 classify every scenario with residual harm on `av2_test` + `av2_test5` as TOO LATE (firing tick after the last safe tick, safe window non-empty), TOO EARLY (before
 the first safe tick), GAP (inside the window span but unsafe), or UNAVOIDABLE (empty window), and report shares of all scenarios. D2: the unavoidable share with a one-sided
 90 % Clopper-Pearson upper bound on the training split and on the test pool. Output `results/final/r11d_decompose.json`.
+
+
+## Amendment 12 — 2026-10-10, BEFORE any analysis below is run (second strict review: robustness of the latency result and the learned trigger)
+
+Written before running anything in this amendment. Splits, loss, hyper-parameters, out-of-fold ordering and the ordered fixed-sequence procedure are those of
+Amendments 11/11a unless stated. delta = 0.10. "Latency l" = l decision ticks (0.5 s each) at 2 Hz unless stated.
+
+### A12-1 Supervised time-to-harm baseline
+A learned trigger with the same features, model and hyper-parameters as CSWC but a FACTUAL label: y_t = 1 iff the no-fallback run is harmful and its first
+harm tick h(X) satisfies h(X) <= t + l + 4 (harm within 2 s after the action would take effect); no counterfactual safe window, no too-early exclusion.
+Retrained per latency. **Claim:** at l = 1 and l = 2 the CSWC trigger stops fewer scenarios than the supervised time-to-harm trigger (paired bootstrap 95 % CI excluding 0),
+among triggers whose realized test O_res <= 0.075. **Refuted if** at either latency it does not (then the paper states that the counterfactual window adds nothing
+over a time-to-harm label).
+
+### A12-2 Target sweep
+For targets 0.05, 0.06, 0.075, 0.09, 0.10, latencies 0, 1, 2 and scores CSWC, geometric, TTC: certified (yes/no), realized test O_res, unnecessary stops. Descriptive.
+
+### A12-3 Collision-only harm
+The labels, windows and losses use collision-only harm (at-fault collision, no time-to-collision term). Primary target O_res <= 0.02. Latencies 0 and 1; scores CSWC
+(retrained with collision-only windows), geometric, TTC. **Claim:** at l = 1 CSWC certifies (realized test O_res <= 0.02) and stops fewer scenarios than both the
+geometric and the TTC score (paired CI excluding 0). **Refuted if** it fails. The l = 0 comparison is reported descriptively.
+
+### A12-4 Joint certification of residual harm and induced collisions
+Targets H <= 0.075 and I (induced collision) <= 0.03, certified together by the maximum of the two Hoeffding-Bentkus p-values along the ordered sequence, latencies 0 and 1,
+scores CSWC, geometric, TTC. **Claim:** CSWC certifies jointly at both latencies and the realized test H <= 0.075 and I <= 0.03. **Refuted if** it fails at either latency.
+Stops of the three scores are reported descriptively.
+
+### A12-5 Multiplicity
+For the paired stop-difference comparisons of Amendments 11, 11b, 11c and 12 (P1, CSWC (ii) against geometric and TTC, 11b at l = 1 and 2 against geometric and TTC, 11c M1,
+A12-1 at l = 1 and 2, A12-3), report Bonferroni-adjusted bootstrap intervals at level 1 - 0.05/m, m = 12, and state which conclusions survive. Descriptive.
+
+### A12-6 Decision-rate and RSS test (new simulation; the latency crossover at 10 Hz)
+**Data.** A new closed-loop arm: for every non-static scenario of `av2_cal5` (calibration/training) and `av2_test5` (test), the reference run is repeated without the
+predictor, recording per step the ego speed, the nearest agent ahead in the ego's lane (gap, speed) and the time-to-collision, and one forced-fire rollout is run at EVERY
+simulator step (10 Hz decision opportunities). The stored 2 Hz predictor scores (geometric, confidence) of the same scenarios are used by zero-order hold (a predictor that runs at
+2 Hz); time-to-collision, headway and the RSS margin are available at 10 Hz. **Reproducibility check:** the new reference run's per-step TTC trace must equal the stored one
+for at least 99 % of scenarios; others are dropped and counted.
+**Triggers.** TTC (u = max(0, 3 - TTC)), RSS (u = d_min - gap with the longitudinal safe distance d_min = v_r*rho + 0.5*a_acc*rho^2 + (v_r + rho*a_acc)^2/(2*b_min) - v_f^2/(2*b_max),
+rho = 0.5 s, a_acc = 3.0, b_min = 4.0, b_max = 8.0 m/s^2, lead = nearest agent ahead within the ego lane width, fixed before running), geometric (held), and the learned trigger
+(same model, features = held 2 Hz scores + 10 Hz TTC, headway and RSS margin + step index; labels shifted by the latency in steps; trained on a random half of `av2_cal5`,
+calibrated on the other half as in R1; test = `av2_test5`). Latencies 0, 2, 3 and 5 steps (0, 0.2, 0.3, 0.5 s). Target O_res <= 0.075, ordered fixed-sequence LTT.
+**Claim:** at 0.3 s and at 0.5 s the learned trigger meets the target and stops fewer scenarios than TTC, than RSS and than the geometric trigger (paired CI excluding 0).
+**Refuted if** it fails at either latency; then the paper must say the latency crossover is not robust to the decision rate.
