@@ -693,6 +693,32 @@ tick, then a safe tick again), which is why the outcome loss is certified
 directly instead of through a union bound on too-late and too-early
 firing.
 
+\emph{Where residual harm comes from.} Classifying each scenario with harm
+in the executed run at the certified threshold (Amendment~11d, descriptive)
+shows that most of it is firing too late, and little is firing too early
+(Table~\ref{tab:decomp}). The unavoidable share is 0.35\,\% on the training
+split (one-sided 90\,\% upper bound 0.59\,\%) and 0.34\,\% on the test pool
+(0.53\,\%).
+
+\begin{table}[h]
+\caption{Residual harm of the executed run at the certified threshold, split
+by cause (\% of all scenarios, test pool of 2{,}900). Alert: Learn-then-Test
+at the alert level. Others: outcome-certified at 7.5\,\% residual harm.}
+\label{tab:decomp}
+\centering
+\scriptsize\setlength{\tabcolsep}{2.5pt}
+\begin{tabular}{lccccc}
+\toprule
+Threshold & Too late & Too early & Gap & Unavoid. & Total \\
+\midrule
+Geometric, alert level & 4.4 & 0.5 & 0.8 & 0.3 & 5.9 \\
+Learned, outcome & 4.2 & 0.4 & 0.6 & 0.3 & 5.5 \\
+Geometric, outcome & 3.6 & 0.5 & 1.0 & 0.3 & 5.3 \\
+TTC, outcome & 4.5 & 0.1 & 0.6 & 0.3 & 5.5 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
 \emph{Prevalence-corrected certificate (refuted).} A marginal miss rate is the
 harm rate times the miss rate among harmful scenarios, and the held-out
 miss rate tracked the target's harm rate. We therefore estimated each

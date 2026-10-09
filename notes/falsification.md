@@ -1114,3 +1114,9 @@ R1 (replication, 452 train / 452 calibrate, test 904): at 0.5 s the learned trig
 score on the second AutoBot (46.2 % vs 39.5 %, CI [+3.1, +10.4]) and better on Wayformer (44.8 % vs 57.0 %); both beat TTC (84.8 %), which does not certify below always-firing
 with 452 calibration scenarios. S1 (descriptive): at latency 0 each of the learned, geometric and TTC scores meets O_res <= 0.075 on 6 of 8 shift targets; the learned trigger
 fails Miami (10.8 %) and nuScenes (8.2 %), the geometric score nuScenes (12.3 %) and Washington (7.6 %), TTC Miami (9.2 %) and nuScenes (8.8 %).
+
+### Amendment 11d — 2026-10-09, descriptive diagnostics (no claim), written before running
+D1: at the outcome-certified threshold (O_res <= 0.075, zero latency) of the learned, geometric and TTC scores and at the alert-level LTT geometric threshold,
+classify every scenario with residual harm on `av2_test` + `av2_test5` as TOO LATE (firing tick after the last safe tick, safe window non-empty), TOO EARLY (before
+the first safe tick), GAP (inside the window span but unsafe), or UNAVOIDABLE (empty window), and report shares of all scenarios. D2: the unavoidable share with a one-sided
+90 % Clopper-Pearson upper bound on the training split and on the test pool. Output `results/final/r11d_decompose.json`.

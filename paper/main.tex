@@ -106,12 +106,7 @@ hypothesis fixed before data collection (Section~\ref{sec:prereg}).
 \textbf{RQ1 (H2):} does a certificate keep its promise on the
 closed-loop outcome, and what does it cost in unnecessary stops and
 induced collisions? \textbf{RQ2 (H1):} do open-loop metrics choose the
-trigger that closed-loop safety does? \textbf{RQ3 (H3, H3-W):} what
-happens to a certificate under cross-dataset shift, and how much can
-unlabeled or a few labeled target scenarios repair? \textbf{RQ4:} how
-sensitive is it to the timing of the intervention, and can the outcome
-be certified under latency? RQ4's outcome-level part was added by
-later amendments and is labeled as such.
+trigger that closed-loop safety does? \textbf{RQ3:} how sensitive is it to the timing of the intervention, and can the outcome be certified under latency? \textbf{RQ4 (H3, H3-W):} what happens to a certificate under cross-dataset shift, and how much can unlabeled or a few labeled target scenarios repair? The outcome-level part of RQ3 was added by later amendments and is labeled as such.
 
 We make four contributions.
 \begin{enumerate}
@@ -720,7 +715,7 @@ confidence score has AUROC $0.45$, below chance, yet a threshold on it
 still reaches the miss target at 75.8\,\% stops, by firing
 indiscriminately.
 
-\subsection{Ablations and latency (RQ4)}
+\subsection{Ablations and latency (RQ3)}
 \label{sec:ablation}
 Ablating the geometric score (Supplementary Section~S14), a route-following
 corridor makes the trigger fire in essentially every scenario (84.9\,\%
@@ -794,7 +789,7 @@ Latency & Trigger & $O$ & Unnec. & Viol. u/c \\
 \end{tabular}
 \end{table}
 
-\subsection{Dataset shift (RQ3)}
+\subsection{Dataset shift (RQ4)}
 \label{sec:res-shift}
 \begin{figure}[t]
 \centering
@@ -844,12 +839,7 @@ certified at $\alpha = 0.05$ on nuScenes. With those scenarios excluded
 (post hoc), the shifted miss rate is 9.2\,\% [7.8, 10.8], still above the
 target. These intervals treat scenarios as independent, but the 1{,}504 nuScenes scenarios come from only 37 scenes. Resampling scenes widens the interval to [6.1, 21.0], which still excludes the target, while a second, disjoint set of 23 scenes gives 9.5\,\% with scene-level interval [3.9, 16.5], which does not: the direction of the failure replicates but its size is uncertain (Supplementary Section~S6). A domain classifier on the covariates separates Argoverse~2 from nuScenes (cross-validated AUROC 0.97) far more easily than from Waymo (0.91), so the certificate failed under the larger measured shift and held under the smaller. Six further natural shifts, the Argoverse~2 cities held out one at a time, add evidence: the certificate met the target in four of six (67\,\%, below the 80\,\% we pre-registered, so that claim is refuted) and failed in Miami (6.1\,\% [4.8, 7.8]) and Washington, DC (5.3\,\%), the two cities with the highest harm rates. Across these and the two datasets the held-out miss rate tracks the target's harm rate (Spearman 0.90, $n=8$, post hoc), but estimating that rate from unlabeled alerts to correct the target was unreliable and did not help (Supplementary Sections~S10 and S15).
 
-Density-ratio weighting, using only unlabeled target covariates, moves
-the miss rate from 13.2\,\% to 7.0\,\%, still above the target, and
-doubles unnecessary stops (26.1\,\% to 52.4\,\%). On the avoidable subset
-it reaches 2.2\,\%, below the target, but its effective sample size is only
-68, so the certificate is achieved almost entirely through conservatism
-(54.5\,\% stops).
+Density-ratio weighting moves the miss rate from 13.2\,\% to 7.0\,\%, still above the target, and doubles unnecessary stops (26.1\,\% to 52.4\,\%). On the avoidable subset it reaches 2.2\,\%, but with an effective sample size of only 68, almost entirely through conservatism (54.5\,\% stops).
 
 \subsection{What the intervention does, and a class-conditional certificate (post hoc)}
 \label{sec:res-cost}
@@ -868,7 +858,7 @@ difference 2.4\,m/s), typically 6.5\,s after firing and often where it
 starts at standstill, so this cost may partly reflect simulated traffic that
 does not yield to a stationary vehicle (Supplementary Section~S6).
 
-\emph{Class-conditional certification and reverse shift.} A Luo-style class-conditional certificate at $\epsilon=0.05$ is equivalent to always firing, and at $\epsilon=0.32$ its conditional miss on nuScenes is 66\,\% against a 32\,\% target (Supplementary Section~S1). Certifying on nuScenes and deploying on Argoverse~2 is safe but conservative (Section~S2).
+\emph{Class-conditional certification.} A Luo-style class-conditional certificate is equivalent to always firing at $\epsilon=0.05$ and misses 66\,\% of harmful nuScenes scenarios at a 32\,\% target (Supplementary Section~S1).
 
 \subsection{Second shifted dataset and recalibration}
 \label{sec:res-waymo}
@@ -903,13 +893,37 @@ against 71.7\,\% for the tuned confidence trigger (Section~S11).
 
 \subsection{Robustness checks (post hoc)}
 \label{sec:res-robust}
-Two objections are addressed on data not used above, in checks
-pre-registered as post hoc before running.
+Table~\ref{tab:robust} collects the checks that vary the data, predictor,
+traffic, harm definition or splitting, each on data not used above and
+pre-registered as post hoc before running. The validity of Learn-then-Test
+and the advantage of the geometric score over the confidence and ensemble
+triggers survive all of them. The TTC trigger beats the geometric score under
+three of the four harm definitions, so the geometric advantage is over
+uncertainty-based triggers only. The cities and spatial groups are where the
+guarantee weakens (Section~\ref{sec:res-shift}).
 
-\emph{Does the geometric score's advantage depend on matching the harm
-label?} The score and the nuPlan label are both proximity- and time-to-collision-based. Re-certifying LTT and the best of T1/T2 under three alternative harm definitions (collision only with $\alpha = 0.01$, and time-to-collision thresholds of 0.5\,s and 1.5\,s, Supplementary Section~S14), the geometric score's advantage over the confidence and ensemble scores survives every definition by at least 20 points of stops. The TTC trigger, however, beats the geometric score under three of the four, so the advantage is over uncertainty-based triggers only.
-
-\emph{Does validity replicate on unseen data and a second predictor?} We recalibrate LTT on 904 fresh Argoverse~2 scenarios, test on a further 904, and repeat with an independently trained predictor (minADE$_6 = 0.854$ against 1.09; T3 and ACI need open-loop error files and are omitted, T2 is added by re-running reference runs with dropout). LTT's validity replicates in both settings (7.5\,\% and 9.0\,\% violations against 46--51\,\% for the uncertified baselines) and its miss rate stays below $\alpha$ (Supplementary Section~S8).
+\begin{table}[t]
+\caption{Robustness and replication checks. Viol.: resplit violation
+frequency of LTT, uncorrected / corrected; Unnec.: unnecessary stops of LTT
+against the tuned confidence trigger (T1). Rates in \%.}
+\label{tab:robust}
+\centering
+\scriptsize\setlength{\tabcolsep}{2.5pt}
+\begin{tabular}{p{2.5cm}p{2.3cm}p{2.7cm}}
+\toprule
+Check & Setting & Result \\
+\midrule
+Lookup vs direct execution & 252 scenarios, 4 triggers & 0 of 1{,}008 alert-level disagreements \\
+Fresh disjoint data & 904 / 904 scenarios & Viol. 7.5 / 0.5, miss 3.4 \\
+Second predictor & AutoBot, minADE 0.854 & Viol. 9.0 / 0.0, stops 30.6 vs 68.3 \\
+Second architecture & Wayformer & Viol. 7.0 / 0.0, stops 41.8 vs 67.8 \\
+Non-reactive traffic & log replay & Miss 3.7 [2.2, 6.1], stops 35.4 vs 71.7 \\
+Alternative harm & collision only, TTC 0.5 s, 1.5 s & Geometric beats T1/T2 by $\ge 20$ points \\
+Held-out cities & 6 Argoverse~2 cities & Target met in 4 of 6 \\
+Spatial groups & 150\,m & Viol. 17.0 / 1.0, indeterminate \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 %=======================================================================
 \section{Scope and Future Work}

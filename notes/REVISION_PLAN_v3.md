@@ -96,3 +96,10 @@ runtime assurance (arXiv 2010.10618, ICCPS 2024), time-to-brake warning work (SA
 models, 2510.06492; detail not confirmed). Reading: learned switching and last-time-to-brake concepts exist; ordered LTT is standard (LTT allows any pre-specified order).
 What remains claimable: statistical certification of a learned trigger's EXECUTED outcome from closed-loop counterfactual windows, and the latency crossover finding.
 Not a systematic review; the paper's claim stays hedged ("to our knowledge").
+
+## Status 2026-10-09
+Done since the last status: literature check (Feldman 2025, Miller 2023 cited), M7 heuristic wording, RQ3/RQ4 renumbered to match section order, consolidated robustness table in the main
+text (M5), too-late/too-early/gap decomposition and unavoidable-floor bound (Amendment 11d, S15), Amendments 11c (mechanism refuted, replication holds). Zenodo archive prepared
+OUTSIDE the repository at F:\CLAUDE\AI3\zenodo_upload\paper03_code_data.zip (77.6 MB; code, pre-registration, result files and per-scenario records; no manuscript, no credentials;
+secret scan clean) for the author to upload. Skipped as low value: Observation 1 as prose (m3), CDT/ACI at 200 x 20, entropy-based confidence variants (stored tables lack mode probabilities).
+Open (author): photos, upload the Zenodo archive and publish, final read of III-F, V-C, V-D.
