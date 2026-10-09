@@ -1,0 +1,85 @@
+{
+  "base_rate_cal": 0.04012036108324975,
+  "target": 0.02,
+  "0": {
+    "methods": {
+      "CSWC": {
+        "lam": null,
+        "tag": "c_cswc",
+        "certified": 0
+      },
+      "geometric": {
+        "lam": null,
+        "tag": "geom",
+        "certified": 0
+      },
+      "TTC": {
+        "lam": null,
+        "tag": "ttc",
+        "certified": 0
+      }
+    },
+    "stop_diff_cswc_minus": {},
+    "cswc_meets_and_fewer_than_both": false
+  },
+  "1": {
+    "methods": {
+      "CSWC": {
+        "lam": null,
+        "tag": "c_cswc",
+        "certified": 0
+      },
+      "geometric": {
+        "lam": -1e-06,
+        "tag": "geom",
+        "certified": 1,
+        "cal_risk": 0.00663716814159292,
+        "cal_stop": 0.959070796460177,
+        "test": {
+          "o_res": 0.009310344827586206,
+          "o_res_ci": [
+            0.00640650844158875,
+            0.013512484385017218
+          ],
+          "o_tot": 0.0693103448275862,
+          "o_tot_ci": [
+            0.06062471170127539,
+            0.07913552866445253
+          ],
+          "stop": 0.9672413793103448,
+          "miss": 0.0,
+          "induced": 0.06448275862068965,
+          "fired": 1.0,
+          "n": 2900
+        }
+      },
+      "TTC": {
+        "lam": -1e-06,
+        "tag": "ttc",
+        "certified": 1,
+        "cal_risk": 0.00663716814159292,
+        "cal_stop": 0.959070796460177,
+        "test": {
+          "o_res": 0.009310344827586206,
+          "o_res_ci": [
+            0.00640650844158875,
+            0.013512484385017218
+          ],
+          "o_tot": 0.0693103448275862,
+          "o_tot_ci": [
+            0.06062471170127539,
+            0.07913552866445253
+          ],
+          "stop": 0.9672413793103448,
+          "miss": 0.0,
+          "induced": 0.06448275862068965,
+          "fired": 1.0,
+          "n": 2900
+        }
+      }
+    },
+    "stop_diff_cswc_minus": {},
+    "cswc_meets_and_fewer_than_both": false
+  },
+  "claim_A12_3": false
+}

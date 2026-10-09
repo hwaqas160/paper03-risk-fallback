@@ -497,7 +497,8 @@ def rollout(env, seed: int, lam: float, predictor, decide_every: int = 1,
             latency_steps: int = 0, max_steps: int = 1000,
             score_trace: list | None = None, ref_ego: list | None = None,
             score_key: str = "geom", fire_step: int | None = None,
-            record_all: bool = False, contact_log: list | None = None) -> RolloutResult:
+            record_all: bool = False, contact_log: list | None = None,
+            kin_log: list | None = None) -> RolloutResult:
     """
     One closed-loop episode. The fallback engages the first time the score exceeds lam
     (after `latency_steps` of actuation delay) and stays engaged. lam = inf disables it,
@@ -592,6 +593,16 @@ def rollout(env, seed: int, lam: float, predictor, decide_every: int = 1,
         r.ttc_trace.append(round(min(ttc, TTC_CAP), 3))
         r.min_ttc = min(r.min_ttc, ttc)
         r.ttc_violations += int(ttc < nm.LEAST_MIN_TTC)
+        if kin_log is not None:           # per-step ego speed and nearest in-lane lead (RSS trigger, Amendment 12, A12-6)
+            gap_l, v_l = 100.0, 0.0
+            if len(agents):
+                fx, fy = nm.ego_frame(ego, agents)
+                bg = nm.box_gap(ego, agents)
+                inlane = [i for i in range(len(agents)) if fx[i] > 0 and abs(fy[i]) < 0.5 * (ego["W"] + agents[i, 5])]
+                if inlane:
+                    k_ = min(inlane, key=lambda i: bg[i])
+                    gap_l, v_l = float(min(max(bg[k_], 0.0), 100.0)), float(agents[k_, 3])
+            kin_log.append([round(float(ego["v"]), 3), round(gap_l, 3), round(v_l, 3)])
 
         contact = _agent_contact(env.agent)
         if contact and not in_contact:                 # rising edge = a new contact event

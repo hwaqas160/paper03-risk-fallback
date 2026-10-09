@@ -103,3 +103,9 @@ text (M5), too-late/too-early/gap decomposition and unavoidable-floor bound (Ame
 OUTSIDE the repository at F:\CLAUDE\AI3\zenodo_upload\paper03_code_data.zip (77.6 MB; code, pre-registration, result files and per-scenario records; no manuscript, no credentials;
 secret scan clean) for the author to upload. Skipped as low value: Observation 1 as prose (m3), CDT/ACI at 200 x 20, entropy-based confidence variants (stored tables lack mode probabilities).
 Open (author): photos, upload the Zenodo archive and publish, final read of III-F, V-C, V-D.
+
+## Status 2026-10-10 (Amendment 12 done)
+Second strict review executed. Stored-data items (supervised baseline, target sweep, collision-only, joint, Bonferroni) and the new 10 Hz arm (904 + 904 scenarios, forced rollout at every
+step, RSS-style trigger) are done. Outcomes: A12-1, A12-3, A12-4, A12-6 refuted; the 2 Hz latency crossover is withdrawn (certification cliff and decision grid); a certified TTC threshold is the cheapest
+trigger up to 0.5 s at 10 Hz; learned or RSS triggers are needed only from 0.8 s. Paper rewritten accordingly (10 pages); supplement S20 added; `reproduce.sh` added.
+Follow-up paper (Method A: exact-counterfactual certified stopping-and-action policies with deployment monitoring) is NOT started; its tables already exist.

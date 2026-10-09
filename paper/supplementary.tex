@@ -859,15 +859,21 @@ N-C: the outcome audit bound covers at least 90\,\% of targets & refuted \\
 CSWC (i): outcome certificate valid at 7.5\,\% & holds \\
 CSWC (ii): learned trigger stops less than geometric and TTC at zero latency & refuted \\
 CSWC (iii): prevalence correction helps the learned trigger under shift & refuted \\
-11b: learned trigger valid and cheapest at 0.5 and 1.0\,s & holds \\
+11b: learned trigger valid and cheapest at 0.5 and 1.0\,s (2\,Hz) & holds, withdrawn (S20) \\
 11c M1: the predictor adds lead time beyond physics features & refuted \\
 11c R1: the learned trigger replicates at 0.5\,s on a second AutoBot and Wayformer & holds \\
+12 A12-1: counterfactual-label trigger beats a supervised time-to-harm trigger & refuted \\
+12 A12-3: collision-only outcome certification, learned trigger cheapest & refuted (underpowered) \\
+12 A12-4: joint certification of harm and induced collisions at both latencies & refuted \\
+12 A12-6: learned trigger beats TTC, RSS and geometric at 0.3 and 0.5\,s at 10\,Hz & refuted \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \section{Mechanism, Replication and Shift for the Counterfactual Trigger}
 \label{sec:s-mech}
+\emph{Update.} The latency comparisons in this section use the 2\,Hz arm, where a one-tick delay is 0.5\,s and a certification cliff can move a score to always firing. They are superseded by the 10\,Hz test of Section~S20, which refuted the claim that the learned trigger beats TTC at realistic latencies.
+
 These analyses were pre-registered in Amendment~11c.
 
 \emph{Mechanism (claim refuted).} To test whether the predictor adds lead
@@ -968,5 +974,130 @@ nuScenes & Always fire & 5.0 & 1.6 & 16.2 & 3.8 & 9.7 / 6.4 \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+\section{Amendment 12: Decision Rate, Supervised Baseline and Robustness of the Latency Result}
+\label{sec:s-a12}
+A second strict review asked whether the latency crossover of Sections~S9
+and S18 survives finer decisions and a simpler learned baseline. Amendment~12
+pre-registered the tests. Four of its six claims were refuted, and the
+crossover is withdrawn as a general finding.
+
+\emph{Supervised time-to-harm baseline (refuted).} A learned trigger with
+the same features, model and ordering but a factual label (harm within 2\,s
+after the action takes effect) stops fewer scenarios than the
+counterfactual-label trigger at every latency (Table~\ref{tab:sup}), so the
+safe-window label adds nothing as a training target.
+
+\begin{table}[h]
+\caption{Counterfactual-label versus supervised time-to-harm trigger, 2\,Hz arm,
+7.5\,\% residual-harm target (calibrate 904, test 2{,}900). Stops in \%,
+difference with paired 95\,\% CI (points).}
+\label{tab:sup}
+\centering
+\scriptsize\setlength{\tabcolsep}{3pt}
+\begin{tabular}{lcccc}
+\toprule
+Latency & Counterfactual & Supervised & Difference \\
+\midrule
+0 & 13.6 & 9.6 & +3.9 [3.0, 4.9] \\
+0.5\,s & 25.5 & 23.6 & +1.9 [0.7, 3.1] \\
+1.0\,s & 34.2 & 29.7 & +4.6 [3.4, 5.7] \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\emph{The certification cliff.} The 2\,Hz crossover came from where the
+target sits on the achievable-risk curve. Sweeping the outcome target
+(Table~\ref{tab:sweep}), a 5\,\% target is unreachable (the learned trigger
+refuses and the others certify only at always firing), and for TTC at 0.5\,s
+the certified stop rate jumps from 85\,\% at 7.5\,\% to 15\,\% at 9\,\%, so a
+small change in the calibration sample moves it across the cliff. At 9 and
+10\,\% the TTC and learned triggers are equal at 0.5\,s (15.1 against
+14.3\,\% and 12.4 against 12.0\,\%).
+
+\begin{table}[h]
+\caption{Unnecessary stops (\%) of the outcome-certified threshold by target
+and latency, 2\,Hz arm. A dash marks a refusal to certify; 84.9 is always
+firing. Cf.: counterfactual-label learned trigger; G: geometric.}
+\label{tab:sweep}
+\centering
+\scriptsize\setlength{\tabcolsep}{2.5pt}
+\begin{tabular}{lccccccccc}
+\toprule
+ & \multicolumn{3}{c}{0\,s} & \multicolumn{3}{c}{0.5\,s} & \multicolumn{3}{c}{1.0\,s} \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}\cmidrule(lr){8-10}
+Target & Cf. & G & TTC & Cf. & G & TTC & Cf. & G & TTC \\
+\midrule
+0.05 & -- & 84.9 & 84.9 & -- & 84.9 & 84.9 & -- & -- & -- \\
+0.06 & 28.2 & 42.9 & 84.9 & 37.9 & 84.9 & 84.9 & -- & 84.9 & 84.9 \\
+0.075 & 13.6 & 32.8 & 10.2 & 25.5 & 37.5 & 84.9 & 34.2 & 84.9 & 84.9 \\
+0.09 & 6.2 & 28.3 & 7.8 & 14.3 & 27.8 & 15.1 & 24.5 & 84.9 & 84.9 \\
+0.10 & 5.2 & 22.7 & 7.1 & 12.0 & 25.3 & 12.4 & 22.3 & 39.2 & 84.9 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\emph{The 10\,Hz arm.} For all 904 calibration-split and 904 test-split
+scenarios of the fresh split we repeated the reference run without the
+predictor, recording per step the ego speed, the in-lane lead's gap and
+speed, and the time-to-collision, and ran one forced rollout at every
+simulator step (10\,Hz decision opportunities). The predictor scores of the
+2\,Hz arm are held at zero order, as a predictor running at 2\,Hz would
+provide, while TTC and the RSS-style safe-distance margin are available at
+10\,Hz. The new reference runs reproduced the stored per-step TTC traces in
+881 of 904 calibration-split and 884 of 904 test-split scenarios (97.5\,\% and
+97.8\,\%), short of the 99\,\% we required; the others were dropped. The learned
+triggers are trained on 440 scenarios, calibrated on 441 and tested on 884, so
+the stop rates are higher than on the 2\,Hz arm for the learned triggers.
+Table~\ref{tab:hz10} gives realized residual harm and stops. Against the
+learned counterfactual-label trigger, the paired stop differences
+(learned minus other) are $+13.2$, $+16.5$, $+18.9$ and $+13.0$ points for TTC
+at 0, 0.2, 0.3 and 0.5\,s (all CIs exclude 0, with $+10.7$ to $+22.1$ at their
+extremes), so the pre-registered claim that the learned trigger beats TTC,
+the safe-distance trigger and the geometric trigger at 0.3 and 0.5\,s is
+refuted. At 0.8 and 1.0\,s, added post hoc because the forced-rollout table
+covers every delay, TTC and the geometric trigger certify only at always
+firing.
+
+\begin{table}[h]
+\caption{10\,Hz arm: realized residual harm $O$ and unnecessary stops of the
+outcome-certified threshold (7.5\,\% target). Both in \%. Learned (cf.) and (fact.):
+counterfactual and factual labels.}
+\label{tab:hz10}
+\centering
+\scriptsize\setlength{\tabcolsep}{2pt}
+\begin{tabular}{lcccccccccc}
+\toprule
+ & \multicolumn{2}{c}{TTC} & \multicolumn{2}{c}{Safe dist.} & \multicolumn{2}{c}{Geometric} & \multicolumn{2}{c}{Learned cf.} & \multicolumn{2}{c}{Learned fact.} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}\cmidrule(lr){8-9}\cmidrule(lr){10-11}
+Latency & $O$ & Stops & $O$ & Stops & $O$ & Stops & $O$ & Stops & $O$ & Stops \\
+\midrule
+0\,s & 4.1 & 5.8 & 4.9 & 20.1 & 3.5 & 32.9 & 5.1 & 19.0 & 6.4 & 7.6 \\
+0.2\,s & 5.0 & 8.7 & 5.0 & 24.7 & 4.9 & 28.5 & 5.5 & 25.2 & 5.0 & 17.6 \\
+0.3\,s & 4.6 & 9.5 & 5.4 & 23.9 & 5.7 & 26.5 & 5.9 & 28.4 & 4.2 & 20.4 \\
+0.5\,s & 5.0 & 12.6 & 6.6 & 23.6 & 5.3 & 31.9 & 6.8 & 25.6 & 4.2 & 30.7 \\
+0.8\,s & 4.1 & 86.7 & 6.1 & 29.9 & 4.1 & 86.7 & 4.9 & 36.5 & 5.1 & 31.4 \\
+1.0\,s & 3.8 & 86.7 & 5.3 & 40.2 & 3.8 & 86.7 & 5.9 & 30.9 & 4.6 & 39.6 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\emph{Collision-only harm (underpowered).} With collision-only harm (base rate
+4.0\,\% in the calibration split) and a 2\,\% outcome target, no score certifies at
+zero latency and only always firing certifies at 0.5\,s with 904 calibration
+scenarios, so the pre-registered comparison is refuted and uninformative:
+the Hoeffding--Bentkus test cannot resolve a 2\,\% target at this sample size.
+
+\emph{Joint certification (refuted).} Certifying residual harm at 7.5\,\% and
+induced collisions at 3\,\% together succeeds at zero latency for the learned
+trigger (harm 4.7\,\%, induced 2.1\,\%, 18.9\,\% stops) and for TTC (5.5\,\%, 1.0\,\%,
+10.2\,\%) but for no score at 0.5\,s, so the claim that the learned trigger
+certifies jointly at both latencies is refuted.
+
+\emph{Multiplicity.} The seven stop-difference comparisons of Amendments~11 and
+11b that we recomputed with Bonferroni-adjusted bootstrap intervals (level
+$1-0.05/12$) all keep intervals that exclude zero. The refuted comparisons
+were not recomputed, because widening an interval cannot support a
+refuted claim.
 
 \end{document}

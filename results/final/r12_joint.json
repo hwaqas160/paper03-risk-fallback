@@ -1,0 +1,35 @@
+{
+  "0": {
+    "CSWC": {
+      "certified": true,
+      "lam": 0.2817984318616076,
+      "H": 0.047241379310344826,
+      "I": 0.021379310344827585,
+      "stop": 0.1893103448275862,
+      "meets": true
+    },
+    "geometric": {
+      "certified": false
+    },
+    "TTC": {
+      "certified": true,
+      "lam": 1.0,
+      "H": 0.05517241379310345,
+      "I": 0.009655172413793104,
+      "stop": 0.10206896551724139,
+      "meets": true
+    }
+  },
+  "1": {
+    "CSWC": {
+      "certified": false
+    },
+    "geometric": {
+      "certified": false
+    },
+    "TTC": {
+      "certified": false
+    }
+  },
+  "claim_A12_4": false
+}

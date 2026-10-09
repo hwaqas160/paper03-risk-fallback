@@ -1163,3 +1163,38 @@ rho = 0.5 s, a_acc = 3.0, b_min = 4.0, b_max = 8.0 m/s^2, lead = nearest agent a
 calibrated on the other half as in R1; test = `av2_test5`). Latencies 0, 2, 3 and 5 steps (0, 0.2, 0.3, 0.5 s). Target O_res <= 0.075, ordered fixed-sequence LTT.
 **Claim:** at 0.3 s and at 0.5 s the learned trigger meets the target and stops fewer scenarios than TTC, than RSS and than the geometric trigger (paired CI excluding 0).
 **Refuted if** it fails at either latency; then the paper must say the latency crossover is not robust to the decision rate.
+
+### Amendment 12a — fixed 2026-10-10 before A12-1 to A12-4 are run
+(1) A12-4 ordering rule: thresholds ordered by ascending maximum normalized out-of-fold train-split risk, max(H/0.075, I/0.03); the same CSWC scores (trained on the
+residual-harm label) are used for the joint certificate. (2) A12-5 uses 20,000 bootstrap draws. (3) A12-1: the supervised label uses 4 ticks (2 s) after the action takes
+effect, as registered; both triggers are certified with the identical calibration split and ordering rule. (4) The campaign for A12-6 was launched 2026-10-09 at 12:17.
+
+### Amendment 12 outcome A12-1 (2026-10-09) (`results/final/r12_sup.json`)
+Supervised time-to-harm trigger (factual label, harm within 2 s after the action takes effect, same features/model/ordering) versus CSWC, outcome target 0.075, test 2,900:
+l = 0 CSWC 13.6 % stops vs supervised 9.7 % (diff +3.9 [+3.0, +4.9]); l = 1 CSWC 25.5 % vs 23.6 % (+1.9 [+0.7, +3.1]), realized O_res 4.9 % vs 5.3 %; l = 2 CSWC 34.2 % vs 29.7 %
+(+4.6 [+3.4, +5.7]), O_res 4.7 % vs 5.9 %. **A12-1 REFUTED**: the counterfactual safe-window label does not beat a factual time-to-harm label; the latency gain comes from
+latency-aware supervised learning of when harm is imminent, and the safe window is useful for diagnostics and the audit, not as the training label.
+
+### Amendment 12 outcomes A12-3, A12-4, A12-5 (2026-10-09) (`r12_collonly.json`, `r12_joint.json`, `r12_bonf.json`)
+A12-3 (collision-only harm, base rate 3.2 %, target O_res <= 0.02, n_cal = 904): at l = 0 all three scores REFUSE to certify; at l = 1 CSWC refuses and the geometric and TTC scores certify only at
+always-firing (96.7 % stops, O_res 0.9 %). **A12-3 REFUTED** (CSWC does not certify). Reading: a 2 % outcome target with 904 calibration scenarios is below the
+resolution of the Hoeffding-Bentkus test; the comparison is underpowered, not informative about the methods.
+A12-4 (joint H <= 0.075 and I <= 0.03): l = 0: CSWC certifies (H 4.7 %, I 2.1 %, stops 18.9 %), TTC certifies (H 5.5 %, I 1.0 %, stops 10.2 %), geometric does not; l = 1: none of the three
+certifies. **A12-4 REFUTED** (CSWC must certify at both latencies; it fails at l = 1).
+A12-5 (Bonferroni, level 1 - 0.05/12, 20,000 draws): all seven stop-difference comparisons computed here exclude 0 (P1 +21.3 [+18.6, +24.1]; outcome l = 0: CSWC vs geometric -19.3 [-21.8, -16.8],
+vs TTC +3.3 [+1.7, +5.0]; l = 1: -12.0 [-14.9, -9.1] and -59.4 [-61.9, -56.8]; l = 2: -50.7 [-53.3, -48.0] for both). The refuted comparisons (M1, A12-1, A12-3) were not recomputed: adjustment
+can only widen their intervals and cannot turn a refuted claim into a supported one.
+
+### Amendment 12 outcome A12-6 (2026-10-09/10) (`results/campaign/av2_cal5_10hz`, `av2_test5_10hz`; `results/final/r12_hz10.json`) — 10 Hz decisions
+Reproducibility of the new reference runs (per-step TTC trace identical to the stored one): 881 of 904 calibration and 884 of 904 test scenarios (97.5 % and 97.8 %), below the 99 %
+required in the registration; the 23 + 20 others are dropped. Calibration half 440 / training half 441 scenarios, test 884. Outcome-level certification at O_res <= 0.075; realized test O_res / unnecessary stops:
+latency 0.0 s: learned (counterfactual labels) 5.1 % / 19.0 %, learned (factual labels) 6.4 % / 7.6 %, TTC at 10 Hz 4.1 % / 5.8 %, RSS at 10 Hz 4.9 % / 20.1 %, geometric (held 2 Hz) 3.5 % / 32.9 %;
+0.2 s: 5.5 / 25.2, 5.0 / 17.6, 5.0 / 8.7, 5.0 / 24.7, 4.9 / 28.5; 0.3 s: 5.9 / 28.4, 4.2 / 20.4, 4.6 / 9.5, 5.4 / 23.9, 5.7 / 26.5; 0.5 s: 6.8 / 25.6, 4.2 / 30.7, 5.0 / 12.6, 6.6 / 23.6, 5.3 / 31.9.
+Paired stop difference learned (counterfactual) minus TTC: +13.2 [+10.7, +15.8] (0 s), +16.5 [+13.6, +19.5] (0.2 s), +18.9 [+15.7, +22.1] (0.3 s), +13.0 [+10.1, +16.1] (0.5 s).
+**A12-6 REFUTED** at 0.3 s and 0.5 s: the learned trigger does NOT stop fewer scenarios than TTC at 10 Hz (it stops 13-19 points MORE), is about equal to RSS and, at 0.3 s, worse than
+RSS and not better than the geometric trigger. A TTC trigger evaluated at 10 Hz does not collapse under latency up to 0.5 s (12.6 % stops), so the latency crossover reported from the 2 Hz arms
+is an artifact of the 0.5 s decision grid (a one-tick delay is then a 0.5 s delay with no chance to re-decide).
+Post hoc checks on A12-6 (2026-10-10, not pre-registered): (a) TTC with decisions restricted to 2 Hz (held at multiples of 5 steps) on the same 10 Hz arm needs 7.8 % stops at 0 s and 15.3 % at 0.5 s (O 4.3 % / 6.2 %), NOT the
+84.9 % seen in the 2 Hz outcome analysis: the 84.9 % came from the certification cliff (the certified set is bimodal when the target 7.5 % sits at the achievable risk of a 15 %-stop threshold,
+so the fixed-sequence walk stops at always-firing in one calibration sample and certifies the 15 % threshold in another), not from the decision grid alone; the target sweep (A12-2) shows TTC and
+the learned trigger equal at 0.5 s for targets 0.09 and 0.10 (15.1 % vs 14.3 %, 12.4 % vs 12.0 %). The latency crossover reported from the 2 Hz arms is therefore withdrawn as a general finding.
