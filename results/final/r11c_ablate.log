@@ -1,0 +1,4 @@
+full            lat 1: O_res 0.049 stop 0.255
+physics-only    lat 1: O_res 0.049 stop 0.248
+predictor-only  lat 1: O_res 0.057 stop 0.215
+{'physics-only': {'diff': 0.007241379310344828, 'ci': [-0.0010344827586206897, 0.015517241379310345]}, 'predictor-only': {'diff': 0.039655172413793106, 'ci': [0.02724137931034483, 0.052068965517241377]}} False

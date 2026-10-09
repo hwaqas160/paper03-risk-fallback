@@ -72,23 +72,32 @@ def labels(s, lat=0):
     return y
 
 
-def fit(train, lat=0):
+PHYS = [4, 5, 6, 7, 8, 10] + list(range(11, 18))      # physics-only feature columns (no predictor-derived score)
+PRED = [0, 1, 2, 3, 9, 10] + list(range(11, 18))      # predictor-only feature columns (no TTC / headway)
+
+
+def fm(s, cols=None):
+    X = feature_matrix(s)
+    return X if cols is None else X[:, cols]
+
+
+def fit(train, lat=0, cols=None):
     from sklearn.ensemble import HistGradientBoostingClassifier
-    X = np.vstack([feature_matrix(s) for s in train])
+    X = np.vstack([fm(s, cols) for s in train])
     y = np.concatenate([labels(s, lat) for s in train])
     return HistGradientBoostingClassifier(**HGB).fit(X, y)
 
 
-def oof_traces(train, key="cswc_oof", folds=5, seed=0, lat=0):
+def oof_traces(train, key="cswc_oof", folds=5, seed=0, lat=0, cols=None):
     from sklearn.ensemble import HistGradientBoostingClassifier
     rng = np.random.default_rng(seed)
     fold = rng.integers(0, folds, size=len(train))
     for f in range(folds):
         tr = [s for s, k in zip(train, fold) if k != f]
-        m = fit(tr, lat)
+        m = fit(tr, lat, cols)
         for s, k in zip(train, fold):
             if k == f:
-                set_trace(s, key, m.predict_proba(feature_matrix(s))[:, 1])
+                set_trace(s, key, m.predict_proba(fm(s, cols))[:, 1])
 
 
 def set_trace(s, key, v):
@@ -96,9 +105,9 @@ def set_trace(s, key, v):
     s.cummax[key] = np.maximum.accumulate(s.traces[key])
 
 
-def score(model, scns, key="cswc"):
+def score(model, scns, key="cswc", cols=None):
     for s in scns:
-        set_trace(s, key, model.predict_proba(feature_matrix(s))[:, 1])
+        set_trace(s, key, model.predict_proba(fm(s, cols))[:, 1])
 
 
 # ------------------------------------------------------------------------------------------------ outcome certification
@@ -420,13 +429,119 @@ def latency_outcome(a):
     Path(a.out).write_text(json.dumps(out, indent=2, default=float))
 
 
+
+def run_learned(train, calib, tests, lat, cols, tag, target=T_RES):
+    oof_traces(train, key=tag + "_oof", lat=lat, cols=cols)
+    model = fit(train, lat, cols)
+    for g in [calib] + list(tests):
+        score(model, g, key=tag, cols=cols)
+    grid = lam_grid(calib, tag)
+    lam, det = certify_ordered(calib, tag, grid, target, train, order_key=tag + "_oof", lat=lat)
+    return lam, det
+
+
+def stops_of(scns, key, lam, lat):
+    _, S = outcome_mat(scns, key, np.array([lam]), "res", lat)
+    return S[:, 0]
+
+
+def ablate(a):
+    cal, cal5, test, test5, pool = get_targets()
+    ev = test + test5
+    lat = 1
+    out = {}
+    res = {}
+    for name, cols in (("full", None), ("physics-only", PHYS), ("predictor-only", PRED)):
+        tag = "m_" + name.replace("-", "_")
+        lam, det = run_learned(cal, cal5, [test, test5], lat, cols, tag)
+        e = dict(lam=lam, **det)
+        if lam is not None:
+            e["test"] = evaluate_at(ev, tag, lam, lat)
+        res[name] = e
+        t = e.get("test")
+        print(f"{name:15s} lat {lat}: " + (f"O_res {t['o_res']:.3f} stop {t['stop']:.3f}" if t else "refused"), flush=True)
+    meeting = [k for k, e in res.items() if e.get("test") and e["test"]["o_res"] <= T_RES]
+    comp = {}
+    if "full" in meeting:
+        Sf = stops_of(ev, "m_full", res["full"]["lam"], lat)
+        for k in meeting:
+            if k != "full":
+                comp[k] = paired(Sf, stops_of(ev, "m_" + k.replace("-", "_"), res[k]["lam"], lat))
+    out = dict(latency_ticks=lat, methods=res, meeting=meeting, stop_diff_full_minus=comp,
+               claim_M1=bool("physics-only" in comp and comp["physics-only"]["ci"][1] < 0))
+    print(comp, out["claim_M1"])
+    Path(a.out).write_text(json.dumps(out, indent=2, default=float))
+
+
+def replicate(a):
+    out = {}
+    for arm, (cname, tname) in (("second predictor (AutoBot 0.854)", ("av2_cal5_gpu", "av2_test5_gpu")),
+                                ("Wayformer", ("av2_cal5_way", "av2_test5_way"))):
+        calarm, testarm = load(cname), load(tname)
+        rng = np.random.default_rng(0)
+        perm = rng.permutation(len(calarm)); h = len(calarm) // 2
+        train = [calarm[i] for i in perm[:h]]; calib = [calarm[i] for i in perm[h:]]
+        out[arm] = {}
+        for lat in (0, 1):
+            res = {}
+            lam, det = run_learned(train, calib, [testarm], lat, None, "r1")
+            res["learned"] = dict(lam=lam, **det, **({"test": evaluate_at(testarm, "r1", lam, lat)} if lam is not None else {}))
+            for name, key in (("geometric", "geom"), ("TTC", "ttc")):
+                grid = lam_grid(calib, key)
+                l_, d_ = certify_ordered(calib, key, grid, T_RES, train, lat=lat)
+                res[name] = dict(lam=l_, **d_, **({"test": evaluate_at(testarm, key, l_, lat)} if l_ is not None else {}))
+            comp = {}
+            if res["learned"].get("test"):
+                Sl = stops_of(testarm, "r1", res["learned"]["lam"], lat)
+                for name, key in (("geometric", "geom"), ("TTC", "ttc")):
+                    if res[name].get("test"):
+                        comp[name] = paired(Sl, stops_of(testarm, key, res[name]["lam"], lat))
+            ok_a = bool(res["learned"].get("test") and res["learned"]["test"]["o_res"] <= T_RES)
+            ok_b = bool(len(comp) == 2 and all(v["ci"][1] < 0 for v in comp.values()))
+            out[arm][str(lat)] = dict(methods=res, stop_diff_learned_minus=comp, a_meets=ok_a, b_fewer_than_both=ok_b)
+            print(arm, "lat", lat, {k: (round(v["test"]["o_res"], 3), round(v["test"]["stop"], 3)) if v.get("test") else "refused" for k, v in res.items()},
+                  comp, ok_a, ok_b, flush=True)
+    out["claim_R1"] = bool(all(out[k]["1"]["a_meets"] and out[k]["1"]["b_fewer_than_both"] for k in out))
+    print("claim_R1", out["claim_R1"])
+    Path(a.out).write_text(json.dumps(out, indent=2, default=float))
+
+
+def shift_scores(a):
+    cal, cal5, test, test5, pool = get_targets()
+    targets = {}
+    for c in sorted({k for _, k in pool}):
+        src = [s for s, k in pool if k != c]
+        tgt = [s for s, k in pool if k == c]
+        rng = np.random.default_rng(0)
+        perm = rng.permutation(len(src)); ntr = int(0.6 * len(src))
+        targets[c] = ([src[i] for i in perm[:ntr]], [src[i] for i in perm[ntr:]], tgt)
+    targets["nuscenes"] = (cal, cal5, load("ns_val"))
+    targets["waymo"] = (cal, cal5, load("waymo_val"))
+    rows = {}
+    for name, (train, calib, tgt) in targets.items():
+        lam, det = run_learned(train, calib, [tgt], 0, None, "s1")
+        row = {}
+        entries = [("learned", "s1", lam)]
+        for nm, key in (("geometric", "geom"), ("TTC", "ttc")):
+            g = lam_grid(calib, key)
+            l_, _ = certify_ordered(calib, key, g, T_RES, train)
+            entries.append((nm, key, l_))
+        for nm, key, l_ in entries:
+            row[nm] = evaluate_at(tgt, key, l_) if l_ is not None else None
+        rows[name] = row
+        print(f"{name:14s} " + " | ".join(f"{k} O {v['o_res']:.3f} stop {v['stop']:.3f}" if v else f"{k} refused" for k, v in row.items()), flush=True)
+    summary = {k: int(sum(1 for r in rows.values() if r[k] and r[k]["o_res"] <= T_RES)) for k in ("learned", "geometric", "TTC")}
+    print(summary)
+    Path(a.out).write_text(json.dumps(dict(rows=rows, targets_met=summary, n_targets=len(rows)), indent=2, default=float))
+
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("what", choices=["indist", "na", "shift", "nc", "latency"])
+    ap.add_argument("what", choices=["indist", "na", "shift", "nc", "latency", "ablate", "replicate", "shift_scores"])
     ap.add_argument("--out", required=True)
     ap.add_argument("--reps", type=int, default=200)
     a = ap.parse_args()
-    {"indist": indist, "na": na, "shift": shift, "nc": nc, "latency": latency_outcome}[a.what](a)
+    {"indist": indist, "na": na, "shift": shift, "nc": nc, "latency": latency_outcome, "ablate": ablate, "replicate": replicate, "shift_scores": shift_scores}[a.what](a)
 
 
 if __name__ == "__main__":

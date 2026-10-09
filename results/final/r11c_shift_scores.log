@@ -1,0 +1,9 @@
+austin         learned O 0.063 stop 0.083 | geometric O 0.066 stop 0.267 | TTC O 0.048 stop 0.086
+dearborn       learned O 0.027 stop 0.075 | geometric O 0.035 stop 0.183 | TTC O 0.029 stop 0.053
+miami          learned O 0.108 stop 0.070 | geometric O 0.074 stop 0.351 | TTC O 0.092 stop 0.094
+palo-alto      learned O 0.051 stop 0.089 | geometric O 0.051 stop 0.229 | TTC O 0.045 stop 0.068
+pittsburgh     learned O 0.058 stop 0.130 | geometric O 0.055 stop 0.379 | TTC O 0.061 stop 0.138
+washington-dc  learned O 0.074 stop 0.074 | geometric O 0.076 stop 0.271 | TTC O 0.067 stop 0.086
+nuscenes       learned O 0.082 stop 0.598 | geometric O 0.123 stop 0.348 | TTC O 0.088 stop 0.207
+waymo          learned O 0.043 stop 0.304 | geometric O 0.038 stop 0.481 | TTC O 0.048 stop 0.099
+{'learned': 6, 'geometric': 6, 'TTC': 6}

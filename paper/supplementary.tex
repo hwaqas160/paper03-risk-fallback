@@ -834,6 +834,86 @@ CSWC (i): outcome certificate valid at 7.5\,\% & holds \\
 CSWC (ii): learned trigger stops less than geometric and TTC at zero latency & refuted \\
 CSWC (iii): prevalence correction helps the learned trigger under shift & refuted \\
 11b: learned trigger valid and cheapest at 0.5 and 1.0\,s & holds \\
+11c M1: the predictor adds lead time beyond physics features & refuted \\
+11c R1: the learned trigger replicates at 0.5\,s on a second AutoBot and Wayformer & holds \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Mechanism, Replication and Shift for the Counterfactual Trigger}
+\label{sec:s-mech}
+These analyses were pre-registered in Amendment~11c.
+
+\emph{Mechanism (claim refuted).} To test whether the predictor adds lead
+time that physics features lack, we trained three learned triggers with
+delay-shifted labels at a latency of 0.5\,s (one tick): all features, physics
+features only (time-to-collision, headway distance, agent count, tick index
+and scenario covariates) and predictor features only (geometric and
+confidence scores, predicted gap, tick index and covariates). All three
+certify the 7.5\,\% target. Table~\ref{tab:mech} shows that the full trigger
+does not stop fewer scenarios than the physics-only trigger (paired CI of the
+difference $[-0.1, 1.6]$ points), and the predictor-only trigger stops fewer
+(4.0 points, CI $[2.7, 5.2]$, though it sits closer to the target). The
+pre-registered claim is therefore refuted: the gain over a plain TTC
+threshold comes from learning on counterfactual, delay-shifted labels, and
+either feature group suffices.
+
+\begin{table}[h]
+\caption{Feature-group ablation of the learned trigger at 0.5\,s of latency
+(calibrate 904, test 2{,}900). $O$: realized residual harm; $O_{\mathrm{tot}}$:
+with induced collisions. Rates in \%.}
+\label{tab:mech}
+\centering
+\scriptsize\setlength{\tabcolsep}{3pt}
+\begin{tabular}{lccc}
+\toprule
+Features & $O$ & $O_{\mathrm{tot}}$ & Unnec. stops \\
+\midrule
+All & 4.9 & 6.5 & 25.5 \\
+Physics only & 4.9 & 6.6 & 24.8 \\
+Predictor only & 5.7 & 7.3 & 21.5 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\emph{Replication (claim holds).} With the second AutoBot and with Wayformer
+the calibration arm is split into 452 training and 452 calibration scenarios
+and the 904 test scenarios are held out. At 0.5\,s the learned trigger meets
+the target (3.3\,\% and 4.3\,\%) and stops 49.3\,\% and 43.0\,\% against 84.8\,\%
+for both the geometric and the TTC score (paired CIs exclude 0). At zero
+latency it is worse than the geometric score on the second AutoBot (46.2\,\%
+against 39.5\,\%, CI $[3.1, 10.4]$) and better on Wayformer (44.8\,\% against
+57.0\,\%); both beat TTC, which only certifies at always firing with 452
+calibration scenarios. The stop rates are higher than in the main split
+because the training and calibration sets are half as large.
+
+\emph{Shift (descriptive).} Table~\ref{tab:scoreshift} gives the realized
+residual harm of the outcome-certified threshold of each score on the eight
+shift targets of the main paper (zero latency, 7.5\,\% target). Each score
+meets the target on 6 of 8. The learned trigger fails Miami and nuScenes, the
+geometric score nuScenes and Washington, DC, and TTC Miami and nuScenes. No
+score survives shift better than the others, and TTC is usually cheapest.
+
+\begin{table}[h]
+\caption{Realized residual harm $O$ and unnecessary stops of the
+outcome-certified threshold on each shift target (zero latency). Rates in \%.}
+\label{tab:scoreshift}
+\centering
+\scriptsize\setlength{\tabcolsep}{2.5pt}
+\begin{tabular}{lcccccc}
+\toprule
+ & \multicolumn{2}{c}{Learned} & \multicolumn{2}{c}{Geometric} & \multicolumn{2}{c}{TTC} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}
+Target & $O$ & Stops & $O$ & Stops & $O$ & Stops \\
+\midrule
+Austin & 6.3 & 8.3 & 6.6 & 26.7 & 4.8 & 8.6 \\
+Dearborn & 2.7 & 7.5 & 3.5 & 18.3 & 2.9 & 5.3 \\
+Miami & 10.8 & 7.0 & 7.4 & 35.1 & 9.2 & 9.4 \\
+Palo Alto & 5.1 & 8.9 & 5.1 & 22.9 & 4.5 & 6.8 \\
+Pittsburgh & 5.8 & 13.0 & 5.5 & 37.9 & 6.1 & 13.8 \\
+Washington, DC & 7.4 & 7.4 & 7.6 & 27.1 & 6.7 & 8.6 \\
+nuScenes & 8.2 & 59.8 & 12.3 & 34.8 & 8.8 & 20.7 \\
+Waymo & 4.3 & 30.4 & 3.8 & 48.1 & 4.8 & 9.9 \\
 \bottomrule
 \end{tabular}
 \end{table}

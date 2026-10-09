@@ -1104,3 +1104,13 @@ to certify are reported (an arm with 452 calibration scenarios may not certify).
 The eight shift targets of N-A (six cities, nuScenes, Waymo) with the sources and splits of Amendment 11a: for each target the number of
 targets on which the realized residual harm of the certified threshold is <= 0.075, and the stops, for the learned trigger, the geometric
 score and the TTC score at latency 0. No claim.
+
+### Amendment 11c outcomes (2026-10-09) (`results/final/r11c_ablate.json`, `r11c_replicate.json`, `r11c_shift_scores.json`)
+M1 (mechanism, 0.5 s latency, test 2,900): full learned trigger O_res 4.9 % / stops 25.5 %; physics-only 4.9 % / 24.8 %; predictor-only 5.7 % / 21.5 %.
+Full minus physics-only stops +0.7 points, paired CI [-0.1, +1.6] (full minus predictor-only +4.0 [2.7, 5.2]). **M1 REFUTED**: the predictor adds no lead time
+beyond physics features; the gain over a plain TTC threshold comes from the counterfactual, latency-shifted labels, and either feature group suffices.
+R1 (replication, 452 train / 452 calibrate, test 904): at 0.5 s the learned trigger meets O_res <= 0.075 and stops 49.3 % (second AutoBot; O 3.3 %) and 43.0 %
+(Wayformer; O 4.3 %) against 84.8 % for both the geometric and TTC scores; paired CIs exclude 0. **R1 HOLDS**. At zero latency the learned trigger is worse than the geometric
+score on the second AutoBot (46.2 % vs 39.5 %, CI [+3.1, +10.4]) and better on Wayformer (44.8 % vs 57.0 %); both beat TTC (84.8 %), which does not certify below always-firing
+with 452 calibration scenarios. S1 (descriptive): at latency 0 each of the learned, geometric and TTC scores meets O_res <= 0.075 on 6 of 8 shift targets; the learned trigger
+fails Miami (10.8 %) and nuScenes (8.2 %), the geometric score nuScenes (12.3 %) and Washington (7.6 %), TTC Miami (9.2 %) and nuScenes (8.8 %).
