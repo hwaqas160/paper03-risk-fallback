@@ -86,3 +86,13 @@ Estimated total: ~5-6 working days of my work, almost no new simulation; plus th
 Phases 0-4 done (Amendments 11 and 11b; paper reframed, 10 pages). Phase 5: all eleven arXiv-ID references and the Phil. Trans. R. Soc. A, L4DC 2026, NeurIPS 2025,
 ITSC 2025 and Proc. IMechE D 2025 references checked against the arXiv, publisher or proceedings pages (titles and authors match). Headline numbers checked
 by src/audit_numbers.py (18 of 18 present in main.tex). Open (author): photos for Rahat and Hina, publish the Zenodo deposit (refresh the code archive first), final read of III-F, V-C, V-D.
+
+## Novelty / literature check for CSWC (2026-10-09) — done
+Searches (web, 2026-10-09): conformal fallback triggers with executed outcomes; learned switching for runtime assurance; time-to-brake / last-time-to-brake; learned order for LTT.
+Found and verified (arXiv pages): Feldman, Harp, Duncan, Schwager, "Conformal Safety Monitoring for Flight Testing" (arXiv 2511.20811; guarantee on abort alerts, the
+response is not evaluated in closed loop); Miller, Zeitler, Shen, Hobbs, Mitra, Schierman, Viswanathan, "Searching for Optimal Runtime Assurance via Reachability and
+Reinforcement Learning" (arXiv 2310.04288; a learned switching policy, safety by reachability, no statistical certificate). Also surfaced, not verified or cited: RL-based
+runtime assurance (arXiv 2010.10618, ICCPS 2024), time-to-brake warning work (SAE 2026-26-0047), Kim/Nakamura/Bajcsy 2025 (conformal risk calibration for latent world
+models, 2510.06492; detail not confirmed). Reading: learned switching and last-time-to-brake concepts exist; ordered LTT is standard (LTT allows any pre-specified order).
+What remains claimable: statistical certification of a learned trigger's EXECUTED outcome from closed-loop counterfactual windows, and the latency crossover finding.
+Not a systematic review; the paper's claim stays hedged ("to our knowledge").

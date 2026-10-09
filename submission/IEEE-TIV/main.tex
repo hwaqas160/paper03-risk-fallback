@@ -153,23 +153,7 @@ pre-registered verdicts are labeled exploratory.
 \label{sec:related}
 
 \subsection{Conformal prediction for autonomous driving}
-Conformal prediction~\cite{vovk2005,angelopoulos2024book} gives
-prediction sets a distribution-free, finite-sample marginal coverage
-guarantee under exchangeability and has been applied widely to trajectory
-forecasting and safe planning~\cite{lindemann2024formal}. Recent work
-calibrates per scenario type~\cite{shu2025scenario}, feeds realized
-trajectories back into the region~\cite{wang2025fbcp}, certifies
-trajectory clearance with a CVaR margin~\cite{chang2026cvar}, and couples
-online calibration with certified navigation in
-crowds~\cite{guo2026coconav}. Lindemann~\emph{et al.}~\cite{lindemann2023}
-embed conformal regions in a model predictive controller, a guarantee that
-collapses under shift, which Rahaman~\emph{et al.}~\cite{robustcp2026}
-address with robust conformal prediction in a synthetic corridor.
-SafePath~\cite{safepath2025} guarantees that a set of candidate paths from
-an LLM planner contains a safe one. In these works the guarantee is on the
-\emph{prediction} or a candidate set, not on a fallback-triggering decision
-evaluated on replayed driving logs under reactive traffic. Ours is on the
-decision, and in Section~\ref{sec:outcome} on its executed outcome.
+Conformal prediction~\cite{vovk2005,angelopoulos2024book} gives prediction sets a distribution-free, finite-sample coverage guarantee under exchangeability and has been applied widely to trajectory forecasting and safe planning~\cite{lindemann2024formal}: per scenario type~\cite{shu2025scenario}, with feedback from realized trajectories~\cite{wang2025fbcp}, with CVaR clearance margins~\cite{chang2026cvar}, and in crowd navigation~\cite{guo2026coconav}. Lindemann \emph{et al.}~\cite{lindemann2023} embed conformal regions in a model predictive controller, a guarantee that collapses under shift, which Rahaman \emph{et al.}~\cite{robustcp2026} address with robust conformal prediction; SafePath~\cite{safepath2025} guarantees that a set of LLM-planned paths contains a safe one. In these works the guarantee is on the \emph{prediction} or a candidate set, not on a fallback-triggering decision replayed on driving logs under reactive traffic. Ours is on the decision, and in Section~\ref{sec:outcome} on its executed outcome.
 
 \subsection{Online and decision-level conformal methods}
 Adaptive Conformal Inference (ACI)~\cite{aci2021} updates the
@@ -227,7 +211,11 @@ filtering~\cite{puphal2025risk}. We replay real logs with reactive traffic.
 Fallback triggering also sits within established safety frameworks.
 Runtime monitors that switch to a trusted fallback, as
 in~\cite{sinha2023,atoui2025mrm}, follow the runtime-assurance idea of a
-monitored learned component with a trusted backup.
+monitored learned component with a trusted backup. Switching policies
+have been learned for this purpose, with safety from
+reachability~\cite{miller2023rta}, but without a statistical certificate on
+the executed outcome, and conformal abort alerts have been calibrated in
+flight testing~\cite{feldman2025} without evaluating the response.
 Responsibility-Sensitive Safety~\cite{rss2017} gives model-based rules for
 when a vehicle is at fault, whereas our trigger is certified from data.
 SOTIF~\cite{iso21448} and UL~4600~\cite{ul4600} frame assurance at the
@@ -352,24 +340,21 @@ stopped. This is enforced by a proportional controller tracking the
 target speed profile $v(t) = \max(v_0 - 4.0\,t,\,0)$ from the moment of
 triggering.
 
-\subsection{Certification under covariate shift}
+\subsection{Weighted repair under covariate shift (a heuristic)}
 \label{sec:shift}
 The certificate in \eqref{eq:guarantee} assumes calibration and
-deployment scenarios are exchangeable. When the deployment distribution
-differs by covariate shift, we reweight calibration scenarios by an
-estimated density ratio $w(x) \propto p_{\mathrm{target}}(x) /
-p_{\mathrm{source}}(x)$ computed from pre-deployment scenario covariates
-only (agent counts and speeds, initial gap, route length). A
-probabilistic domain classifier is trained on unlabeled target
-scenarios, following weighted conformal prediction~\cite{tibshirani2019}.
-The weighted empirical risk $\hat R_w(\lambda) = \sum_i w_i L(X_i,\lambda)
-/ \sum_i w_i$ is tested with the Hoeffding--Bentkus $p$-value at the
-Kish effective sample size $n_{\mathrm{eff}} = (\sum_i w_i)^2 / \sum_i
-w_i^2$. As the weights concentrate, $n_{\mathrm{eff}}$ shrinks and the
-test certifies a more conservative threshold, and eventually none at
-all. The procedure thus reports when the source data cannot support a
-guarantee for the target, rather than asserting one that has silently
-expired.
+deployment scenarios are exchangeable. For covariate shift we reweight
+calibration scenarios by an estimated density ratio $w(x)$ from a domain
+classifier on pre-deployment covariates (agent counts and speeds, initial
+gap, route length) and unlabeled target scenarios, following weighted
+conformal prediction~\cite{tibshirani2019}, and test the weighted risk with
+the Hoeffding--Bentkus $p$-value at the Kish effective sample size
+$n_{\mathrm{eff}} = (\sum_i w_i)^2 / \sum_i w_i^2$. Because the weights are
+estimated and clipped and $n_{\mathrm{eff}}$ is an approximation, this is a
+heuristic repair with no finite-sample guarantee. As the weights
+concentrate, $n_{\mathrm{eff}}$ shrinks and the test certifies a more
+conservative threshold, and eventually none, which reports when the source
+data cannot support a guarantee for the target.
 
 \subsection{Evaluating every trigger by lookup}
 \label{sec:exact-eval}
@@ -433,26 +418,23 @@ $\tau$, are determined by $R(X)$ alone. At $\tau$ the control depends
 only on the state at $\tau$ (A3), as in $F(X,\tau)$, and both runs have
 equal states afterwards by (A1).
 \end{IEEEproof}
-Two corollaries follow. First, alert-level indicators need no forced run:
-$L$ and $S$ are functions of $R(X)$ and $\tau$ alone. Second, the
-consequences of the fallback need $n_{\text{ticks}}$ forced rollouts per
-scenario (16.8 on average, at most 26, on the Argoverse~2 test split),
-after which any number of triggers is evaluated by lookup, where direct
-execution needs one rollout per trigger, threshold and latency (over
-7{,}000 per scenario here). The observation is elementary and its value
-is practical: an exhaustive, paired comparison becomes affordable.
-Assumption (A1) is an idealization, so we measure its violation. Over the
-first 33{,}761 forced rollouts (2{,}000 scenarios), 98.4\,\% agreed with
-the reference run to within 1\,cm before firing, the pre-fire
-time-to-collision trace differed in 1.2\,\%, and the pre-fire harm status
-in one rollout (0.003\,\%). We report every analysis on all scenarios and
-after dropping the 3.6\,\% with any flagged drift. We also executed four
-triggers directly, live and without replay, on 252 random test scenarios
-(1{,}008 scenario--trigger pairs, one trigger with a one-tick latency).
-Firing step, miss, unnecessary stop and induced collision agreed with the
-lookup in all 1{,}008 pairs (upper bound 0.4\,\%), and harm anywhere in
-the run in all but one; route completion differed by at most 0.036
-(Supplementary Section~S7). The lookup is exact only under (A1), but it
+Two corollaries follow. Alert-level indicators need no forced run, since
+$L$ and $S$ are functions of $R(X)$ and $\tau$ alone, and the consequences of
+the fallback need only $n_{\text{ticks}}$ forced rollouts per scenario (16.8
+on average, at most 26), after which any number of triggers is evaluated by
+lookup, where direct execution needs over 7{,}000 rollouts per scenario here.
+The observation is elementary and its value is practical: an exhaustive,
+paired comparison becomes affordable. Assumption (A1) is an idealization,
+so we measure its violation. Over the first 33{,}761 forced rollouts
+(2{,}000 scenarios), 98.4\,\% agreed with the reference run to within 1\,cm
+before firing, the pre-fire time-to-collision trace differed in 1.2\,\%, and
+the pre-fire harm status in one rollout (0.003\,\%). We report every
+analysis on all scenarios and after dropping the 3.6\,\% with any flagged
+drift. We also executed four triggers directly on 252 random test scenarios
+(1{,}008 scenario--trigger pairs, one with a one-tick latency). Firing step,
+miss, unnecessary stop and induced collision agreed with the lookup in all
+1{,}008 pairs (upper bound 0.4\,\%), and harm anywhere in the run in all but
+one (Supplementary Section~S7). The lookup is exact only under (A1), but it
 matched direct execution within this tolerance.
 
 \subsection{Outcome-level certification and a counterfactual trigger}
@@ -938,30 +920,12 @@ label?} The score and the nuPlan label are both proximity- and time-to-collision
 
 \emph{Alert versus outcome.} The alert certificate leaves 6.5\,\% harm after the fallback and 24\,\% of harmful scenarios unalerted (58\,\% on nuScenes). The outcome certificate of Section~\ref{sec:outcome} bounds the executed run's harm, but only as well as the calibration data resemble deployment. The 5.0\,\% first-tick floor on nuScenes shows that a miss metric on harm anywhere in a replayed snippet mixes preventable events with events already under way, and we propose an avoidable-only variant for future benchmarks.
 
-\emph{Simulator, predictor and perception.} All results use MetaDrive with rule-based (IDM) agents, so whether the ordering of triggers survives learned agent behavior is open, and the induced-collision rate is best read as an upper bound. The geometric trigger's validity and its gap to the uncertainty triggers replicate with a second AutoBot predictor and with Wayformer (Supplementary Section~S13). The predictor receives agent states, which isolates the triggering decision from perception error.
-
-\emph{Dependence.} All guarantees treat scenarios as exchangeable, which nearby scenarios may violate: our nuScenes samples span only 37 and 23 scenes, and spatial-group resplits leave the high-probability statement indeterminate under the corrected count.
+\emph{Simulator, predictor, perception and dependence.} All results use MetaDrive with rule-based (IDM) agents, so whether the ordering of triggers survives learned agent behavior is open, and the induced-collision rate is best read as an upper bound. The geometric trigger's validity and its gap to the uncertainty triggers replicate with a second AutoBot and with Wayformer (Supplementary Section~S13). The predictor receives agent states, which isolates triggering from perception error. All guarantees treat scenarios as exchangeable, which nearby scenarios may violate: our nuScenes samples span only 37 and 23 scenes, and spatial-group resplits leave the high-probability statement indeterminate.
 
 %=======================================================================
 \section{Conclusion}
 \label{sec:conclusion}
-A certificate on a fallback trigger bounds what it was calibrated to
-bound, and what that is matters. Evaluated with the fallback executed, a
-Learn-then-Test certified alert keeps its 5\,\% target on the calibration
-distribution (3.7\,\% missed, violations in 9.5\,\% of resplits against
-43.5\,\% without a certificate) but leaves 6.5\,\% harm after the fallback.
-Risk-ordered testing certifies the executed outcome directly (5.4\,\%
-realized against a 7.5\,\% target). Which trigger is cheapest depends on
-latency: a certified time-to-collision trigger needs 10\,\% unnecessary stops
-without delay and 85\,\% at 0.5\,s, where a learned counterfactual trigger
-needs 26\,\%, and confidence and ensemble triggers need 68--71\,\% at the alert
-level. The certificate fails on nuScenes (13.2\,\% missed, with wide
-uncertainty) and in two of six held-out Argoverse~2 cities, both with high
-harm rates, but holds, conservatively, on Waymo. For the setting studied,
-these findings argue for certifying the outcome at the latency that will be
-deployed, auditing it on data that resemble deployment, and checking a
-physics baseline first; the lookup protocol makes each of these
-inexpensive to repeat for any trigger.
+A certificate on a fallback trigger bounds what it was calibrated to bound, and what that is matters. With the fallback executed, a Learn-then-Test certified alert keeps its 5\,\% target in distribution (3.7\,\% missed, violations in 9.5\,\% of resplits against 43.5\,\% uncertified) but leaves 6.5\,\% harm after the fallback. Risk-ordered testing certifies the executed outcome directly (5.4\,\% realized against a 7.5\,\% target). Which trigger is cheapest depends on latency: a certified time-to-collision trigger needs 10\,\% unnecessary stops without delay and 85\,\% at 0.5\,s, where a learned counterfactual trigger needs 26\,\%; confidence and ensemble triggers need 68--71\,\% at the alert level. The certificate fails on nuScenes and in two of six held-out cities, both with high harm rates, but holds on Waymo. For the setting studied, these findings argue for certifying the outcome at the deployed latency, auditing it on data that resemble deployment, and checking a physics baseline first; the lookup protocol makes each inexpensive to repeat.
 
 %=======================================================================
 \section*{Acknowledgment}
@@ -1202,6 +1166,16 @@ evaluation of autonomous products,'' 3rd ed., Mar. 2023.
 Y.~Geifman and R.~El-Yaniv, ``Selective classification for deep neural
 networks,'' in \emph{Adv. Neural Inf. Process. Syst. (NeurIPS)}, vol.~30,
 2017, pp.~4878--4887.
+
+\bibitem{miller2023rta}
+K.~Miller, C.~K.~Zeitler, W.~Shen, K.~Hobbs, S.~Mitra, J.~Schierman, and
+M.~Viswanathan, ``Searching for optimal runtime assurance via reachability
+and reinforcement learning,'' \emph{arXiv preprint arXiv:2310.04288}, 2023.
+
+\bibitem{feldman2025}
+A.~O.~Feldman, D.~I.~Harp, J.~Duncan, and M.~Schwager, ``Conformal safety
+monitoring for flight testing: A case study in data-driven safety
+learning,'' \emph{arXiv preprint arXiv:2511.20811}, 2025.
 
 \end{thebibliography}
 
