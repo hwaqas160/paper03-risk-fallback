@@ -129,7 +129,7 @@ fixed-sequence testing certifies the harm in the run the vehicle actually
 drives, a non-monotone loss that the alert-level certificate does not
 bound (it leaves 6.5\,\% harm after the fallback). At a 7.5\,\% target the
 certified threshold realizes 5.4\,\% harm with a valid violation frequency.
-\item \textbf{A physics baseline that is hard to beat, and a latency map.} Under a time-to-collision (TTC) harm label, a certified TTC threshold is the cheapest trigger at the outcome level up to 0.5\,s of latency with 10\,Hz decisions (6--13\,\% unnecessary stops against 19--32\,\% for predictor-based and safe-distance triggers), and counterfactual labels are not needed for a learned trigger. Only from 0.8\,s does TTC fail to certify. A latency crossover seen at 2\,Hz decisions was an artifact, withdrawn after a pre-registered 10\,Hz test.
+\item \textbf{A physics baseline that is hard to beat, and a latency map.} Under a time-to-collision (TTC) harm label, a certified TTC threshold is the cheapest trigger at the outcome level up to 0.5\,s of latency with 10\,Hz decisions (6--13\,\% unnecessary stops against 8--33\,\% for the safe-distance, geometric and learned triggers), and counterfactual labels are not needed for a learned trigger. Only from 0.8\,s does TTC fail to certify. A latency crossover seen at 2\,Hz decisions was an artifact, withdrawn after a pre-registered 10\,Hz test.
 \item \textbf{A failure map for the certificate.} An Argoverse~2
 certificate fails on nuScenes and in two of six held-out cities but holds
 on Waymo, with failures tracking the target's harm rate. A
@@ -739,18 +739,13 @@ certify the residual harm of the executed run at 7.5\,\% (no fallback leaves
 15.1\,\%, always firing 4.1\,\%, so 5\,\% is barely reachable) with
 risk-ordered fixed-sequence testing (Section~\ref{sec:outcome}). At zero
 latency on the 2\,Hz arm (calibrate 904, test 2{,}900) every score certifies
-and meets the target. A TTC trigger is the cheapest of the predictor-free and
-predictor-based triggers except a supervised time-to-harm trigger (10.2\,\%
-and 9.6\,\% unnecessary stops against 13.6\,\% for the counterfactual-label
-trigger and 32.8\,\% for the geometric score), so the pre-registered claims
-that the counterfactual-label trigger beats TTC, and beats a supervised
-time-to-harm trigger, are both \textbf{refuted}.
+and meets the target. TTC (10.2\,\% unnecessary stops) and a supervised time-to-harm trigger (9.6\,\%) are the cheapest, ahead of the counterfactual-label trigger (13.6\,\%) and the geometric score (32.8\,\%), so the pre-registered claims that the counterfactual-label trigger beats TTC, and beats a supervised time-to-harm trigger, are both \textbf{refuted}.
 
 \emph{Latency.} On the 2\,Hz arm a one-tick delay is 0.5\,s with no chance to re-decide, and TTC then needed 85\,\% unnecessary stops against 26\,\% for the learned trigger. This crossover did not survive the test we pre-registered against it, a new arm with a forced rollout at every simulator step (10\,Hz decisions; Table~\ref{tab:outcome}). There TTC stays the cheapest through 0.5\,s, and the learned counterfactual-label trigger stops 13--19 points more (paired CIs exclude 0) and is no better than the safe-distance trigger (\textbf{refuted} at 0.3 and 0.5\,s). The 2\,Hz result came from a certification cliff: the 7.5\,\% target lies at the risk of a 15\,\%-stop threshold, so the certified set flips to always firing in some calibration samples (Supplementary Section~S20). Only at 0.8 and 1.0\,s (post hoc) does TTC fail to certify (87\,\%), while the safe-distance and learned triggers need 30--40\,\%; at 1.0\,s the learned trigger is cheapest (9.3 points fewer than the safe-distance trigger, CI [5.7, 12.9]). Physics features alone give the same learned trigger as all features (24.8\,\% against 25.5\,\% at 0.5\,s on the 2\,Hz arm), so the predictor adds no lead time beyond physics here.
 
 \begin{table}[t]
 \caption{Unnecessary stops (\%) of the outcome-certified threshold at a
-7.5\,\% residual-harm target on the 10\,Hz arm (calibrate 441, test 884).
+7.5\,\% residual-harm target on the 10\,Hz arm (calibrate 441, test 884; 2.2--2.5\,\% of scenarios that did not reproduce the stored reference run are dropped).
 Realized residual harm is at most 6.8\,\% in every cell. $\dagger$: always
 firing. Geometric: predictor scores held at 2\,Hz. Learned (cf.), counterfactual
 label; learned (fact.), factual label.}
