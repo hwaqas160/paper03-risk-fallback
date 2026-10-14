@@ -48,15 +48,15 @@ so one reference run plus one forced rollout per decision tick evaluates
 every trigger, threshold and latency by lookup, which agreed with direct
 execution in all 1{,}008 checked pairs. On replayed Argoverse~2,
 nuScenes and Waymo logs with reactive traffic, a Learn-then-Test certificate
-keeps its 5\,\% miss target (3.7\,\% missed, with no resplit clearly
-violating it, against 12--15\,\% for tuned, risk-control and confidence
-thresholds). The alert certificate still leaves 6.5\,\% harm after the
+keeps its 5\,\% miss target (3.7\,\% missed). No resplit clearly violates
+it, against 12--15\,\% of resplits for tuned, risk-control and confidence
+thresholds. The alert certificate still leaves 6.5\,\% harm after the
 fallback, so we certify the executed outcome itself with risk-ordered
 fixed-sequence testing. At a 7.5\,\% target the realized harm is 5.4\,\%.
 Under this outcome certificate a time-to-collision threshold is the
 cheapest trigger, with 6--13\,\% unnecessary stops at 10\,Hz decisions up to
-0.5\,s of latency, and it meets the target on six of eight shifted test
-sets. Learned or safe-distance triggers are needed only from 0.8\,s, where
+0.5\,s of latency, and its point estimate meets the target on six of eight
+shifted test sets. Learned or safe-distance triggers are needed only from 0.8\,s, where
 time-to-collision no longer certifies. Validity replicates with three
 predictors, two traffic models and fresh data. Certificates fail on
 nuScenes and in two of six held-out cities, the targets with the highest
