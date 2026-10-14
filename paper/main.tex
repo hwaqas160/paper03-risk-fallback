@@ -209,7 +209,8 @@ filtering~\cite{puphal2025risk}. We replay real logs with reactive traffic.
 Fallback triggering also sits within established safety frameworks.
 Runtime monitors that switch to a trusted fallback, as
 in~\cite{sinha2023,atoui2025mrm}, follow the runtime-assurance idea of a
-monitored learned component with a trusted backup. Switching policies
+monitored learned component with a trusted backup, as in the Simplex
+architecture~\cite{sha2001}. Switching policies
 have been learned for this purpose, with safety from
 reachability~\cite{miller2023rta}, but without a statistical certificate on
 the executed outcome, and conformal abort alerts have been calibrated in
@@ -351,8 +352,7 @@ $n_{\mathrm{eff}} = (\sum_i w_i)^2 / \sum_i w_i^2$. Because the weights are
 estimated and clipped and $n_{\mathrm{eff}}$ is an approximation, this is a
 heuristic repair with no finite-sample guarantee. As the weights
 concentrate, $n_{\mathrm{eff}}$ shrinks and the test certifies a more
-conservative threshold, and eventually none, which reports when the source
-data cannot support a guarantee for the target.
+conservative threshold, or none.
 
 \subsection{Evaluating every trigger by lookup}
 \label{sec:exact-eval}
@@ -421,8 +421,7 @@ $L$ and $S$ are functions of $R(X)$ and $\tau$ alone, and the consequences of
 the fallback need only $n_{\text{ticks}}$ forced rollouts per scenario (16.8
 on average, at most 26), after which any number of triggers is evaluated by
 lookup, where direct execution needs over 7{,}000 rollouts per scenario here.
-The observation is elementary and its value is practical: an exhaustive,
-paired comparison becomes affordable. Assumption (A1) is an idealization,
+The observation is elementary, and its value is practical. Assumption (A1) is an idealization,
 so we measure its violation. Of the first 33{,}761 forced rollouts, 98.4\,\% agreed
 with the reference run to within 1\,cm before firing and one changed the
 pre-fire harm status. We report every analysis also after dropping the
@@ -496,7 +495,8 @@ on held-out validation scenes). It runs online inside the closed loop, so
 its input is the actual, possibly ego-deviated, simulator history, with
 the UniTraj preprocessing unchanged. Vehicles are predicted by the
 network. Pedestrians and cyclists, which the checkpoint was not trained
-on, receive constant-velocity forecasts.
+on, receive constant-velocity forecasts. The robustness checks add a second
+AutoBot checkpoint (minADE$_6$ = 0.854) and Wayformer~\cite{wayformer2022}.
 
 \subsection{Datasets and splits}
 \label{sec:data}
@@ -512,7 +512,7 @@ pre-registered evaluation uses 2{,}000 calibration, 2{,}000 test and
 1{,}500 nuScenes scenarios, of which ten Argoverse~2 scenarios with
 unmatched per-agent records are dropped from every analysis, leaving
 1{,}994, 1{,}996 and 1{,}504. Decisions are taken at 2\,Hz, with identical
-miss rates at 10\,Hz on a paired development comparison.
+miss rates at 10\,Hz on a paired development comparison. The latency map of Section~\ref{sec:res-outcome} uses a separate 10\,Hz arm, because a 2\,Hz tick would make every delay a multiple of 0.5\,s.
 
 \subsection{Baselines}
 \label{sec:baselines}
@@ -535,8 +535,7 @@ spread of endpoint predictions across five Monte Carlo dropout passes
 \item \textbf{T3 --- open-loop conformal}: inflate every predicted mode by
 the split-conformal radius of the predictor's 3\,s error on held-out
 Argoverse~2 logs at level $\alpha$~\cite{vovk2005}, and fire when the
-inflated region touches the ego. This is the guarantee-on-the-prediction
-design that the paper argues is insufficient.
+inflated region touches the ego.
 \item \textbf{Tuned geometric}: our score with an empirically tuned
 threshold and no certificate. It isolates the contribution of the
 calibrator.
@@ -579,14 +578,13 @@ safety--conservatism trade-off than a tuned fixed threshold; and
 \textbf{H3}, that a threshold certified on Argoverse~2 loses its
 guarantee on nuScenes. A later amendment, written before any Waymo
 outcome existed, added \textbf{H3-W}, the same hypothesis on Waymo, and
-a few-label recalibration study. The note carries further dated
-amendments (a corrected confidence baseline, the exactness measurements,
-robustness checks, a direct-execution check, and a strict-review
-amendment that added the TTC baseline, noise-corrected validity,
-outcome-level certification and the learned counterfactual trigger), each
-written before the corresponding outcomes were evaluated, and it labels
-the analyses run afterwards as post hoc. That last amendment was written
-after the main results were known, and ten of its fourteen pre-registered
+a few-label recalibration study. Further dated amendments (exactness
+measurements, robustness checks, a direct-execution check, and two strict-review
+amendments that added the TTC baseline, noise-corrected validity, outcome-level
+certification and the learned counterfactual trigger) were each written
+before the corresponding outcomes were evaluated, and analyses run
+afterwards are labeled post hoc. The two strict-review amendments were written
+after the main results were known, and ten of their fourteen pre-registered
 claims were refuted (Supplementary Section~S17).
 
 \emph{Data and code availability.} Code, the pre-registration note with
@@ -676,7 +674,7 @@ ACI (1.3\,\% at 45\,\%) and open-loop conformal (0.0\,\% at 73.8\,\%) show a gua
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\columnwidth]{figures/operating_points.pdf}
+\includegraphics[width=0.9\columnwidth]{figures/operating_points.pdf}
 \caption{Every method at its operating point (Table~\ref{tab:main}),
 against the geometric score's own miss-versus-stops curve as its
 threshold varies. On this split most methods sit below the dashed
@@ -687,7 +685,7 @@ keeps the target across resplits is shown in Fig.~\ref{fig:validity}.}
 \end{figure}
 \begin{figure}[t]
 \centering
-\includegraphics[width=\columnwidth]{figures/validity.pdf}
+\includegraphics[width=0.86\columnwidth]{figures/validity.pdf}
 \caption{Test miss rate over 200 calibration/test resplits. Dashed line:
 the 5\,\% target; hatched bars: resplits that violate it. A valid
 certificate keeps violations at or below $\delta = 10\,\%$. LTT's
@@ -725,8 +723,10 @@ and 1.5 and 0.5\,\% corrected.
 \subsection{Outcome-level certification, with and without latency}
 \label{sec:res-outcome}
 The alert certificate leaves 6.5\,\% harm after the fallback. We therefore
-certify the residual harm of the executed run at 7.5\,\% (no fallback leaves
-15.1\,\%, always firing 4.1\,\%, so 5\,\% is barely reachable) with
+certify the residual harm of the executed run at 7.5\,\% (fixed in Amendment 11: no fallback leaves
+15.1\,\%, always firing 4.1\,\%, so 5\,\% is barely reachable, and a
+later sweep found 7.5\,\% the lowest target at which every score certifies at zero
+latency without always firing; Supplementary Section~S20) with
 risk-ordered fixed-sequence testing (Section~\ref{sec:outcome}). At zero
 latency (calibrate 904, test 2{,}900) every score certifies and meets the
 target, the counterfactual-label trigger at 5.4\,\% realized harm. TTC
@@ -820,7 +820,7 @@ certified at $\alpha = 0.05$ on nuScenes. With those scenarios excluded
 (post hoc), the shifted miss rate is 9.2\,\% [7.8, 10.8], still above the
 target. These intervals treat scenarios as independent, but the 1{,}504 nuScenes scenarios come from only 37 scenes. Resampling scenes widens the interval to [6.1, 21.0], which still excludes the target, while a second, disjoint set of 23 scenes gives 9.5\,\% with scene-level interval [3.9, 16.5], which does not: the direction of the failure replicates but its size is uncertain (Supplementary Section~S6). A domain classifier on the covariates separates Argoverse~2 from nuScenes (cross-validated AUROC 0.97) far more easily than from Waymo (0.91), so the certificate failed under the larger measured shift and held under the smaller. Six further natural shifts, the Argoverse~2 cities held out one at a time, add evidence: the certificate met the target in four of six and failed in Miami (6.1\,\% [4.8, 7.8]) and Washington, DC (5.3\,\%), the two cities with the highest harm rates. Across these and the two datasets the held-out miss rate tracks the target's harm rate (Spearman 0.90, $n=8$, post hoc), which gives a deployment check: a target whose harm rate exceeds the source's should be audited before the certificate is trusted (Supplementary Section~S10).
 
-\emph{The outcome certificate under shift.} Deployed unchanged on the same eight targets, the outcome-certified TTC threshold keeps realized harm within the 7.5\,\% target on six of eight, at 5--21\,\% unnecessary stops, and fails in Miami (9.2\,\%) and on nuScenes (8.8\,\%). The geometric and learned triggers also meet it on six of eight, the geometric score with more stops on every target and the learned trigger with similar stops in the cities but 30--60\,\% on Waymo and nuScenes (Supplementary Section~S18).
+\emph{The outcome certificate under shift.} Deployed unchanged on the same eight targets, the outcome-certified TTC threshold realizes harm at or below the 7.5\,\% target on six of eight at 5--21\,\% unnecessary stops. Its Wilson interval, which treats scenarios as independent, lies below the target for Austin, Dearborn, Palo Alto and Waymo, and contains it for Pittsburgh (6.1\,\% [4.9, 7.5]) and Washington, DC (6.7\,\% [5.0, 8.8]). It exceeds the target in Miami (9.2\,\% [7.8, 10.8]) and, with an interval that contains it, on nuScenes (8.8\,\% [7.4, 10.3]). The geometric and learned triggers also meet it on six of eight, the geometric score with more stops on every target and the learned trigger with similar stops in the cities but 30--60\,\% on Waymo and nuScenes (Supplementary Section~S18).
 
 Density-ratio weighting moves the miss rate from 13.2\,\% to 7.0\,\%, still above the target, and doubles unnecessary stops (26.1\,\% to 52.4\,\%). On the avoidable subset it reaches 2.2\,\%, but with an effective sample size of only 68, almost entirely through conservatism (54.5\,\% stops).
 
@@ -883,12 +883,10 @@ against the tuned confidence trigger (T1). Rates in \%.}
 \toprule
 Check & Setting & Result \\
 \midrule
-Lookup vs direct execution & 252 scenarios, 4 triggers & 0 of 1{,}008 alert-level disagreements \\
 Fresh disjoint data & 904 / 904 scenarios & Viol. 7.5 / 0.5, miss 3.4 \\
 Second predictor & AutoBot, minADE 0.854 & Viol. 9.0 / 0.0, stops 30.6 vs 68.3 \\
 Second architecture & Wayformer & Viol. 7.0 / 0.0, stops 41.8 vs 67.8 \\
 Non-reactive traffic & log replay & Miss 3.7 [2.2, 6.1], stops 35.4 vs 71.7 \\
-Decision rate & 10\,Hz, 0.2--0.5\,s & TTC stays cheapest (9--13 stops) \\
 Alternative harm & collision only, TTC 0.5 s, 1.5 s & Geometric beats T1/T2 by $\ge 20$ points \\
 Held-out cities & 6 Argoverse~2 cities & Target met in 4 of 6 \\
 Spatial groups & 150\,m & Viol. 17.0 / 1.0, indeterminate \\
@@ -915,12 +913,11 @@ adds no lead time here. An apparent advantage at 0.5\,s with 2\,Hz decisions
 the 7.5\,\% target lies at the risk of a 15\,\%-stop threshold so that the
 certified set flips to always firing in some calibration samples. We withdrew
 it (Supplementary Section~S20). \textbf{Repairs:} correcting the
-certificate by a harm prevalence estimated from unlabeled alerts was
-unreliable, an outcome audit bound covered fewer than 90\,\% of targets,
+certificate by a harm prevalence estimated from unlabeled alerts with
+black-box shift estimation~\cite{lipton2018} was unreliable, an outcome audit bound covered fewer than 90\,\% of targets,
 joint certification of harm and induced collisions succeeded at zero
 latency but for no score at 0.5\,s, and collision-only outcome certification was underpowered
-(Supplementary Sections~S15, S16 and S20). Ten of the fourteen claims added
-by the last two amendments were refuted.
+(Supplementary Sections~S15, S16 and S20).
 
 %=======================================================================
 \section{Discussion and Scope}
@@ -976,13 +973,10 @@ step inexpensive to repeat.
 
 %=======================================================================
 \section*{Acknowledgment}
-The authors thank the maintainers of MetaDrive and ScenarioNet for
-releasing the simulation infrastructure this work builds on.
+The authors thank the MetaDrive and ScenarioNet maintainers.
 
 \section*{Conflict of Interest}
-The authors declare that they have no known competing financial
-interests or personal relationships that could have appeared to
-influence the work reported in this paper.
+The authors declare no competing financial or personal interests.
 
 %=======================================================================
 \begin{thebibliography}{99}
@@ -1223,6 +1217,15 @@ and reinforcement learning,'' \emph{arXiv preprint arXiv:2310.04288}, 2023.
 A.~O.~Feldman, D.~I.~Harp, J.~Duncan, and M.~Schwager, ``Conformal safety
 monitoring for flight testing: A case study in data-driven safety
 learning,'' \emph{arXiv preprint arXiv:2511.20811}, 2025.
+
+\bibitem{wayformer2022}
+N.~Nayakanti, R.~Al-Rfou, A.~Zhou, K.~Goel, K.~S.~Refaat, and B.~Sapp, ``Wayformer: Motion forecasting via simple and efficient attention networks,'' \emph{arXiv preprint arXiv:2207.05844}, 2022.
+
+\bibitem{lipton2018}
+Z.~Lipton, Y.-X.~Wang, and A.~Smola, ``Detecting and correcting for label shift with black box predictors,'' in \emph{Proc. 35th Int. Conf. Mach. Learn. (ICML)}, PMLR vol.~80, 2018, pp.~3122--3130.
+
+\bibitem{sha2001}
+L.~Sha, ``Using simplicity to control complexity,'' \emph{IEEE Softw.}, vol.~18, no.~4, pp.~20--28, Jul./Aug. 2001, doi:~10.1109/MS.2001.936213.
 
 \end{thebibliography}
 
