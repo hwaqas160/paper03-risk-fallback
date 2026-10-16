@@ -1230,3 +1230,10 @@ If it is refuted for lack of power, the paper says so and does not use collision
 ### A13-3 Presentation (no statistical claim)
 An algorithm box ("how to certify a fallback trigger") replaces the prose recipe in the Discussion. The abstract and introduction state the contribution as evaluation and application, with the
 lookup protocol and outcome certification as the original elements. No number in the paper changes except through A13-1 and A13-2.
+
+### Amendment 13 outcome A13-2 (2026-10-16) (`src/cswc3.py collonly`, `results/final/r13_collonly.json`)
+Collision-only harm (base rate 4.0 % on `av2_cal`, 1,994 calibration scenarios, order from `av2_cal5` 904, test 2,900). Primary target O_res <= 0.02: at l = 0 geometric REFUSES and TTC certifies only
+near always-firing (stops 96.7 %, O_res 1.2 %); at l = 1 both refuse. **A13-2 REFUTED.** Doubling the calibration set did not make a 2 % target resolvable (the target is near the achievable floor), so
+collision-only harm is NOT used in the paper as support for the TTC recommendation at the 2 % target. Descriptive target 0.03: at l = 0 both certify (geometric O_res 2.0 % / stops 42.4 %; TTC 2.1 % / 20.7 %;
+paired stop difference TTC minus geometric -21.7 points, CI [-23.4, -20.0]); at l = 1 (0.5 s) both certify only at always-firing (96.7 %). Reading: at zero latency, under a harm label with no time-to-collision
+term, the certified TTC trigger still needs half the stops of the predictor-based one, but at 0.5 s with 2 Hz decisions neither trigger certifies usefully at a 3 % target.

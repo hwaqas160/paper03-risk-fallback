@@ -1,0 +1,13 @@
+target 0.02 lat 0 geometric refused
+target 0.02 lat 0 TTC       O_res 0.0124 stop 0.967
+   diff TTC - geometric None nontrivial False
+target 0.02 lat 1 geometric refused
+target 0.02 lat 1 TTC       refused
+   diff TTC - geometric None nontrivial False
+target 0.03 lat 0 geometric O_res 0.0203 stop 0.424
+target 0.03 lat 0 TTC       O_res 0.0210 stop 0.207
+   diff TTC - geometric {'diff': -0.21724137931034482, 'ci': [-0.23448275862068965, -0.2]} nontrivial True
+target 0.03 lat 1 geometric O_res 0.0093 stop 0.967
+target 0.03 lat 1 TTC       O_res 0.0093 stop 0.967
+   diff TTC - geometric {'diff': 0.0, 'ci': [0.0, 0.0]} nontrivial False
+claim_A13_2 False
