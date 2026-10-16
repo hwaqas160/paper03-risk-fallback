@@ -1198,3 +1198,35 @@ Post hoc checks on A12-6 (2026-10-10, not pre-registered): (a) TTC with decision
 84.9 % seen in the 2 Hz outcome analysis: the 84.9 % came from the certification cliff (the certified set is bimodal when the target 7.5 % sits at the achievable risk of a 15 %-stop threshold,
 so the fixed-sequence walk stops at always-firing in one calibration sample and certifies the 15 % threshold in another), not from the decision grid alone; the target sweep (A12-2) shows TTC and
 the learned trigger equal at 0.5 s for targets 0.09 and 0.10 (15.1 % vs 14.3 %, 12.4 % vs 12.0 %). The latency crossover reported from the 2 Hz arms is therefore withdrawn as a general finding.
+
+
+## Amendment 13 — 2026-10-16, BEFORE any analysis below is run (third strict review: the latency finding as a certifiability frontier, and a harm label that does not contain TTC)
+
+Prompted by the final pre-submission review. Two reviewer objections remain that stored data can address without new simulation: (i) the latency result rests on one target (7.5 %) and one
+random calibration split, and the 2 Hz episode showed that a single split can sit on a certification cliff; (ii) a TTC trigger is favoured by a harm label that itself contains a
+time-to-collision term, and the only label without it (collision only) was underpowered at n_cal = 904. Honest provenance: the outcomes at target 0.075 on the 10 Hz arm and the 2 Hz
+target sweep are already known (Amendment 12), so A13-1 is partly informed by them; targets other than 0.075 on the 10 Hz arm and all of A13-2 with n_cal = 1,994 are unseen.
+
+### A13-1 Certifiability frontier on the 10 Hz arm
+**Data.** The 10 Hz arms of Amendment 12 (`av2_cal5_10hz` split 50/50 by `rng(0).permutation` into training and calibration exactly as in `src/hz10.py`; `av2_test5_10hz` as test, same
+reproducibility filter). **Scores.** TTC (10 Hz), RSS (10 Hz, parameters of Amendment 12), geometric (2 Hz, held), learned with counterfactual labels (same model and features as A12-6).
+**Latencies.** 0, 0.2, 0.3, 0.5, 0.8, 1.0 s (0, 2, 3, 5, 8, 10 steps). **Targets.** Outcome residual harm O_res <= t, t in {0.05, 0.06, 0.07, 0.075, 0.08, 0.09, 0.10, 0.12, 0.15},
+ordered fixed-sequence LTT at delta = 0.10, ordering and threshold choice exactly as in `hz10.certify`.
+**Definition.** A (score, latency, target) cell is *usefully certified* if a threshold is certified, its realized test O_res <= t, and its test unnecessary-stop rate <= 0.50. The
+*frontier* f(score, latency) is the smallest target in the grid at which the cell is usefully certified (infinity if none).
+**Claims.** (a) For latencies 0, 0.2, 0.3 and 0.5 s, f(TTC) <= min(f(RSS), f(geometric), f(learned)). (b) For 0.8 and 1.0 s, f(TTC) > min(f(RSS), f(learned)).
+A13-1 holds only if (a) and (b) both hold; each is refuted independently otherwise.
+**Descriptive, not a claim.** For TTC, RSS and geometric, the fraction of 50 random 50/50 resplits (seeds 0..49, same procedure) in which target 0.075 is usefully certified, per latency, to show how
+much the single-split frontier depends on the split. The learned trigger is evaluated on the seed-0 split only.
+
+### A13-2 Collision-only harm with a doubled calibration set
+**Data.** The 2 Hz arms. Harm = at-fault collision only (`HarmDef(use_ttc=False)`, no time-to-collision term). For the score-only triggers the training split and the calibration split of A12-3
+are swapped: ordering from `av2_cal5` (904, order affects power only, not validity) and calibration on `av2_cal` (1,994 scenarios, previously used only for training). Test = `av2_test` +
+`av2_test5` (2,900). **Scores.** TTC and geometric. **Latencies.** 0 and 1 tick (0 and 0.5 s). **Primary target** O_res <= 0.02 (as in A12-3); target 0.03 is reported descriptively.
+**Claim.** At both latencies both scores certify a threshold other than always firing (stop rate < 0.95) with realized test O_res <= 0.02, and the TTC trigger stops fewer scenarios than the
+geometric trigger (paired bootstrap 95 % CI of the stop difference excludes 0). **Refuted if** any score refuses or certifies only at always firing at either latency, or the CI includes 0.
+If it is refuted for lack of power, the paper says so and does not use collision-only harm as support for the TTC recommendation.
+
+### A13-3 Presentation (no statistical claim)
+An algorithm box ("how to certify a fallback trigger") replaces the prose recipe in the Discussion. The abstract and introduction state the contribution as evaluation and application, with the
+lookup protocol and outcome certification as the original elements. No number in the paper changes except through A13-1 and A13-2.
