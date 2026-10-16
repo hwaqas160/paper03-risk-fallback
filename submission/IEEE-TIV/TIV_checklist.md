@@ -5,7 +5,7 @@ Items marked **AUTHOR** can only be confirmed by the authors. Everything else wa
 
 ## Checklist
 - [x] Conflict of interest disclosed: "Conflict of Interest" section in the manuscript (no competing interests). Answer the portal form the same way.
-- [ ] **AUTHOR** Institutional email address of all co-authors. Hassan: seecs.edu.pk (NUST). Rahat: student.nust.edu.pk (NUST; author states it is his university email). Hina: the author supplied hina.maryam@kinnaird.edu.pk (Kinnaird University) on 2026-10-16, but the manuscript still lists the State Bank of Pakistan as her affiliation with an sbp.org.pk email. Decide which affiliation and email to use, then make the manuscript, biography and portal entry match.
+- [x] Institutional email address of all co-authors, supplied by the author on 2026-10-16: Hassan hsaleem.msee20seecs@seecs.edu.pk (NUST), Rahat rahat.mscm21nbs@student.nust.edu.pk (NUST), Hina hina.maryam@kinnaird.edu.pk (Kinnaird College for Women University, Lahore). The manuscript footnote and biography now use Kinnaird for Hina. **AUTHOR**: confirm her exact role and department wording; the biography says only that she is with the university.
 - [x] No non-English characters in the author information (the author block and biographies are plain ASCII).
 - [ ] Detailed response letter: resubmission only, not applicable.
 - [ ] Highlighted revised manuscript: resubmission only, not applicable.
