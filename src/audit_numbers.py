@@ -32,6 +32,20 @@ for lat, lab in (("0", "0 s"), ("2", "0.2 s"), ("3", "0.3 s"), ("5", "0.5 s"), (
             chk(f"10 Hz {lab} {k} stops", m[k]["stop"])
 sup = J("r12_sup.json")
 chk("supervised l=1 stops", sup["1"]["methods"]["supervised time-to-harm"]["test"]["stop"])
+# Amendment 13: certifiability map (Table II, right block and the resplit sentence) and collision-only descriptive numbers
+fr = J("r13_frontier.json"); co = J("r13_collonly.json")
+for lat, lab in (("0", "0 s"), ("2", "0.2 s"), ("3", "0.3 s"), ("5", "0.5 s"), ("8", "0.8 s"), ("10", "1.0 s")):
+    for n in ("TTC", "RSS", "geometric", "learned"):
+        f_ = fr["frontier"][lat][n]
+        row_ok = f_ is not None
+        chk(f"frontier {lab} {n}", f"{100 * f_:g}" if row_ok else "none", f"{100 * f_:g}" if row_ok else "")
+pu = fr["prob_useful_at_0.075_over_50_splits"]
+chk("TTC certifies usefully at 0.5 s across resplits (%)", f"{100 * pu['5']['TTC']:.0f}", f"{100 * pu['5']['TTC']:.0f}" + "\,\% of them")
+chk("geometric across resplits at 0.5 s (%)", f"{100 * pu['5']['geometric']:.0f}", f"{100 * pu['5']['geometric']:.0f}" + "\,\% for the geometric")
+chk("RSS across resplits at 0.5 s (%)", f"{100 * pu['5']['RSS']:.0f}", f"{100 * pu['5']['RSS']:.0f}" + "\,\% for the RSS")
+c3 = co["targets"]["0.03"]["0"]
+chk("collision-only 3% TTC stops", c3["methods"]["TTC"]["test"]["stop"])
+chk("collision-only 3% geometric stops", c3["methods"]["geometric"]["test"]["stop"])
 bad = [c for c in checks if not c[2]]
 for n, s, ok in checks:
     print(("ok   " if ok else "MISS ") + f"{n}: {s}")

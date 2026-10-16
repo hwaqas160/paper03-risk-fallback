@@ -3,7 +3,9 @@
 \usepackage{array}
 \usepackage{url}
 \usepackage{booktabs}
+\usepackage{graphicx}
 \renewcommand{\thetable}{S\arabic{table}}
+\renewcommand{\thefigure}{S\arabic{figure}}
 \renewcommand{\thesection}{S\arabic{section}}
 \hyphenation{op-tical net-works semi-conduc-tor IEEE-Xplore}
 
@@ -866,9 +868,22 @@ CSWC (iii): prevalence correction helps the learned trigger under shift & refute
 12 A12-3: collision-only outcome certification, learned trigger cheapest & refuted (underpowered) \\
 12 A12-4: joint certification of harm and induced collisions at both latencies & refuted \\
 12 A12-6: learned trigger beats TTC, RSS and geometric at 0.3 and 0.5\,s at 10\,Hz & refuted \\
+13 A13-1: the TTC frontier is the lowest at 0 to 0.5\,s, and above RSS and learned at 0.8 and 1.0\,s & (a) refuted, (b) holds \\
+13 A13-2: collision-only outcome certification at 2\,\% with 1{,}994 calibration scenarios, TTC fewer stops than geometric & refuted (underpowered) \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.9\columnwidth]{figures/validity.pdf}
+\caption{Test miss rate over 200 calibration/test resplits. Dashed line:
+the 5\,\% target; hatched bars: resplits that violate it. A valid
+certificate keeps violations at or below $\delta = 10\,\%$. LTT's
+high-probability guarantee does (9.5\,\%); CRC's expectation guarantee
+and empirical tuning do not.}
+\label{fig:s-validity}
+\end{figure}
 
 \section{Mechanism, Replication and Shift for the Counterfactual Trigger}
 \label{sec:s-mech}
@@ -1099,5 +1114,89 @@ certifies jointly at both latencies is refuted.
 $1-0.05/12$) all keep intervals that exclude zero. The refuted comparisons
 were not recomputed, because widening an interval cannot support a
 refuted claim.
+
+\section{Amendment 13: Certifiability Map and Collision-Only Harm}
+\label{sec:s-a13}
+Amendment 13 was registered before either analysis was run (Section~S17 lists the verdicts). \emph{Certifiability map (claim refuted).} Table~\ref{tab:s-map} gives, for every score, latency and target in a grid of nine, the realized residual harm and unnecessary stops of the certified threshold. The frontier of the main paper is the lowest target in a row that is usefully certified, that is, certified with at most 50\,\% stops and a realized harm within the target. The pre-registered claim (a), that the TTC frontier is the lowest at 0, 0.2, 0.3 and 0.5\,s, is refuted: from 0.2 to 0.5\,s the geometric or learned trigger reaches a lower target (at 0.2\,s only the learned trigger reaches 5\,\%). Claim (b), that TTC's frontier lies above the lowest of the RSS and learned frontiers at 0.8 and 1.0\,s, holds (8 and 12\,\% against 6\,\%). \emph{Split dependence (descriptive).} Table~\ref{tab:s-prob} shows that the single-split map hides variation: TTC certifies usefully at 7.5\,\% in 76\,\% of resplits at 0.5\,s, fewer than the geometric (92\,\%) or RSS (88\,\%) trigger, and in 18 and 0\,\% of resplits at 0.8 and 1.0\,s.
+
+\begin{table*}[t]
+\caption{Certifiability map on the 10\,Hz arm: realized residual harm / unnecessary stops (both \%) of the outcome-certified threshold, by score, latency and target (seed-0 split; calibrate 441, test 884). A dash: no threshold certified. Parentheses: not usefully certified (more than 50\,\% stops or a realized harm above the target). Learned: counterfactual labels. Targets in \%.}
+\label{tab:s-map}
+\centering
+\scriptsize\setlength{\tabcolsep}{4pt}
+\begin{tabular}{llccccccccc}
+\toprule
+Latency & Score & 5 & 6 & 7 & 7.5 & 8 & 9 & 10 & 12 & 15 \\
+\midrule
+0\,s & TTC & -- & 3.6/7 & 3.6/7 & 4.1/6 & 4.1/6 & 6.0/5 & 6.0/5 & 7.7/3 & 9.4/1 \\
+ & RSS & -- & 3.6/42 & 4.9/20 & 4.9/20 & 5.3/16 & 6.7/13 & 7.4/8 & 8.0/7 & 9.0/4 \\
+ & Geometric & -- & 3.4/35 & 3.5/33 & 3.5/33 & 4.3/30 & 5.1/27 & 7.0/21 & 8.9/13 & 10.9/7 \\
+ & Learned & -- & 4.0/33 & 5.2/21 & 5.1/19 & 6.4/12 & 6.9/10 & 8.3/7 & 9.0/5 & 11.5/1 \\
+\midrule
+0.2\,s & TTC & -- & 3.2/12 & 5.0/9 & 5.0/9 & 5.0/9 & 6.0/7 & 6.0/7 & 8.5/4 & 8.5/4 \\
+ & RSS & -- & (4.0/54) & (4.0/54) & 5.0/25 & 5.0/25 & 6.8/15 & 7.6/12 & 8.3/8 & 11.7/3 \\
+ & Geometric & -- & 3.8/34 & 4.5/29 & 4.9/29 & 5.3/27 & 6.8/22 & 7.7/17 & 8.9/13 & 11.2/6 \\
+ & Learned & 3.4/49 & 4.0/38 & 5.3/27 & 5.5/25 & 5.8/24 & 7.0/18 & 7.0/18 & 9.7/8 & 11.4/3 \\
+\midrule
+0.3\,s & TTC & (3.2/87) & (3.2/87) & 4.6/10 & 4.6/10 & 5.5/8 & 5.5/8 & 6.7/7 & 8.3/6 & 9.7/4 \\
+ & RSS & (4.4/56) & (4.4/56) & (4.4/56) & 5.4/24 & 6.0/22 & 7.0/18 & 7.8/13 & 8.3/11 & 11.0/4 \\
+ & Geometric & 3.7/43 & 4.3/35 & 5.3/28 & 5.7/26 & 5.7/26 & 7.0/22 & 7.7/20 & 8.8/15 & 10.6/9 \\
+ & Learned & (3.8/51) & 4.8/36 & 5.0/32 & 5.9/28 & 6.1/27 & 7.9/17 & 7.9/17 & 10.2/8 & 12.0/3 \\
+\midrule
+0.5\,s & TTC & -- & (3.2/87) & 5.0/13 & 5.0/13 & 5.0/13 & 6.1/11 & 6.6/10 & 8.5/8 & 11.8/4 \\
+ & RSS & -- & (4.9/51) & 5.5/27 & 6.6/24 & 6.6/24 & 7.1/22 & 8.0/19 & 9.2/12 & 11.4/5 \\
+ & Geometric & -- & 4.4/41 & 5.3/32 & 5.3/32 & 6.0/27 & 6.2/26 & 7.7/22 & 9.6/16 & 11.0/9 \\
+ & Learned & -- & 3.7/45 & 5.9/30 & 6.8/26 & 6.9/25 & 7.1/22 & 9.0/14 & 10.3/9 & 12.3/3 \\
+\midrule
+0.8\,s & TTC & (4.1/87) & (4.1/87) & (4.1/87) & (4.1/87) & 5.0/22 & 6.6/18 & 6.9/17 & 9.3/12 & 11.9/6 \\
+ & RSS & (4.1/87) & (4.1/87) & (4.1/87) & 6.1/30 & 7.0/25 & 6.9/25 & 8.1/20 & 8.5/19 & 11.2/8 \\
+ & Geometric & (4.1/87) & (4.1/87) & (4.1/87) & (4.1/87) & (4.1/87) & 7.6/30 & 7.6/30 & 8.8/22 & 11.2/11 \\
+ & Learned & (4.1/79) & 4.9/41 & 4.9/37 & 4.9/37 & 4.9/37 & 6.4/30 & 8.1/19 & 10.4/9 & 12.0/5 \\
+\midrule
+1\,s & TTC & (3.8/87) & (3.8/87) & (3.8/87) & (3.8/87) & (3.8/87) & (3.8/87) & (3.8/87) & 9.5/15 & 11.9/7 \\
+ & RSS & (3.8/87) & 5.1/49 & 5.3/40 & 5.3/40 & 5.3/40 & 7.2/27 & 8.1/24 & 8.5/20 & 12.4/8 \\
+ & Geometric & (3.8/87) & (3.8/87) & (3.8/87) & (3.8/87) & (3.8/87) & (3.8/87) & 8.8/27 & 9.7/22 & 11.7/14 \\
+ & Learned & -- & 4.1/44 & 5.1/34 & 5.9/31 & 5.9/31 & 6.6/28 & 7.8/21 & 10.3/10 & 11.8/5 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\begin{table}[t]
+\caption{Share of 50 random calibration/training resplits of the 10\,Hz arm in which the 7.5\,\% outcome target is usefully certified (\%).}
+\label{tab:s-prob}
+\centering
+\scriptsize\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lccc}
+\toprule
+Latency & TTC & RSS & Geometric \\
+\midrule
+0\,s & 100 & 88 & 100 \\
+0.2\,s & 98 & 86 & 98 \\
+0.3\,s & 96 & 84 & 96 \\
+0.5\,s & 76 & 88 & 92 \\
+0.8\,s & 18 & 48 & 6 \\
+1\,s & 0 & 52 & 4 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\emph{Collision-only harm (claim refuted).} With harm defined by at-fault collisions only, so that no time-to-collision term favors the TTC trigger, doubling the calibration set to 1{,}994 scenarios did not make a 2\,\% target resolvable (Table~\ref{tab:s-coll}): geometric refuses at zero latency and TTC certifies only near always firing. At a 3\,\% target, reported descriptively, both certify at zero latency and TTC needs 21.7 points fewer stops (95\,\% CI $[-23.4, -20.0]$), but neither certifies usefully at 0.5\,s.
+
+\begin{table}[t]
+\caption{Collision-only harm, 2\,Hz arm, calibration on 1{,}994 scenarios, test 2{,}900. Realized harm / unnecessary stops (\%) and the paired stop difference TTC minus geometric (points, 95\,\% CI).}
+\label{tab:s-coll}
+\centering
+\scriptsize\setlength{\tabcolsep}{3pt}
+\begin{tabular}{llccc}
+\toprule
+Target & Latency & TTC & Geometric & Difference \\
+\midrule
+2 & 0\,s & 1.2 / 96.7 & refused & -- \\
+2 & 0.5\,s & refused & refused & -- \\
+3 & 0\,s & 2.1 / 20.7 & 2.0 / 42.4 & -21.7 [-23.4, -20.0] \\
+3 & 0.5\,s & 0.9 / 96.7 & 0.9 / 96.7 & +0.0 [+0.0, +0.0] \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \end{document}

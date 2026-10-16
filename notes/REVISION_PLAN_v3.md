@@ -109,3 +109,10 @@ Second strict review executed. Stored-data items (supervised baseline, target sw
 step, RSS-style trigger) are done. Outcomes: A12-1, A12-3, A12-4, A12-6 refuted; the 2 Hz latency crossover is withdrawn (certification cliff and decision grid); a certified TTC threshold is the cheapest
 trigger up to 0.5 s at 10 Hz; learned or RSS triggers are needed only from 0.8 s. Paper rewritten accordingly (10 pages); supplement S20 added; `reproduce.sh` added.
 Follow-up paper (Method A: exact-counterfactual certified stopping-and-action policies with deployment monitoring) is NOT started; its tables already exist.
+
+## Status 2026-10-16 (Amendment 13)
+Third strict review executed on stored data. A13-1 (certifiability frontier on the 10 Hz arm): claim (a) refuted, claim (b) holds; the paper now reports the full map (Table II: stops at 7.5 % and frontier by
+score and latency) and the 50-resplit fractions (TTC certifies usefully at 0.5 s in 76 % of resplits, geometric 92 %, RSS 88 %). A13-2 (collision-only harm, calibration doubled to 1,994): refuted at 2 %
+(underpowered); at 3 % and zero latency TTC needs 20.7 % stops against 42.4 % for geometric (descriptive). Twelve of sixteen claims of Amendments 11-13 are now refuted. Main text: abstract and contribution 3
+rewritten as a certifiability map, algorithm box added, the resplit-distribution figure moved to the supplement (Fig. S1), 10 pages, audit 57 of 57. NOT done (needs new simulation): learned traffic agents,
+larger 10 Hz arm, a harm label other than TTC/collision at the outcome level. Open (author): Zenodo publication, T-IV checklist, photos, final read.

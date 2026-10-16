@@ -53,11 +53,11 @@ it, against 12--15\,\% of resplits for tuned, risk-control and confidence
 thresholds. The alert certificate still leaves 6.5\,\% harm after the
 fallback, so we certify the executed outcome itself with risk-ordered
 fixed-sequence testing. At a 7.5\,\% target the realized harm is 5.4\,\%.
-Under this outcome certificate a time-to-collision threshold is the
-cheapest trigger, with 6--13\,\% unnecessary stops at 10\,Hz decisions up to
-0.5\,s of latency, and its point estimate meets the target on six of eight
-shifted test sets. Learned or safe-distance triggers are needed only from 0.8\,s, where
-time-to-collision no longer certifies. Validity replicates with three
+Mapping which triggers certify at which latency and target, a
+time-to-collision threshold is the cheapest at a 7.5\,\% target up to 0.5\,s of
+latency (6--13\,\% unnecessary stops at 10\,Hz), and its point estimate meets that
+target on six of eight shifted test sets. Stricter targets and delays of
+0.8\,s or more need learned or safe-distance triggers, at 30--50\,\% stops. Validity replicates with three
 predictors, two traffic models and fresh data. Certificates fail on
 nuScenes and in two of six held-out cities, the targets with the highest
 harm rates, and hold on Waymo.
@@ -113,7 +113,7 @@ hypothesis fixed before data collection (Section~\ref{sec:prereg}).
 \textbf{RQ1 (H2):} does a certificate keep its promise on the
 closed-loop outcome, and what does it cost in unnecessary stops and
 induced collisions? \textbf{RQ2 (H1):} do open-loop metrics choose the
-trigger that closed-loop safety does? \textbf{RQ3:} how sensitive is it to the timing of the intervention, and can the outcome be certified under latency? \textbf{RQ4 (H3, H3-W):} what happens to a certificate under cross-dataset shift, and how much can unlabeled or a few labeled target scenarios repair? The outcome-level part of RQ3 was added by later amendments and is labeled as such.
+trigger that closed-loop safety does? \textbf{RQ3:} how sensitive is it to the timing of the intervention, and can the outcome be certified under latency? \textbf{RQ4 (H3, H3-W):} what happens to a certificate under cross-dataset shift, and how much can unlabeled or a few labeled target scenarios repair?
 
 We make four contributions.
 \begin{enumerate}
@@ -134,13 +134,13 @@ certificate leaves 6.5\,\% harm after the fallback, risk-ordered
 fixed-sequence testing certifies the harm in the run the vehicle actually
 drives, a non-monotone loss. At a 7.5\,\% target the certified threshold
 realizes 5.4\,\%.
-\item \textbf{A certified physics trigger as a deployable recipe, with a
-latency map.} A certified time-to-collision (TTC) threshold is the cheapest
-outcome-certified trigger up to 0.5\,s of latency at 10\,Hz decisions
-(6--13\,\% unnecessary stops against 8--33\,\% for safe-distance, geometric
-and learned triggers) and meets the target on six of eight shifted test
-sets. Learned or safe-distance triggers pay off only from 0.8\,s, where TTC
-no longer certifies.
+\item \textbf{A certifiability map, with a certified physics trigger as the default.}
+We map which triggers can be certified at which latency and target. A
+certified time-to-collision (TTC) threshold is the cheapest at a 7.5\,\% target
+up to 0.5\,s of latency at 10\,Hz (6--13\,\% unnecessary stops against 8--33\,\% for
+safe-distance, geometric and learned triggers) and meets that target on six of
+eight shifted test sets. Stricter targets and delays of 0.8\,s or more are
+certifiable only by learned or safe-distance triggers, at 30--50\,\% stops.
 \item \textbf{A failure map for the certificate.} An Argoverse~2
 certificate fails on nuScenes and in two of six held-out cities but holds
 on Waymo, with failures tracking the target's harm rate, and spatial
@@ -219,10 +219,9 @@ Responsibility-Sensitive Safety~\cite{rss2017} gives model-based rules for
 when a vehicle is at fault, whereas our trigger is certified from data.
 SOTIF~\cite{iso21448} and UL~4600~\cite{ul4600} frame assurance at the
 system level, but do not specify how to certify a trigger threshold.
-Selective prediction~\cite{geifman2017} studies when a model should abstain
-at a controlled risk, the same reject-option structure as a trigger,
-except that here abstention is an executed maneuver with its own cost. We
-do not claim priority in any of these areas.
+Selective prediction~\cite{geifman2017} has the same reject-option structure,
+except that abstention here is an executed maneuver with its own cost. We do
+not claim priority in any of these areas.
 
 Conditional Value-at-Risk~\cite{cvar2022} would extend our analysis to the severity of violations, which we leave to future work.
 
@@ -584,7 +583,7 @@ amendments that added the TTC baseline, noise-corrected validity, outcome-level
 certification and the learned counterfactual trigger) were each written
 before the corresponding outcomes were evaluated, and analyses run
 afterwards are labeled post hoc. The two strict-review amendments were written
-after the main results were known, and ten of their fourteen pre-registered
+after the main results were known, and twelve of their sixteen pre-registered
 claims were refuted (Supplementary Section~S17).
 
 \emph{Data and code availability.} Code, the pre-registration note with
@@ -599,7 +598,7 @@ can be regenerated without re-simulation.
 \label{sec:results}
 All results use $\alpha = 0.05$ and $\delta = 0.10$, 1{,}994 calibration
 and 1{,}996 test scenarios from Argoverse~2, and 1{,}504 nuScenes
-scenarios, with Wilson 95\,\% intervals unless stated. Dropping the 3.6\,\% of scenarios with any flagged simulator drift changes no conclusion below.
+scenarios, with Wilson 95\,\% intervals unless stated.
 Sections~\ref{sec:res-main}--\ref{sec:ablation}, the shift study and the Waymo recalibration are pre-registered. Section~\ref{sec:res-outcome} and the TTC baseline come from later amendments, and the remaining analyses are post hoc.
 
 \subsection{Does a certificate keep its promise, and what does it cost? (RQ1)}
@@ -620,9 +619,9 @@ corrected), while LTT is not violated under either. Among the predictor-based
 triggers, certification is therefore the only design that reliably keeps its
 target at a useful operating point (the uncertified TTC threshold sits far
 below the target and is only indeterminate). Fig.~\ref{fig:operating-points} plots every method against
-the geometric score's own curve as its threshold varies, and
-Fig.~\ref{fig:validity} shows the resplit distributions behind the
-violation column. CRC and empirical tuning select the same threshold here, because no grid point falls between the calibration risks 4.81\,\% and 5.02\,\%.
+the geometric score's own curve as its threshold varies, and the
+resplit distributions behind the violation column are in Supplementary
+Fig.~S1. CRC and tuning select the same threshold (no grid point lies between the calibration risks 4.81\,\% and 5.02\,\%).
 
 \begin{table}[t]
 \caption{Closed-loop outcomes on the Argoverse~2 test set at
@@ -674,24 +673,14 @@ ACI (1.3\,\% at 45\,\%) and open-loop conformal (0.0\,\% at 73.8\,\%) show a gua
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.9\columnwidth]{figures/operating_points.pdf}
+\includegraphics[width=0.84\columnwidth]{figures/operating_points.pdf}
 \caption{Every method at its operating point (Table~\ref{tab:main}),
 against the geometric score's own miss-versus-stops curve as its
 threshold varies. On this split most methods sit below the dashed
 $\alpha = 0.05$ line; the geometric methods do so at well under half the
 stops of the confidence, ensemble and open-loop triggers. Which of them
-keeps the target across resplits is shown in Fig.~\ref{fig:validity}.}
+keeps the target across resplits is in Table~\ref{tab:main}.}
 \label{fig:operating-points}
-\end{figure}
-\begin{figure}[t]
-\centering
-\includegraphics[width=0.86\columnwidth]{figures/validity.pdf}
-\caption{Test miss rate over 200 calibration/test resplits. Dashed line:
-the 5\,\% target; hatched bars: resplits that violate it. A valid
-certificate keeps violations at or below $\delta = 10\,\%$. LTT's
-high-probability guarantee does (9.5\,\%); CRC's expectation guarantee
-and empirical tuning do not.}
-\label{fig:validity}
 \end{figure}
 \subsection{Do open-loop metrics choose the closed-loop trigger? (RQ2)}
 \label{sec:res-h1}
@@ -699,12 +688,10 @@ Ranking six trigger scores by open-loop AUROC of their scenario peak and
 by closed-loop unnecessary stops at each certified threshold
 (Supplementary Section~S14), the rankings agree at the top and diverge
 below it: Kendall's $\tau = 0.60$ on Argoverse~2, $0.47$ on nuScenes and
-$0.73$ on Waymo. The pre-registered rule refutes H1 only if $\tau \ge 0.8$
-and the top score coincides in every setting, so H1 is not refuted, but
-the evidence is weak. The clearest disagreement is at the bottom: the
+$0.73$ on Waymo. H1 is refuted only if $\tau \ge 0.8$ and the top score
+coincides everywhere, so it is not refuted, but the evidence is weak. The
 confidence score has AUROC $0.45$, below chance, yet a threshold on it
-still reaches the miss target at 75.8\,\% stops, by firing
-indiscriminately.
+reaches the miss target at 75.8\,\% stops by firing indiscriminately.
 
 \subsection{Ablations and latency (RQ3)}
 \label{sec:ablation}
@@ -734,38 +721,51 @@ target, the counterfactual-label trigger at 5.4\,\% realized harm. TTC
 are the cheapest, ahead of the counterfactual-label trigger (13.6\,\%) and
 the geometric score (32.8\,\%).
 
-\emph{Latency map.} Table~\ref{tab:outcome} repeats the outcome certificate
+\emph{Certifiability map.} Table~\ref{tab:outcome} repeats the outcome certificate
 on an arm with a forced rollout at every simulator step (10\,Hz decisions),
-so the deployed latency can be applied exactly. Every cell meets the
-target (realized harm at most 6.8\,\%). TTC is the cheapest trigger through
-0.5\,s, at 5.8\,\% unnecessary stops without delay and 12.6\,\% at 0.5\,s,
-and the learned triggers stop 13--19 points more (paired CIs exclude 0).
-From 0.8\,s (post hoc) TTC certifies only by always firing (86.7\,\%),
-while the safe-distance and learned triggers need 30--40\,\%. At 1.0\,s the
-learned trigger is the cheapest, 9.3 points below the safe-distance
-trigger (CI [5.7, 12.9]). The practical reading is a latency budget: below
-about 0.5\,s a certified TTC threshold suffices, and beyond it a trigger
-that anticipates is needed.
+so the deployed latency can be applied exactly, and for several targets. The
+left block gives unnecessary stops at the 7.5\,\% target, where every cell meets
+the target (realized harm at most 6.8\,\%). The right block gives the
+\emph{frontier}, the lowest of nine targets (5--15\,\%) that a trigger certifies
+with at most 50\,\% stops and a realized harm within the target. At 7.5\,\%, a TTC
+threshold is the cheapest trigger through 0.5\,s (5.8\,\% stops without delay,
+12.6\,\% at 0.5\,s), and the learned triggers stop 13--19 points more (paired CIs
+exclude 0), but across 50 resplits it certifies usefully in only 76\,\% of them at
+0.5\,s, against 92\,\% for the geometric and 88\,\% for the RSS trigger. From
+0.8\,s (post hoc) TTC certifies only by always firing, while the
+safe-distance and learned triggers need 30--40\,\%, and at 1.0\,s the learned
+trigger is the cheapest (9.3 points below the safe-distance trigger, CI
+[5.7, 12.9]). TTC is not the best at stricter targets, either. From
+0.2 to 0.5\,s the geometric or learned trigger certifies a target 1--2 points
+lower than TTC does (5--6\,\% against 6--7\,\%), at 36--49\,\% stops, and at
+1.0\,s the learned trigger reaches 6\,\% where TTC needs 12\,\% (Supplementary
+Section~S21). The practical reading is a map: for moderate targets and delays
+up to 0.5\,s a certified TTC threshold is the cheapest valid trigger, and
+stricter targets or longer delays need a trigger that anticipates, at a much
+higher stop cost.
 
 \begin{table}[t]
-\caption{Unnecessary stops (\%) of the outcome-certified threshold at a
-7.5\,\% residual-harm target on the 10\,Hz arm (calibrate 441, test 884; 2.2--2.5\,\% of scenarios that did not reproduce the stored reference run are dropped).
-Realized residual harm is at most 6.8\,\% in every cell. $\dagger$: always
-firing. Geometric: predictor scores held at 2\,Hz. Learned (cf.), counterfactual
-label; learned (fact.), factual label.}
+\caption{Outcome-certified triggers on the 10\,Hz arm (calibrate 441, test 884; 2.2--2.5\,\% of
+scenarios that did not reproduce the stored reference run are dropped). Left:
+unnecessary stops (\%) at a 7.5\,\% residual-harm target. Right: frontier, the lowest
+target (\%) in \{5, 6, 7, 7.5, 8, 9, 10, 12, 15\} certified with at most 50\,\% stops and a
+realized harm within the target. $\dagger$: always firing. Geometric: predictor
+scores held at 2\,Hz. Learned: counterfactual labels. Bold: best in the row.}
 \label{tab:outcome}
 \centering
-\scriptsize\setlength{\tabcolsep}{3pt}
-\begin{tabular}{lccccc}
+\scriptsize\setlength{\tabcolsep}{2.6pt}
+\begin{tabular}{lcccccccc}
 \toprule
-Latency & TTC & Safe dist. & Geometric & Learned (cf.) & Learned (fact.) \\
+ & \multicolumn{4}{c}{Stops at 7.5\,\%} & \multicolumn{4}{c}{Frontier (\%)} \\
+\cmidrule(lr){2-5}\cmidrule(lr){6-9}
+Latency & TTC & RSS & Geom. & Learned & TTC & RSS & Geom. & Learned \\
 \midrule
-0\,s & \textbf{5.8} & 20.1 & 32.9 & 19.0 & 7.6 \\
-0.2\,s & \textbf{8.7} & 24.7 & 28.5 & 25.2 & 17.6 \\
-0.3\,s & \textbf{9.5} & 23.9 & 26.5 & 28.4 & 20.4 \\
-0.5\,s & \textbf{12.6} & 23.6 & 31.9 & 25.6 & 30.7 \\
-0.8\,s & 86.7$^\dagger$ & \textbf{29.9} & 86.7$^\dagger$ & 36.5 & 31.4 \\
-1.0\,s & 86.7$^\dagger$ & 40.2 & 86.7$^\dagger$ & \textbf{30.9} & 39.6 \\
+0\,s & \textbf{5.8} & 20.1 & 32.9 & 19.0 & \textbf{6} & \textbf{6} & \textbf{6} & \textbf{6} \\
+0.2\,s & \textbf{8.7} & 24.7 & 28.5 & 25.2 & 6 & 7.5 & 6 & \textbf{5} \\
+0.3\,s & \textbf{9.5} & 23.9 & 26.5 & 28.4 & 7 & 7.5 & \textbf{5} & 6 \\
+0.5\,s & \textbf{12.6} & 23.6 & 31.9 & 25.6 & 7 & 7 & \textbf{6} & \textbf{6} \\
+0.8\,s & 86.7$^\dagger$ & \textbf{29.9} & 86.7$^\dagger$ & 36.5 & 8 & 7.5 & 9 & \textbf{6} \\
+1.0\,s & 86.7$^\dagger$ & 40.2 & 86.7$^\dagger$ & \textbf{30.9} & 12 & \textbf{6} & 10 & \textbf{6} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -774,7 +774,7 @@ Latency & TTC & Safe dist. & Geometric & Learned (cf.) & Learned (fact.) \\
 \label{sec:res-shift}
 \begin{figure}[t]
 \centering
-\includegraphics[width=\columnwidth]{figures/shift_latency.pdf}
+\includegraphics[width=0.9\columnwidth]{figures/shift_latency.pdf}
 \caption{(a) Miss rate of the Argoverse~2-certified threshold deployed
 unchanged on nuScenes and Waymo, unweighted and with the density-ratio
 repair (Section~\ref{sec:shift}); error bars are 95\,\% Wilson CIs. (b)
@@ -884,8 +884,7 @@ against the tuned confidence trigger (T1). Rates in \%.}
 Check & Setting & Result \\
 \midrule
 Fresh disjoint data & 904 / 904 scenarios & Viol. 7.5 / 0.5, miss 3.4 \\
-Second predictor & AutoBot, minADE 0.854 & Viol. 9.0 / 0.0, stops 30.6 vs 68.3 \\
-Second architecture & Wayformer & Viol. 7.0 / 0.0, stops 41.8 vs 67.8 \\
+2nd predictor, Wayformer & AutoBot 0.854; Wayformer & Viol. 9.0 / 0.0; 7.0 / 0.0, stops 30.6; 41.8 vs 68.3; 67.8 \\
 Non-reactive traffic & log replay & Miss 3.7 [2.2, 6.1], stops 35.4 vs 71.7 \\
 Alternative harm & collision only, TTC 0.5 s, 1.5 s & Geometric beats T1/T2 by $\ge 20$ points \\
 Held-out cities & 6 Argoverse~2 cities & Target met in 4 of 6 \\
@@ -906,7 +905,8 @@ better trade-off. \textbf{H3-W, cities:} the certificate held on Waymo
 against the 80\,\% we pre-registered. \textbf{Learned triggers:} the
 counterfactual-label trigger beat neither TTC nor a supervised time-to-harm
 trigger at zero latency, nor TTC and the safe-distance trigger at 0.3 and
-0.5\,s with 10\,Hz decisions, and physics features alone gave the same
+0.5\,s with 10\,Hz decisions, TTC was not the lowest certifiable target from 0.2 to 0.5\,s
+(Table~\ref{tab:outcome}), and physics features alone gave the same
 trigger as all features (24.8\,\% against 25.5\,\% stops), so the predictor
 adds no lead time here. An apparent advantage at 0.5\,s with 2\,Hz decisions
 (26\,\% against 85\,\% stops for TTC) came from a certification cliff, where
@@ -916,37 +916,42 @@ it (Supplementary Section~S20). \textbf{Repairs:} correcting the
 certificate by a harm prevalence estimated from unlabeled alerts with
 black-box shift estimation~\cite{lipton2018} was unreliable, an outcome audit bound covered fewer than 90\,\% of targets,
 joint certification of harm and induced collisions succeeded at zero
-latency but for no score at 0.5\,s, and collision-only outcome certification was underpowered
-(Supplementary Sections~S15, S16 and S20).
+latency but for no score at 0.5\,s, and a collision-only harm label did not resolve a 2\,\% target even with
+1{,}994 calibration scenarios (Supplementary Sections~S15, S16, S20 and S21).
 
 %=======================================================================
 \section{Discussion and Scope}
 \label{sec:discussion}
-\emph{A recipe for certifying a fallback trigger.} The results suggest four
-steps. (1) Simulate one reference run and one forced rollout per decision
-tick, after which every candidate trigger is evaluated by lookup. (2)
-Certify the outcome of the executed run, not only the alert, at the
-deployed latency and decision rate. (3) Start from a certified TTC
-threshold, and add an anticipating trigger only when the latency budget
-exceeds what TTC can certify (0.8\,s here). (4) Before trusting the
-certificate in a new domain, compare its harm rate with the source's and
-audit on labeled target data when it is higher.
+\begin{algorithm}[t]
+\caption{Certifying the outcome of a fallback trigger}
+\label{alg:recipe}
+\small
+\begin{algorithmic}[1]
+\STATE Simulate one reference run and one forced rollout per decision tick for every scenario.
+\STATE For a score and latency $\ell$, look up the executed outcome $\Phi(X,\tau_\lambda(X){+}\ell)$ for every threshold $\lambda$.
+\STATE Order the thresholds by outcome risk on a training split.
+\STATE Walk that order on a calibration split with Hoeffding--Bentkus tests at level $\delta$, stopping at the first failure.
+\STATE Deploy the certified threshold with the fewest unnecessary stops. In a new domain, audit on labeled target data when its harm rate exceeds the source's.
+\end{algorithmic}
+\end{algorithm}
 
-\emph{What we claim, and what we do not.} We claim that certification
-makes a closed-loop trigger keep its stated target, that the outcome of
-the executed fallback can be certified with risk-ordered testing, that a
-certified physics trigger is the one to beat, and that the guarantee is
-fragile to shift and dependence. We do not claim that a learned or
-predictor-based trigger is better below 0.8\,s of latency, a guarantee under
-shift, or one on outcomes other than those calibrated.
+\emph{How to use the results.} Run Algorithm~\ref{alg:recipe} for each candidate, start from a certified TTC threshold, and add an anticipating trigger when the target is strict or the delay reaches 0.8\,s.
+
+\emph{What we claim, and what we do not.} We claim that certification makes
+a closed-loop trigger keep its stated target, that the executed outcome can be
+certified with risk-ordered testing, that a certified physics trigger is the one
+to beat at moderate targets, and that the guarantee is fragile to shift and
+dependence. We do not claim that a learned trigger is cheaper than TTC at the
+same target below 0.8\,s, or a guarantee under shift.
 
 \emph{The harm label and the trigger.} Harm is defined by
 time-to-collision, so a TTC trigger is close to the label and its advantage is
 partly structural, although it holds at the alert level in three of four
-harm definitions. The supervised vehicle is a rule-based driver, not a
+harm definitions and, at zero latency, at the outcome level under collision-only
+harm at a 3\,\% target (20.7\,\% against 42.4\,\% stops; Supplementary Section~S21). The simulated ego is a rule-based driver, not a
 learned planner, so results concern triggering.
 
-\emph{Alert versus outcome.} The outcome certificate bounds the executed run's harm only as well as the calibration data resemble deployment. The 5.0\,\% first-tick floor on nuScenes shows that a miss metric on harm anywhere in a replayed snippet mixes preventable events with events already under way, and we propose an avoidable-only variant for future benchmarks.
+\emph{Alert versus outcome.} The outcome certificate bounds the executed run's harm only as well as the calibration data resemble deployment, and the 5.0\,\% first-tick floor on nuScenes shows that a miss metric on a replayed snippet mixes preventable events with events already under way. We propose an avoidable-only variant for future benchmarks.
 
 \emph{Simulator, predictor, perception and dependence.} All results use MetaDrive with rule-based (IDM) agents, so whether the ordering of triggers survives learned agent behavior is open, and the induced-collision rate is best read as an upper bound. The predictor receives agent states, which isolates triggering from perception error. All guarantees treat scenarios as exchangeable, which nearby scenarios may violate: our nuScenes samples span only 37 and 23 scenes, and spatial-group resplits leave the high-probability statement indeterminate.
 
@@ -959,11 +964,12 @@ Learn-then-Test certified alert keeps its 5\,\% target in distribution
 (3.7\,\% missed, violations in 9.5\,\% of resplits against 43.5\,\%
 uncertified) but leaves 6.5\,\% harm after the fallback, and risk-ordered
 testing certifies the executed outcome directly (5.4\,\% realized against a
-7.5\,\% target). Under a time-to-collision harm label a certified
+7.5\,\% target). A map of what can be certified shows that, at a 7.5\,\% target, a certified
 time-to-collision threshold is the cheapest trigger up to 0.5\,s of latency
 with decisions at 10\,Hz (6--13\,\% unnecessary stops) and meets its
-outcome target on six of eight shifted test sets. Predictor-based and
-learned triggers pay off only from 0.8\,s, where TTC fails to certify. The
+outcome target on six of eight shifted test sets, whereas stricter targets
+and delays of 0.8\,s or more are certifiable only by learned or
+safe-distance triggers, at 30--50\,\% stops. The
 certificate fails on nuScenes and in two of six held-out Argoverse~2 cities,
 the targets with the highest harm rates, but holds on Waymo. For the setting
 studied, these findings argue for certifying the outcome at the deployed

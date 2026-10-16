@@ -12,6 +12,8 @@ $PY src/cswc2.py sup --out results/final/r12_sup.json                           
 $PY src/cswc2.py sweep --out results/final/r12_sweep.json                                                                        # target sweep
 $PY src/hz10.py --out results/final/r12_hz10.json                                                                                # 10 Hz decision arm (Table II)
 $PY src/hz10.py --lats 8 10 --out results/final/r12_hz10_posthoc_long.json                                                       # 0.8 s and 1.0 s (post hoc)
+$PY src/cswc3.py frontier --out results/final/r13_frontier.json                                                               # certifiability map and resplit fractions (Table II, S21)
+$PY src/cswc3.py collonly --out results/final/r13_collonly.json                                                               # collision-only harm, doubled calibration (S21)
 $PY src/city_shift.py --out results/final/city_shift.json                                                                        # held-out cities
 $PY src/spatial_groups.py --out results/final/spatial_groups.json                                                                # spatial-group resplits
 $PY src/audit_numbers.py                                                                                                         # checks headline numbers against result files
