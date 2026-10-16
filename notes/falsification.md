@@ -1237,3 +1237,17 @@ near always-firing (stops 96.7 %, O_res 1.2 %); at l = 1 both refuse. **A13-2 RE
 collision-only harm is NOT used in the paper as support for the TTC recommendation at the 2 % target. Descriptive target 0.03: at l = 0 both certify (geometric O_res 2.0 % / stops 42.4 %; TTC 2.1 % / 20.7 %;
 paired stop difference TTC minus geometric -21.7 points, CI [-23.4, -20.0]); at l = 1 (0.5 s) both certify only at always-firing (96.7 %). Reading: at zero latency, under a harm label with no time-to-collision
 term, the certified TTC trigger still needs half the stops of the predictor-based one, but at 0.5 s with 2 Hz decisions neither trigger certifies usefully at a 3 % target.
+
+### Amendment 13 outcome A13-1, primary part (2026-10-16) (`src/cswc3.py frontier`, `results/final/r13_frontier_primary.json`; the 50-split descriptive part is reported separately)
+Lowest usefully certified outcome target (O_res <= t, test stops <= 50 %), 10 Hz arm, seed-0 split (441 training / 440 calibration / 884 test):
+latency 0.0 s: TTC 0.06, RSS 0.06, geometric 0.06, learned 0.06; 0.2 s: 0.06 / 0.075 / 0.06 / 0.05; 0.3 s: 0.07 / 0.075 / 0.05 / 0.06; 0.5 s: 0.07 / 0.07 / 0.06 / 0.06; 0.8 s: 0.08 / 0.075 / 0.09 / 0.06;
+1.0 s: 0.12 / 0.06 / 0.10 / 0.06. **A13-1(a) REFUTED:** at 0.2, 0.3 and 0.5 s the TTC frontier is NOT the lowest (learned or geometric reach a lower target at 35-50 % stops where TTC refuses or certifies
+only at always-firing). **A13-1(b) holds:** at 0.8 and 1.0 s the TTC frontier (0.08, 0.12) is above the lowest of RSS and learned (0.075, 0.06 and 0.06, 0.06). A13-1 as a whole is REFUTED. Reading: the
+earlier summary "a certified TTC trigger is the cheapest up to 0.5 s" is correct for targets of 7 % and above and wrong as a statement about the strictest certifiable target; the paper reports the full
+map (stops and frontier by score and latency) instead of one number per latency.
+
+### Amendment 13 outcome A13-1, descriptive part (2026-10-16) (`results/final/r13_frontier.json`)
+Fraction of 50 random 50/50 resplits (seeds 0-49) of the 10 Hz calibration arm in which target 0.075 is usefully certified (certified, realized test O_res <= 0.075, test stops <= 50 %),
+latency 0 / 0.2 / 0.3 / 0.5 / 0.8 / 1.0 s: TTC 1.00 / 0.98 / 0.96 / 0.76 / 0.18 / 0.00; RSS 0.88 / 0.86 / 0.84 / 0.88 / 0.48 / 0.52; geometric 1.00 / 0.98 / 0.96 / 0.92 / 0.06 / 0.04.
+Reading: the single-split statement "TTC certifies at 0.5 s" holds in 76 % of resplits, fewer than the geometric (92 %) or RSS (88 %) trigger, so TTC's lead at 0.5 s is split-dependent; at 0.8 and 1.0 s TTC
+rarely certifies usefully at 7.5 %. The paper reports these fractions next to the single-split map.

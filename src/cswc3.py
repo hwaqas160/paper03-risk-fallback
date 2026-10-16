@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -97,14 +98,14 @@ def frontier(a):
     print("claim_A13_1", out["claim_A13_1"], flush=True)
     # descriptive: certifiability probability at 0.075 over 50 resplits (score-only triggers)
     prob = {str(l): {n: 0 for n, _ in SCORES} for l in LATS}
-    for seed in range(50):
+    for seed in range(int(os.environ.get('P13_SEEDS', '50'))):
         tr, ca = split(cal10, seed)
         for lat in LATS:
             for name, key in SCORES:
                 lam = cert_multi(ca, key, tr, lat, (0.075,))[0.075]
                 prob[str(lat)][name] += int(useful(evaluate(test10, key, lam, lat), 0.075))
         print("seed", seed, flush=True)
-    out["prob_useful_at_0.075_over_50_splits"] = {l: {n: v / 50 for n, v in d.items()} for l, d in prob.items()}
+    out["prob_useful_at_0.075_over_50_splits"] = {l: {n: v / max(1, int(os.environ.get('P13_SEEDS', '50'))) for n, v in d.items()} for l, d in prob.items()}
     Path(a.out).write_text(json.dumps(out, indent=2, default=float))
 
 

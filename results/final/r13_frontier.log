@@ -1,0 +1,58 @@
+reproducibility {'rows': 904, 'kept': 881, 'dropped_not_reproduced': 23} {'rows': 904, 'kept': 884, 'dropped_not_reproduced': 20}
+lat 0.0 s frontier: {'TTC': 0.06, 'RSS': 0.06, 'geometric': 0.06, 'learned': 0.06}
+lat 0.2 s frontier: {'TTC': 0.06, 'RSS': 0.075, 'geometric': 0.06, 'learned': 0.05}
+lat 0.3 s frontier: {'TTC': 0.07, 'RSS': 0.075, 'geometric': 0.05, 'learned': 0.06}
+lat 0.5 s frontier: {'TTC': 0.07, 'RSS': 0.07, 'geometric': 0.06, 'learned': 0.06}
+lat 0.8 s frontier: {'TTC': 0.08, 'RSS': 0.075, 'geometric': 0.09, 'learned': 0.06}
+lat 1.0 s frontier: {'TTC': 0.12, 'RSS': 0.06, 'geometric': 0.1, 'learned': 0.06}
+claim_A13_1 {'a': False, 'b': True, 'holds': False}
+seed 0
+seed 1
+seed 2
+seed 3
+seed 4
+seed 5
+seed 6
+seed 7
+seed 8
+seed 9
+seed 10
+seed 11
+seed 12
+seed 13
+seed 14
+seed 15
+seed 16
+seed 17
+seed 18
+seed 19
+seed 20
+seed 21
+seed 22
+seed 23
+seed 24
+seed 25
+seed 26
+seed 27
+seed 28
+seed 29
+seed 30
+seed 31
+seed 32
+seed 33
+seed 34
+seed 35
+seed 36
+seed 37
+seed 38
+seed 39
+seed 40
+seed 41
+seed 42
+seed 43
+seed 44
+seed 45
+seed 46
+seed 47
+seed 48
+seed 49
