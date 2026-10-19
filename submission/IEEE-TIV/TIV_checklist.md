@@ -29,6 +29,6 @@ Items marked **AUTHOR** can only be confirmed by the authors. Everything else wa
 - [x] Route: traditional (free), chosen 2026-10-02. No open-access fee. The guidelines grant waived APCs only to corresponding authors from low-income countries; do not rely on that waiver.
 - [x] PDF fonts: all 23 embedded, no Type 3 fonts.
 - [x] Supplementary Material: `supplementary.pdf`, upload as a separate file.
-- [ ] **AUTHOR** Code and data DOI (10.5281/zenodo.23054382) is cited in the paper: publish the record, after refreshing the archive with the Amendment 12 and 13 files, so the DOI resolves.
+- [x] Code and data DOI 10.5281/zenodo.23054382 is published (2026-10-19) with the refreshed archive and resolves; GitHub repository is up to date.
 - [ ] **AUTHOR** Create or confirm the account on the TIV Author Portal; a corresponding author for copyright transfer after acceptance.
 - Single-blind review: author names are shown to reviewers, so no anonymization is needed. All articles are screened for plagiarism before review, so make sure any text shared with the authors' other papers or preprints is cited (not checked here).

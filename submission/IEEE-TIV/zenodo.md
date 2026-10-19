@@ -1,17 +1,9 @@
-# Zenodo DOI (reserved, not yet published)
+# Zenodo DOI (PUBLISHED 2026-10-19)
 
-- DOI cited in the manuscript: `10.5281/zenodo.23054382`
-- Deposit ID: 23054382
-- Dashboard: https://zenodo.org/deposit/23054382
-- State: draft with the code/results archive uploaded; not yet published, so the DOI does not
-  resolve until it is published from the dashboard.
+- DOI cited in the manuscript: `10.5281/zenodo.23054382` (resolves: https://doi.org/10.5281/zenodo.23054382)
+- Record: https://zenodo.org/records/23054382
+- Content: `paper03_code_data.zip` (84.6 MB, 498 files: code through Amendment 13, pre-registration, per-scenario records, result files; no manuscript, no credentials), licence CC-BY-4.0.
+- Creators: Saleem H. W. (ORCID 0009-0003-4461-8005), Saleem R. Z., Maryam H. (Kinnaird College for Women University).
+- Published files cannot be replaced; a change needs a new version (the DOI of the concept stays citable).
+- The access token used for the upload was NOT saved in this repo. It should be revoked in the Zenodo account settings.
 - An older draft, 23054071, was created under a different account and is superseded. Do not cite it.
-
-The access token used to create the deposit was NOT saved anywhere in this repo; get a fresh one
-from Zenodo account settings if it needs to be reused.
-
-## Before submitting the paper
-1. Refresh the uploaded archive so it matches the final code and results (not the paper PDF/LaTeX,
-   which go through IEEE, not Zenodo).
-2. Check metadata (title, authors, description, license) and click Publish.
-3. The DOI stays the same before and after publishing.
