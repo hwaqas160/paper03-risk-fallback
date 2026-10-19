@@ -22,7 +22,7 @@ Items marked **AUTHOR** can only be confirmed by the authors. Everything else wa
 
 ## Length and abstract
 - [x] Regular paper, 10 pages including references and biographies (limit: 10; overlength would be $175 per page). `paper/qa_check.py` reports 10.
-- [x] Abstract 247 words (150-250), one paragraph, no abbreviations, footnotes, references, equations or tables. "minimum-risk maneuver" is spelled out; "Hz" is a unit.
+- [x] Abstract 249 words (150-250), one paragraph, no abbreviations, footnotes, references, equations or tables. "minimum-risk maneuver" is spelled out; "Hz" is a unit.
 - [x] Four keywords: Autonomous driving, conformal prediction, minimum-risk maneuver, distribution shift.
 
 ## Other

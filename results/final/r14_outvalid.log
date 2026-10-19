@@ -1,0 +1,9 @@
+groups {'n': 3804, 'n_groups': 536, 'largest': 692, 'share_largest': 0.1819137749737119}
+learned realized (0.0545, 0.136) random {'uncorrected': 0.045, 'corrected': 0.005, 'refused': 0, 'n_resplits': 200, 'verdict': 'valid'} group {'uncorrected': 0.07, 'corrected': 0.015, 'refused': 0, 'n_resplits': 200, 'verdict': 'valid'}
+geometric realized (0.0534, 0.328) random {'uncorrected': 0.075, 'corrected': 0.0, 'refused': 0, 'n_resplits': 200, 'verdict': 'valid'} group {'uncorrected': 0.1, 'corrected': 0.005, 'refused': 0, 'n_resplits': 200, 'verdict': 'valid'}
+TTC realized (0.0552, 0.102) random {'uncorrected': 0.0, 'corrected': 0.0, 'refused': 0, 'n_resplits': 200, 'verdict': 'valid'} group {'uncorrected': 0.02, 'corrected': 0.005, 'refused': 0, 'n_resplits': 200, 'verdict': 'valid'}
+sizes all [1994, 904, 1996, 904] drift-free [1928, 864, 1943, 878]
+learned realized (0.056, 0.06) random {'uncorrected': 0.05, 'corrected': 0.005, 'refused': 0, 'n_resplits': 200, 'verdict': 'valid'} group None
+geometric realized (0.0507, 0.279) random {'uncorrected': 0.07, 'corrected': 0.0, 'refused': 0, 'n_resplits': 200, 'verdict': 'valid'} group None
+TTC realized (0.056, 0.072) random {'uncorrected': 0.01, 'corrected': 0.005, 'refused': 0, 'n_resplits': 200, 'verdict': 'valid'} group None
+claim_A14_1 True claim_A14_2 True

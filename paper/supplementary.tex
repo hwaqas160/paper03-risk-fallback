@@ -870,6 +870,8 @@ CSWC (iii): prevalence correction helps the learned trigger under shift & refute
 12 A12-6: learned trigger beats TTC, RSS and geometric at 0.3 and 0.5\,s at 10\,Hz & refuted \\
 13 A13-1: the TTC frontier is the lowest at 0 to 0.5\,s, and above RSS and learned at 0.8 and 1.0\,s & (a) refuted, (b) holds \\
 13 A13-2: collision-only outcome certification at 2\,\% with 1{,}994 calibration scenarios, TTC fewer stops than geometric & refuted (underpowered) \\
+14 A14-1: outcome certificate violation at most $\delta$ under spatial-group resplits, all three scores & holds \\
+14 A14-2: outcome certificate valid on the drift-free subset, all three scores & holds \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -1195,6 +1197,30 @@ Target & Latency & TTC & Geometric & Difference \\
 2 & 0.5\,s & refused & refused & -- \\
 3 & 0\,s & 2.1 / 20.7 & 2.0 / 42.4 & -21.7 [-23.4, -20.0] \\
 3 & 0.5\,s & 0.9 / 96.7 & 0.9 / 96.7 & +0.0 [+0.0, +0.0] \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Amendment 14: Outcome Certificate Under Dependence and Without Drifted Scenarios}
+\label{sec:s-a14}
+Amendment 14 was registered before either analysis was run, after the pre-submission audit. The set-up is that of the zero-latency outcome certificate of Section~S15 (training on \texttt{av2\_cal}, calibration on \texttt{av2\_cal5}, test on the two test arms; 7.5\,\% target; \(\delta=0.10\)). \emph{Spatial groups (claim holds).} Ego start points within 150\,m in the same city form 536 groups over the 3804 pooled scenarios, the largest holding 18\,\%. Resplitting whole groups into calibration and test halves, the uncorrected violation frequency is at most \(\delta\) for all three scores, although the geometric score sits exactly at the boundary (10.0\,\%), which is the same score whose alert certificate rises to 17.0\,\% under spatial resplits. \emph{Drift-free subset (claim holds, with a caveat).} Dropping every scenario with a flagged simulator drift leaves the realized harm at most 5.6\,\% and the violation frequency at most 7.0\,\%. Stop rates fall for every score (learned 13.6 to 6.0\,\%, geometric 32.8 to 27.9\,\%, TTC 10.2 to 7.2\,\%), and the learned trigger, which was behind TTC on all scenarios, is then ahead of it. The comparison was not tested and the learned model is refit on the smaller training set, so we read it as showing that the 2\,Hz zero-latency ordering of the learned trigger and TTC depends on the flagged scenarios. The 10\,Hz arm already drops scenarios that did not reproduce the stored reference run (2.2 to 2.5\,\%).
+
+\begin{table}[h]
+\caption{Outcome certificate (7.5\,\% target, zero latency, 2\,Hz arm) under random and spatial-group resplits and without drifted scenarios. Realized test harm and unnecessary stops (\%), and violation frequency over 200 resplits, uncorrected / corrected (\%). The drift-free sets hold 1928/864/1943/878 scenarios (training, calibration, test and test5 arms) against 1994/904/1996/904.}
+\label{tab:s-a14}
+\centering
+\scriptsize\setlength{\tabcolsep}{3pt}
+\begin{tabular}{llcccc}
+\toprule
+Set & Score & Harm & Stops & Random resplits & Group resplits \\
+\midrule
+All scenarios & Learned & 5.4 & 13.6 & 4.5 / 0.5 & 7.0 / 1.5 \\
+ & Geometric & 5.3 & 32.8 & 7.5 / 0.0 & 10.0 / 0.5 \\
+ & TTC & 5.5 & 10.2 & 0.0 / 0.0 & 2.0 / 0.5 \\
+\midrule
+Drift-free & Learned & 5.6 & 6.0 & 5.0 / 0.5 & -- \\
+ & Geometric & 5.1 & 27.9 & 7.0 / 0.0 & -- \\
+ & TTC & 5.6 & 7.2 & 1.0 / 0.5 & -- \\
 \bottomrule
 \end{tabular}
 \end{table}

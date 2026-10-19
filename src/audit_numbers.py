@@ -46,6 +46,14 @@ chk("RSS across resplits at 0.5 s (%)", f"{100 * pu['5']['RSS']:.0f}", f"{100 * 
 c3 = co["targets"]["0.03"]["0"]
 chk("collision-only 3% TTC stops", c3["methods"]["TTC"]["test"]["stop"])
 chk("collision-only 3% geometric stops", c3["methods"]["geometric"]["test"]["stop"])
+# Amendment 14: outcome certificate under random and spatial-group resplits and without drifted scenarios
+ov = J("r14_outvalid.json")
+for k, nm in (("learned", "learned"), ("geometric", "geometric"), ("TTC", "TTC")):
+    chk(f"A14 random-resplit violation {nm} (%)", f"{100 * ov['all'][k]['random_resplits']['uncorrected']:.1f}")
+    chk(f"A14 group-resplit violation {nm} (%)", f"{100 * ov['all'][k]['group_resplits']['uncorrected']:.1f}")
+chk("A14 drift-free max realized harm (%)", f"{100 * max(ov['drift_free'][k]['realized']['o_res'] for k in ov['drift_free']):.1f}")
+chk("A14 drift-free learned stops (%)", f"{100 * ov['drift_free']['learned']['realized']['stop']:.1f}")
+chk("A14 drift-free TTC stops (%)", f"{100 * ov['drift_free']['TTC']['realized']['stop']:.1f}")
 bad = [c for c in checks if not c[2]]
 for n, s, ok in checks:
     print(("ok   " if ok else "MISS ") + f"{n}: {s}")

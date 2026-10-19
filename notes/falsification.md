@@ -1278,3 +1278,12 @@ reported.
 The paper states in one sentence the outcome certificate's random-resplit validity (Amendment 11 numbers) and the results of A14-1 and A14-2, and fixes eight inaccuracies found by the audit
 (abstract and conclusion wording at 0.2-0.5 s, the stop range of competing triggers, the latency at which the shift result was measured, the drift sentence, the configuration-files claim, the amendment
 count, the stop range on met targets, and the denominator of 1.1 %).
+
+### Amendment 14 outcomes (2026-10-20) (`src/cswc3.py outvalid`, `results/final/r14_outvalid.json`)
+Outcome certificate at O_res <= 0.075, zero latency, 2 Hz arm, 200 resplits of the pool (3,804 scenarios; 536 spatial groups at 150 m, largest 18.2 % of the pool). Violation frequency uncorrected / corrected
+(realized test O_res / unnecessary stops): all scenarios: learned random 4.5 / 0.5, group 7.0 / 1.5 (5.4 % / 13.6 %); geometric random 7.5 / 0.0, group 10.0 / 0.5 (5.3 % / 32.8 %); TTC random 0.0 / 0.0, group 2.0 / 0.5
+(5.5 % / 10.2 %). **A14-1 HOLDS** (all three at most delta; the geometric score sits exactly at the 0.10 boundary). Drift-free subset (1,928 / 864 / 1,943 / 878 scenarios in the four arms; the learned model is refit on
+the smaller training set): learned random 5.0 / 0.5 (5.6 % / 6.0 %); geometric 7.0 / 0.0 (5.1 % / 27.9 %); TTC 1.0 / 0.5 (5.6 % / 7.2 %). **A14-2 HOLDS.**
+Caveat recorded, not pre-registered: dropping the flagged scenarios lowers every stop rate and reverses the zero-latency order of the learned trigger and TTC (learned 6.0 % against TTC 7.2 %, from 13.6 % against 10.2 %
+on all scenarios); this comparison was not tested, so the paper states that the 2 Hz zero-latency ordering depends on the flagged scenarios. The 10 Hz arm already drops scenarios that did not reproduce the stored
+reference run (2.2-2.5 %). Tally of pre-registered claims in Amendments 11-14: 12 of 18 refuted.
