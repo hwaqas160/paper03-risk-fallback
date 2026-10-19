@@ -1251,3 +1251,30 @@ Fraction of 50 random 50/50 resplits (seeds 0-49) of the 10 Hz calibration arm i
 latency 0 / 0.2 / 0.3 / 0.5 / 0.8 / 1.0 s: TTC 1.00 / 0.98 / 0.96 / 0.76 / 0.18 / 0.00; RSS 0.88 / 0.86 / 0.84 / 0.88 / 0.48 / 0.52; geometric 1.00 / 0.98 / 0.96 / 0.92 / 0.06 / 0.04.
 Reading: the single-split statement "TTC certifies at 0.5 s" holds in 76 % of resplits, fewer than the geometric (92 %) or RSS (88 %) trigger, so TTC's lead at 0.5 s is split-dependent; at 0.8 and 1.0 s TTC
 rarely certifies usefully at 7.5 %. The paper reports these fractions next to the single-split map.
+
+
+## Amendment 14 — 2026-10-20, BEFORE any analysis below is run (pre-submission audit: dependence and drift for the OUTCOME certificate)
+
+Prompted by the pre-submission audit. The alert certificate was tested under spatial-group resplits (Amendment 10) and with drifted scenarios dropped (Amendment 2), but the outcome certificate was not.
+Honest provenance: the random-resplit validity of the outcome certificate at zero latency is already known (Amendment 11: learned 4.5 % uncorrected / 0.5 % corrected, geometric 7.5 / 0.0, TTC 0.0 / 0.0 from
+`r11_outcome_valid_lat0.json` and `r11_cswc_indist.json`) and is only reported, not re-tested. Everything below on group resplits and the drift-free subset is unseen.
+
+**Common set-up.** The 2 Hz arms exactly as in `cswc.indist`: train = `av2_cal` (order only), calibrate = `av2_cal5` (904), test = `av2_test` + `av2_test5`; zero latency; outcome target O_res <= 0.075,
+delta = 0.10; scores = learned (counterfactual labels, model fit on `av2_cal`), geometric, TTC; pool for resplits = `av2_cal5` + `av2_test` + `av2_test5` (about 3,800 scenarios), the training split held fixed;
+200 resplits, seed 0. Violation counted two ways as before: uncorrected (resplit test O_res > 0.075) and corrected (its one-sided Wilson lower bound > 0.075).
+
+### A14-1 Spatial-group resplits
+Groups = single-linkage components of ego start points within 150 m, per Argoverse 2 city (`spatial_groups.components`), over the pool. Each resplit assigns whole groups to the calibration half until it holds
+half the pool, calibrates on that half and evaluates on the rest. **Claim:** for each of the three scores the uncorrected violation frequency is <= delta = 0.10. **Refuted** for a score if it exceeds 0.10; the
+verdict is reported per score (valid / indeterminate / violated, as in Amendment 11) and the claim holds only if all three hold. The largest group must hold at most 25 % of the pool, otherwise the analysis is
+reported as not feasible.
+
+### A14-2 Drift-free subset
+Drop every scenario whose stored `n_diverged` is above 0 in any of the four arms (the 3.6 % flagged in Amendment 2) and repeat the realized-threshold evaluation and the 200 random resplits. **Claim:** for each
+score the realized test O_res of the certified threshold is <= 0.075 and the uncorrected random-resplit violation frequency is <= delta. **Refuted** for a score otherwise. No claim about stops is made; they are
+reported.
+
+### Presentation (no statistical claim)
+The paper states in one sentence the outcome certificate's random-resplit validity (Amendment 11 numbers) and the results of A14-1 and A14-2, and fixes eight inaccuracies found by the audit
+(abstract and conclusion wording at 0.2-0.5 s, the stop range of competing triggers, the latency at which the shift result was measured, the drift sentence, the configuration-files claim, the amendment
+count, the stop range on met targets, and the denominator of 1.1 %).
