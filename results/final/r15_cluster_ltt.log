@@ -1,0 +1,12 @@
+50.0 plain {'uncorrected': 0.14, 'corrected': 0.005, 'refused': 0, 'n_resplits': 200, 'mean_stop': 0.2759869947584075, 'mean_miss': 0.04148670464431667, 'mean_n_eff': 1999.37}
+50.0 kish {'uncorrected': 0.0, 'corrected': 0.0, 'refused': 0, 'n_resplits': 200, 'mean_stop': 0.3753203025428924, 'mean_miss': 0.02265417300636525, 'mean_n_eff': 225.80582827253073}
+50.0 hoeffding {'uncorrected': None, 'corrected': None, 'refused': 200, 'n_resplits': 0, 'mean_stop': None, 'mean_miss': None, 'mean_n_eff': 225.80582827253073}
+50.0 random plain {'uncorrected': 0.085, 'refused': 0, 'n_resplits': 200}
+50.0 random kish {'uncorrected': 0.0, 'refused': 0, 'n_resplits': 200}
+50.0 random hoeffding {'uncorrected': None, 'refused': 200, 'n_resplits': 0}
+150.0 plain {'uncorrected': 0.17, 'corrected': 0.015, 'refused': 0, 'n_resplits': 200, 'mean_stop': 0.27098624582673797, 'mean_miss': 0.04228251270898751, 'mean_n_eff': 2116.76}
+150.0 kish {'uncorrected': None, 'corrected': None, 'refused': 200, 'n_resplits': 0, 'mean_stop': None, 'mean_miss': None, 'mean_n_eff': 10.234524968099418}
+150.0 hoeffding {'uncorrected': None, 'corrected': None, 'refused': 200, 'n_resplits': 0, 'mean_stop': None, 'mean_miss': None, 'mean_n_eff': 10.234524968099418}
+150.0 random plain {'uncorrected': 0.085, 'refused': 0, 'n_resplits': 200}
+150.0 random kish {'uncorrected': None, 'refused': 200, 'n_resplits': 0}
+150.0 random hoeffding {'uncorrected': None, 'refused': 200, 'n_resplits': 0}

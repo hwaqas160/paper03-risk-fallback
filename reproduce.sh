@@ -15,6 +15,8 @@ $PY src/hz10.py --lats 8 10 --out results/final/r12_hz10_posthoc_long.json      
 $PY src/cswc3.py frontier --out results/final/r13_frontier.json                                                               # certifiability map and resplit fractions (Table II, S21)
 $PY src/cswc3.py collonly --out results/final/r13_collonly.json                                                               # collision-only harm, doubled calibration (S21)
 $PY src/cswc3.py outvalid --out results/final/r14_outvalid.json                                                               # outcome certificate under spatial groups and without drift (S22)
+$PY src/cluster_ltt.py describe --out results/final/r15_groups.json                                                          # spatial group effective sample sizes (outcome-free)
+$PY src/cluster_ltt.py run --out results/final/r15_cluster_ltt.json                                                          # cluster-aware LTT (S23)
 $PY src/city_shift.py --out results/final/city_shift.json                                                                        # held-out cities
 $PY src/spatial_groups.py --out results/final/spatial_groups.json                                                                # spatial-group resplits
 $PY src/audit_numbers.py                                                                                                         # checks headline numbers against result files

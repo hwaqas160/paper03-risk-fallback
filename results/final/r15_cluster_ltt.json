@@ -1,0 +1,107 @@
+{
+  "alpha": 0.05,
+  "delta": 0.1,
+  "reps": 200,
+  "results": {
+    "50.0": {
+      "plain": {
+        "uncorrected": 0.14,
+        "corrected": 0.005,
+        "refused": 0,
+        "n_resplits": 200,
+        "mean_stop": 0.2759869947584075,
+        "mean_miss": 0.04148670464431667,
+        "mean_n_eff": 1999.37
+      },
+      "kish": {
+        "uncorrected": 0.0,
+        "corrected": 0.0,
+        "refused": 0,
+        "n_resplits": 200,
+        "mean_stop": 0.3753203025428924,
+        "mean_miss": 0.02265417300636525,
+        "mean_n_eff": 225.80582827253073
+      },
+      "hoeffding": {
+        "uncorrected": null,
+        "corrected": null,
+        "refused": 200,
+        "n_resplits": 0,
+        "mean_stop": null,
+        "mean_miss": null,
+        "mean_n_eff": 225.80582827253073
+      },
+      "random_resplits": {
+        "plain": {
+          "uncorrected": 0.085,
+          "refused": 0,
+          "n_resplits": 200
+        },
+        "kish": {
+          "uncorrected": 0.0,
+          "refused": 0,
+          "n_resplits": 200
+        },
+        "hoeffding": {
+          "uncorrected": null,
+          "refused": 200,
+          "n_resplits": 0
+        }
+      },
+      "paired_stop_kish_minus_plain": {
+        "mean": 0.09933330778448489,
+        "n": 200
+      }
+    },
+    "150.0": {
+      "plain": {
+        "uncorrected": 0.17,
+        "corrected": 0.015,
+        "refused": 0,
+        "n_resplits": 200,
+        "mean_stop": 0.27098624582673797,
+        "mean_miss": 0.04228251270898751,
+        "mean_n_eff": 2116.76
+      },
+      "kish": {
+        "uncorrected": null,
+        "corrected": null,
+        "refused": 200,
+        "n_resplits": 0,
+        "mean_stop": null,
+        "mean_miss": null,
+        "mean_n_eff": 10.234524968099418
+      },
+      "hoeffding": {
+        "uncorrected": null,
+        "corrected": null,
+        "refused": 200,
+        "n_resplits": 0,
+        "mean_stop": null,
+        "mean_miss": null,
+        "mean_n_eff": 10.234524968099418
+      },
+      "random_resplits": {
+        "plain": {
+          "uncorrected": 0.085,
+          "refused": 0,
+          "n_resplits": 200
+        },
+        "kish": {
+          "uncorrected": null,
+          "refused": 200,
+          "n_resplits": 0
+        },
+        "hoeffding": {
+          "uncorrected": null,
+          "refused": 200,
+          "n_resplits": 0
+        }
+      },
+      "paired_stop_kish_minus_plain": {
+        "mean": null,
+        "n": 0
+      }
+    }
+  }
+}

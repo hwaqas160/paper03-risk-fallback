@@ -148,7 +148,7 @@ safe-distance triggers, at 30--50\,\% stops.
 \item \textbf{A failure map for the certificate.} An Argoverse~2
 certificate fails on nuScenes and in two of six held-out cities but holds
 on Waymo, with failures tracking the target's harm rate, and spatial
-dependence weakens the high-probability statement.
+dependence weakens the high-probability statement, which a cluster-aware certificate restores at a cost.
 \end{enumerate}
 Section~\ref{sec:res-negative} reports, in one place, the pre-registered
 claims that did not hold, and analyses run after the pre-registered
@@ -339,7 +339,7 @@ stopped. This is enforced by a proportional controller tracking the
 target speed profile $v(t) = \max(v_0 - 4.0\,t,\,0)$ from the moment of
 triggering.
 
-\subsection{Weighted repair under covariate shift (a heuristic)}
+\subsection{Weighted and cluster-aware repairs (heuristics)}
 \label{sec:shift}
 The certificate in \eqref{eq:guarantee} assumes calibration and
 deployment scenarios are exchangeable. For covariate shift we reweight
@@ -352,7 +352,7 @@ $n_{\mathrm{eff}} = (\sum_i w_i)^2 / \sum_i w_i^2$. Because the weights are
 estimated and clipped and $n_{\mathrm{eff}}$ is an approximation, this is a
 heuristic repair with no finite-sample guarantee. As the weights
 concentrate, $n_{\mathrm{eff}}$ shrinks and the test certifies a more
-conservative threshold, or none.
+conservative threshold, or none. Spatial dependence is handled the same way: evaluating the $p$-value at the cluster effective sample size $n_{\mathrm{eff}} = N^2/\sum_g n_g^2$ of the spatial groups in the calibration set gives a cluster-aware certificate, also a heuristic.
 
 \subsection{Evaluating every trigger by lookup}
 \label{sec:exact-eval}
@@ -559,7 +559,7 @@ violation probability for this pool, with Monte Carlo error (Wilson
 Scenarios from one place may be dependent: resplitting whole spatial
 groups (ego starts within 150\,m, a proxy) raises LTT's violation
 frequency to 17.0\,\% [12.4, 22.8], above $\delta$ (Supplementary
-Section~S12). Harm uses the nuPlan definition above, and
+Section~S12). The cluster-aware certificate of Section~\ref{sec:shift} removes these violations for 50\,m groups (0\,\% against 14\,\%) at 10 points more unnecessary stops, and refuses at 150\,m, where one group holds 16\,\% of the pool and the effective sample size falls to about 10 scenarios (Supplementary Section~S23). Harm uses the nuPlan definition above, and
 Section~\ref{sec:res-robust} repeats the key comparison under three
 alternatives.
 
@@ -574,14 +574,13 @@ safety--conservatism trade-off than a tuned fixed threshold; and
 \textbf{H3}, that a threshold certified on Argoverse~2 loses its
 guarantee on nuScenes. A later amendment, written before any Waymo
 outcome existed, added \textbf{H3-W}, the same hypothesis on Waymo, and
-a few-label recalibration study. Further dated amendments (exactness
-measurements, robustness checks, a direct-execution check, and four strict-review
-amendments that added the TTC baseline, noise-corrected validity, outcome-level
-certification, the learned counterfactual trigger, the certifiability map and
-dependence checks) were each written before the corresponding outcomes were
-evaluated, and analyses run afterwards are labeled post hoc. The four
-strict-review amendments were written after the main results were known, and
-twelve of their eighteen pre-registered claims were refuted (Supplementary
+a few-label recalibration study. Further dated amendments were each written before the corresponding outcomes
+were evaluated, and analyses run afterwards are labeled post hoc. Five of
+them (Amendments 11 to 15: the TTC baseline, noise-corrected validity,
+outcome-level certification, the learned counterfactual trigger, the
+certifiability map, dependence checks and a cluster-aware certificate) were
+written after the main results were known, and twelve of their twenty-one
+pre-registered claims were refuted (Supplementary
 Section~S17).
 
 \emph{Data and code availability.} Code, the pre-registration note with
@@ -823,7 +822,7 @@ certified at $\alpha = 0.05$ on nuScenes. With those scenarios excluded
 (post hoc), the shifted miss rate is 9.2\,\% [7.8, 10.8], still above the
 target. These intervals treat scenarios as independent, but the 1{,}504 nuScenes scenarios come from only 37 scenes. Resampling scenes widens the interval to [6.1, 21.0], which still excludes the target, while a second, disjoint set of 23 scenes gives 9.5\,\% with scene-level interval [3.9, 16.5], which does not: the direction of the failure replicates but its size is uncertain (Supplementary Section~S6). A domain classifier on the covariates separates Argoverse~2 from nuScenes (cross-validated AUROC 0.97) far more easily than from Waymo (0.91), so the certificate failed under the larger measured shift and held under the smaller. Six further natural shifts, the Argoverse~2 cities held out one at a time, add evidence: the certificate met the target in four of six and failed in Miami (6.1\,\% [4.8, 7.8]) and Washington, DC (5.3\,\%), the two cities with the highest harm rates. Across these and the two datasets the held-out miss rate tracks the target's harm rate (Spearman 0.90, $n=8$, post hoc), which gives a deployment check: a target whose harm rate exceeds the source's should be audited before the certificate is trusted (Supplementary Section~S10).
 
-\emph{The outcome certificate under shift.} Deployed unchanged on the same eight targets at zero latency, the outcome-certified TTC threshold realizes harm at or below the 7.5\,\% target on six of eight at 5--14\,\% unnecessary stops. Its Wilson interval, which treats scenarios as independent, lies below the target for Austin, Dearborn, Palo Alto and Waymo, and contains it for Pittsburgh (6.1\,\% [4.9, 7.5]) and Washington, DC (6.7\,\% [5.0, 8.8]). It exceeds the target in Miami (9.2\,\% [7.8, 10.8]) and, with an interval that contains it, on nuScenes (8.8\,\% [7.4, 10.3]). The geometric and learned triggers also meet it on six of eight, the geometric score with more stops on every target and the learned trigger with similar stops in the cities but 30--60\,\% on Waymo and nuScenes (Supplementary Section~S18).
+\emph{The outcome certificate under shift.} Deployed unchanged on the same eight targets at zero latency, the outcome-certified TTC threshold realizes harm at or below the 7.5\,\% target on six of eight at 5--14\,\% unnecessary stops. Its Wilson interval, which treats scenarios as independent, lies below the target for Austin, Dearborn, Palo Alto and Waymo, and contains it for Pittsburgh (6.1\,\% [4.9, 7.5]) and Washington, DC (6.7\,\% [5.0, 8.8]). It exceeds the target in Miami (9.2\,\% [7.8, 10.8]) and, with an interval that contains it, on nuScenes (8.8\,\% [7.4, 10.3]). The geometric and learned triggers also meet it on six of eight, the geometric score with more stops on every target (Supplementary Section~S18).
 
 Density-ratio weighting moves the nuScenes miss rate from 13.2\,\% to 7.0\,\%, still above the target, and doubles unnecessary stops. On the avoidable subset it reaches 2.2\,\% with $n_{\mathrm{eff}}=68$, almost entirely through conservatism.
 
@@ -885,7 +884,6 @@ Wayformer & second architecture & Viol. 7.0 / 0.0, stops 41.8 vs 67.8 \\
 Non-reactive traffic & log replay & Miss 3.7 [2.2, 6.1], stops 35.4 vs 71.7 \\
 Alternative harm & collision only, TTC 0.5 s, 1.5 s & Geometric beats T1/T2 by $\ge 20$ points \\
 Held-out cities & 6 Argoverse~2 cities & Target met in 4 of 6 \\
-Spatial groups & 150\,m & Viol. 17.0 / 1.0, indeterminate \\
 \bottomrule
 \end{tabular}
 \end{table}

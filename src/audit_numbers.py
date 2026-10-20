@@ -54,6 +54,13 @@ for k, nm in (("learned", "learned"), ("geometric", "geometric"), ("TTC", "TTC")
 chk("A14 drift-free max realized harm (%)", f"{100 * max(ov['drift_free'][k]['realized']['o_res'] for k in ov['drift_free']):.1f}")
 chk("A14 drift-free learned stops (%)", f"{100 * ov['drift_free']['learned']['realized']['stop']:.1f}")
 chk("A14 drift-free TTC stops (%)", f"{100 * ov['drift_free']['TTC']['realized']['stop']:.1f}")
+# Amendment 15: cluster-aware LTT
+cg = J("r15_cluster_ltt.json")["results"]["50.0"]; g15 = J("r15_groups.json")
+chk("A15 plain group violation at 50 m (%)", f"{100 * cg['plain']['uncorrected']:.0f}", r"(0\,\% against " + f"{100 * cg['plain']['uncorrected']:.0f}" + r"\,\%)")
+chk("A15 kish group violation at 50 m (%)", f"{100 * cg['kish']['uncorrected']:.0f}", r"(0\,\% against 14\,\%)")
+chk("A15 stop cost (points, rounded)", f"{100 * cg['paired_stop_kish_minus_plain']['mean']:.0f}", "at 10 points more unnecessary stops")
+chk("A15 n_eff at 150 m (about)", f"{g15['150.0']['n_eff_calibration_half']['mean']:.0f}", "about 10 scenarios")
+chk("A15 largest group share at 150 m (%)", f"{100 * 649 / 3990:.0f}", r"holds 16\,\% of the pool")
 bad = [c for c in checks if not c[2]]
 for n, s, ok in checks:
     print(("ok   " if ok else "MISS ") + f"{n}: {s}")

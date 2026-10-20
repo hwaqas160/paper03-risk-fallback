@@ -1295,7 +1295,7 @@ Motivation: the alert certificate (LTT, geometric score) violates its target in 
 Hoeffding-Bentkus p-value assumes independent scenarios. Method (`src/cluster_ltt.py`): keep the empirical risk and the fixed-sequence walk, but evaluate the p-value at the cluster effective sample
 size n_eff = N^2 / sum_g n_g^2 over the spatial groups in the calibration set (groups = single-linkage components of ego start points within EPS metres, per city). Two variants: **kish** (Hoeffding-Bentkus
 at floor(n_eff), a heuristic like the weighted repair of Section III-D) and **hoeffding** (weighted Hoeffding bound exp(-2 n_eff (alpha - R)^2) for independent group means, strictly valid if groups are independent).
-Provenance: plain LTT's group-resplit violations and the group sizes (547 groups with the largest holding 16 %% of the pool at 150 m; 1,796 groups, largest 79, at 50 m) are already published (Supplementary S12);
+Provenance: plain LTT's group-resplit violations and the group sizes (547 groups with the largest holding 16 % of the pool at 150 m; 1,796 groups, largest 79, at 50 m) are already published (Supplementary S12);
 the outcome-free effective sample sizes were computed before this registration (`r15_groups.json`): calibration half n_eff mean 10.2 (5th to 95th percentile 5.9 to 18.5) at 150 m and 225.8 (166 to 301) at 50 m,
 against about 2,000 scenarios. Everything below that reads outcomes is unseen.
 
@@ -1311,3 +1311,14 @@ the only one with enough groups) and EPS = 150 m (secondary). Violation counted 
 
 **Reading rule for the paper.** If A15-1 holds and A15-2 is refuted, the paper reports cluster-aware LTT as a valid but costly repair that quantifies what spatial dependence does to the certificate. If A15-1 is refuted, the repair is reported as
 failed. In either case the plain-LTT headline and the 17 % statement remain.
+
+
+### Amendment 15 outcomes (2026-10-20) (`src/cluster_ltt.py run`, `results/final/r15_cluster_ltt.json`)
+Geometric score, pooled `av2_cal` + `av2_test` (3,990), alpha = 0.05, delta = 0.10, 200 group resplits. EPS = 50 m: plain LTT violation 14.0 % uncorrected / 0.5 % corrected, mean stops 27.6 %, mean miss 4.1 %;
+cluster-aware **kish** violation 0.0 % / 0.0 %, mean stops 37.5 %, mean miss 2.3 %, mean n_eff 225.8, no refusals; cluster-aware **hoeffding** (strictly valid for independent groups) REFUSES in 200 of 200 resplits (no certificate).
+Random resplits at 50 m: plain 8.5 %, kish 0.0 %, hoeffding refuses everywhere. EPS = 150 m: plain 17.0 % / 1.5 % (stops 27.1 %); kish and hoeffding refuse in 200 of 200 (n_eff mean 10.2).
+Paired stop difference kish minus plain at 50 m: +9.93 points (n = 200).
+**A15-1 HOLDS for the kish variant (0.0 %), and is VACUOUS for the strictly valid hoeffding variant, which never certifies; A15-2 HOLDS, by a hair (+9.9 against the 10-point limit); A15-3 HOLDS for kish (0.0 %).**
+Reading: cluster-aware LTT is a valid but conservative repair (realized miss 2.3 % against a 5 % target, 10 more points of stops); it is a heuristic, because the strictly valid version has too little effective sample size to
+certify anything, and at 150 m a single giant spatial group leaves about 10 effective scenarios, so no certificate is possible with this data at that dependence scale. The paper reports it that way.
+Tally of pre-registered claims in Amendments 11-15: 12 of 21 refuted (A15-1 counted as holding for the kish variant only).
