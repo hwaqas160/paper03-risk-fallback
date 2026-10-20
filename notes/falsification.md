@@ -1287,3 +1287,27 @@ the smaller training set): learned random 5.0 / 0.5 (5.6 % / 6.0 %); geometric 7
 Caveat recorded, not pre-registered: dropping the flagged scenarios lowers every stop rate and reverses the zero-latency order of the learned trigger and TTC (learned 6.0 % against TTC 7.2 %, from 13.6 % against 10.2 %
 on all scenarios); this comparison was not tested, so the paper states that the 2 Hz zero-latency ordering depends on the flagged scenarios. The 10 Hz arm already drops scenarios that did not reproduce the stored
 reference run (2.2-2.5 %). Tally of pre-registered claims in Amendments 11-14: 12 of 18 refuted.
+
+
+## Amendment 15 — 2026-10-20, BEFORE any outcome below is run (cluster-aware Learn-then-Test for the alert certificate)
+
+Motivation: the alert certificate (LTT, geometric score) violates its target in 17.0 % (150 m groups) and 14 % (50 m groups) of spatial-group resplits (Amendment 10), above delta = 0.10, because the
+Hoeffding-Bentkus p-value assumes independent scenarios. Method (`src/cluster_ltt.py`): keep the empirical risk and the fixed-sequence walk, but evaluate the p-value at the cluster effective sample
+size n_eff = N^2 / sum_g n_g^2 over the spatial groups in the calibration set (groups = single-linkage components of ego start points within EPS metres, per city). Two variants: **kish** (Hoeffding-Bentkus
+at floor(n_eff), a heuristic like the weighted repair of Section III-D) and **hoeffding** (weighted Hoeffding bound exp(-2 n_eff (alpha - R)^2) for independent group means, strictly valid if groups are independent).
+Provenance: plain LTT's group-resplit violations and the group sizes (547 groups with the largest holding 16 %% of the pool at 150 m; 1,796 groups, largest 79, at 50 m) are already published (Supplementary S12);
+the outcome-free effective sample sizes were computed before this registration (`r15_groups.json`): calibration half n_eff mean 10.2 (5th to 95th percentile 5.9 to 18.5) at 150 m and 225.8 (166 to 301) at 50 m,
+against about 2,000 scenarios. Everything below that reads outcomes is unseen.
+
+**Set-up.** Pooled `av2_cal` + `av2_test` (3,990 scenarios), geometric score, alpha = 0.05, delta = 0.10, 200 group resplits (seed 0, as in `spatial_groups.group_resplits`) and 200 random resplits (seed 1), at EPS = 50 m (primary:
+the only one with enough groups) and EPS = 150 m (secondary). Violation counted uncorrected (test miss > alpha) and corrected (one-sided Wilson lower bound > alpha).
+
+**Claims.**
+- **A15-1 (validity):** at EPS = 50 m the uncorrected group-resplit violation frequency is at most delta for BOTH variants, among the resplits that certify. Refuted for a variant otherwise.
+- **A15-2 (cost):** at EPS = 50 m the mean unnecessary-stop rate of the kish variant is within 10 points of plain LTT (paired over resplits where both certify). Refuted otherwise. Expectation stated in advance: n_eff is about a tenth of N, so a
+  large stop cost is likely and this claim may well be refuted.
+- **A15-3 (random resplits):** at EPS = 50 m the uncorrected violation under random resplits stays at most delta for both variants (no loss of validity where independence holds).
+- **Descriptive, no claim:** at EPS = 150 m the refusal rate (n_eff of about 10 cannot certify any threshold at delta = 0.10 for alpha = 0.05, so refusal is expected) and the corresponding numbers.
+
+**Reading rule for the paper.** If A15-1 holds and A15-2 is refuted, the paper reports cluster-aware LTT as a valid but costly repair that quantifies what spatial dependence does to the certificate. If A15-1 is refuted, the repair is reported as
+failed. In either case the plain-LTT headline and the 17 % statement remain.
