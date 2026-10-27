@@ -5,7 +5,7 @@ Items marked **AUTHOR** can only be confirmed by the authors. Everything else wa
 
 ## Checklist
 - [x] Conflict of interest disclosed: "Conflict of Interest" section in the manuscript (no competing interests). Answer the portal form the same way.
-- [x] Institutional email address of all co-authors, supplied by the author on 2026-10-16: Hassan hsaleem.msee20seecs@seecs.edu.pk (NUST), Rahat rahat.mscm21nbs@student.nust.edu.pk (NUST), Hina hina.maryam@kinnaird.edu.pk (Kinnaird College for Women University, Lahore). The manuscript footnote and biography now use Kinnaird for Hina. **AUTHOR**: confirm her exact role and department wording; the biography says only that she is with the university.
+- [x] Institutional email address of both co-authors: Hassan hsaleem.msee20seecs@seecs.edu.pk (NUST), Rahat rahat.mscm21nbs@student.nust.edu.pk (NUST). The paper now has TWO authors (Hina Maryam removed on 2026-10-27 at the author's request); page-1 footnotes match the biographies (public-sector and private-sector organizations).
 - [x] No non-English characters in the author information (the author block and biographies are plain ASCII).
 - [ ] Detailed response letter: resubmission only, not applicable.
 - [ ] Highlighted revised manuscript: resubmission only, not applicable.
@@ -18,7 +18,7 @@ Items marked **AUTHOR** can only be confirmed by the authors. Everything else wa
 - [x] Author list under the title: names only. Affiliations, emails and ORCID are in the first-page footnotes, as the IEEEtran template produces them.
 - [x] Standard format of figures and tables: table captions above, figure captions below, IEEE caption style. Figures remain legible in grayscale (checked at 70 dpi).
 - [x] References: IEEEtran `thebibliography` (justified, hanging indent). Journal and proceedings names use IEEE abbreviations, and two inconsistencies (a missing "Proc." and an un-italicized arXiv entry) were fixed on 2026-10-16.
-- [x] Short biographies for all three authors at the end of the paper (photo for Hassan only; photos for the other two are needed only with the final files after acceptance).
+- [x] Short biographies for both authors at the end of the paper (photo for Hassan only; Rahat's photo is needed only with the final files after acceptance).
 
 ## Length and abstract
 - [x] Regular paper, 10 pages including references and biographies (limit: 10; overlength would be $175 per page). `paper/qa_check.py` reports 10.
