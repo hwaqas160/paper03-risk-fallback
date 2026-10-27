@@ -18,7 +18,7 @@ Items marked **AUTHOR** can only be confirmed by the authors. Everything else wa
 - [x] Author list under the title: names only. Affiliations, emails and ORCID are in the first-page footnotes, as the IEEEtran template produces them.
 - [x] Standard format of figures and tables: table captions above, figure captions below, IEEE caption style. Figures remain legible in grayscale (checked at 70 dpi).
 - [x] References: IEEEtran `thebibliography` (justified, hanging indent). Journal and proceedings names use IEEE abbreviations, and two inconsistencies (a missing "Proc." and an un-italicized arXiv entry) were fixed on 2026-10-16.
-- [x] Short biographies for both authors at the end of the paper (photo for Hassan only; Rahat's photo is needed only with the final files after acceptance).
+- [x] Short biographies for both authors at the end of the paper, text only. T-IV asks for photographs only with the final files after acceptance, so none is in the initial submission.
 
 ## Length and abstract
 - [x] Regular paper, 10 pages including references and biographies (limit: 10; overlength would be $175 per page). `paper/qa_check.py` reports 10.
