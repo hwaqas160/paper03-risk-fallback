@@ -61,6 +61,8 @@ chk("A15 kish group violation at 50 m (%)", f"{100 * cg['kish']['uncorrected']:.
 chk("A15 stop cost (points, rounded)", f"{100 * cg['paired_stop_kish_minus_plain']['mean']:.0f}", "at 10 points more unnecessary stops")
 chk("A15 n_eff at 150 m (about)", f"{g15['150.0']['n_eff_calibration_half']['mean']:.0f}", "about 10 scenarios")
 chk("A15 largest group share at 150 m (%)", f"{100 * 649 / 3990:.0f}", r"holds 16\,\% of the pool")
+sz_all, sz_df = ov["all_sizes"], ov["drift_free_sizes"]
+chk("A14 drift-flagged share dropped (%)", f"{100 * (sum(sz_all) - sum(sz_df)) / sum(sz_all):.1f}", f"{100 * (sum(sz_all) - sum(sz_df)) / sum(sz_all):.1f}" + "\,\% of scenarios with flagged simulator")
 bad = [c for c in checks if not c[2]]
 for n, s, ok in checks:
     print(("ok   " if ok else "MISS ") + f"{n}: {s}")

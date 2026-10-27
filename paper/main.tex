@@ -21,8 +21,7 @@ Fallback Triggers: Closed-Loop Evaluation\\
 Under Latency and Dataset Shift}
 
 \author{Hassan~Waqas~Saleem, Rahat~Zeeshan~Saleem, and Hina~Maryam
-\thanks{Manuscript received XX XXXX 2026; revised XX XXXX 2026. This
-work received no external funding.}%
+\thanks{This work received no external funding.}%
 \thanks{H.~W.~Saleem (corresponding author) is with the School of
 Electrical Engineering and Computer Science (SEECS), National
 University of Sciences and Technology (NUST), H-12, Islamabad 44000,
@@ -421,8 +420,8 @@ forced rollouts per scenario on average (at most 26), where direct execution
 needs over 7{,}000. The observation is elementary and its value is practical.
 Assumption (A1) is an idealization, so we measure its violation. Of the first 33{,}761 forced rollouts, 98.4\,\% agreed
 with the reference run to within 1\,cm before firing and one changed the
-pre-fire harm status (Section~\ref{sec:res-outcome} drops the 3.6\,\% of
-scenarios with any flagged drift as a check). Executing four triggers directly
+pre-fire harm status (Section~\ref{sec:res-outcome} drops the 3.2\,\% of
+scenarios with any flagged drift as a check). When four triggers were executed directly
 on 252 random test scenarios, firing step, miss, unnecessary stop and induced
 collision agreed with the lookup in all 1{,}008 pairs (upper bound 0.4\,\%),
 and harm anywhere in the run in all but one (Supplementary Section~S7).
@@ -585,8 +584,8 @@ Section~S17).
 
 \emph{Data and code availability.} Code, the pre-registration note with
 all amendments and per-scenario rollout records are
-available at \url{https://github.com/hwaqas160/paper03-risk-fallback}
-and archived at \url{https://doi.org/10.5281/zenodo.23054382}. Each
+available at \url{https://github.com/hwaqas160/paper03-risk-fallback},
+and a snapshot is archived at \url{https://doi.org/10.5281/zenodo.23054382}. Each
 scenario's record contains every score trace and outcome, so every table
 can be regenerated without re-simulation.
 
@@ -718,7 +717,7 @@ the geometric score (32.8\,\%). The outcome certificate also holds up under
 dependence and drift (Supplementary Section~S22). Over 200 random resplits
 its violation frequency is 4.5, 7.5 and 0.0\,\% for the learned, geometric and
 TTC scores, and 7.0, 10.0 (at the boundary) and 2.0\,\% when whole spatial
-groups are resplit. Without the 3.6\,\% of scenarios with flagged simulator
+groups are resplit. Without the 3.2\,\% of scenarios with flagged simulator
 drift the realized harm is at most 5.6\,\%, but stops fall, and the learned
 trigger then stops 6.0\,\% against 7.2\,\% for TTC, so this 2\,Hz zero-latency
 ordering depends on those scenarios.
