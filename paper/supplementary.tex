@@ -1232,22 +1232,23 @@ Drift-free & Learned & 5.6 & 6.0 & 5.0 / 0.5 & -- \\
 \label{sec:s-a15}
 The alert certificate violates its target in 17.0\,\% of spatial-group resplits at 150\,m and 14\,\% at 50\,m (Section~S12), because its Hoeffding--Bentkus $p$-value assumes independent scenarios. The cluster-aware certificate keeps the empirical risk and the fixed-sequence walk but evaluates the $p$-value at $n_{\mathrm{eff}}=N^2/\sum_g n_g^2$, where $n_g$ are the sizes of the spatial groups in the calibration set. The \emph{kish} variant uses the Hoeffding--Bentkus $p$-value at $\lfloor n_{\mathrm{eff}}\rfloor$ and is a heuristic. The \emph{Hoeffding} variant uses the weighted Hoeffding bound $\exp(-2n_{\mathrm{eff}}(\alpha-\hat R)^2)$ for independent group means, which is strictly valid if groups are independent. The effective sample sizes were computed before the registration (Amendment 15), the outcomes after. \emph{At 50\,m (claims hold, with caveats).} The kish variant removes the violations (0.0\,\% against 14.0\,\%, also 0.0\,\% under random resplits) and its mean test miss is 2.3\,\% against 4.1\,\%, so it is valid but conservative: it needs 37.5\,\% unnecessary stops against 27.6\,\%, a paired difference of 9.9 points, just inside the 10-point limit that was registered. The strictly valid Hoeffding variant refuses in all 200 resplits, because an effective sample of about 226 scenarios cannot reject a 5\,\% risk at $\delta=0.10$ for any threshold with a useful stop rate, so the claim for it is vacuous. \emph{At 150\,m (descriptive).} One group holds 16\,\% of the pool and the calibration half has $n_{\mathrm{eff}}\approx10$, so both variants refuse in every resplit: if dependence extends over that scale, 3{,}990 scenarios cannot support a certificate. The repair therefore quantifies what spatial dependence does to the certificate rather than removing the problem.
 
-\begin{table}[t]
+\makeatletter\setlength{\@fptop}{0pt}\makeatother
+\begin{table}[!t]
 \caption{Cluster-aware Learn-then-Test for the alert certificate (geometric score, $\alpha=0.05$, $\delta=0.10$) over 200 resplits of the pooled 3{,}990 Argoverse~2 scenarios. Group resplits: violation frequency uncorrected / corrected (\%); mean unnecessary stops and test miss (\%); random-resplit violation (\%). $n_{\mathrm{eff}}$: mean cluster effective sample size of the calibration half. Groups: single-linkage ego starts within 50 or 150\,m, per city.}
 \label{tab:s-a15}
 \centering
 \scriptsize\setlength{\tabcolsep}{2.5pt}
-\begin{tabular}{llcccccc}
+\begin{tabular}{llccccc}
 \toprule
 Groups & Certificate & $n_{\mathrm{eff}}$ & Group viol. & Stops & Miss & Random viol. \\
 \midrule
 50\,m & Plain LTT & 1999 & 14.0 / 0.5 & 27.6 & 4.1 & 8.5 \\
-\,m & Cluster-aware (kish) & 226 & 0.0 / 0.0 & 37.5 & 2.3 & 0.0 \\
-\,m & Cluster-aware (Hoeffding) & 226 & refuses (200 of 200) & -- & -- & refuses \\
+ & Cluster-aware (kish) & 226 & 0.0 / 0.0 & 37.5 & 2.3 & 0.0 \\
+ & Cluster-aware (Hoeffding) & 226 & refuses (200 of 200) & -- & -- & refuses \\
 \midrule
 150\,m & Plain LTT & 2117 & 17.0 / 1.5 & 27.1 & 4.2 & 8.5 \\
-\,m & Cluster-aware (kish) & 10 & refuses (200 of 200) & -- & -- & refuses \\
-\,m & Cluster-aware (Hoeffding) & 10 & refuses (200 of 200) & -- & -- & refuses \\
+ & Cluster-aware (kish) & 10 & refuses (200 of 200) & -- & -- & refuses \\
+ & Cluster-aware (Hoeffding) & 10 & refuses (200 of 200) & -- & -- & refuses \\
 \bottomrule
 \end{tabular}
 \end{table}
